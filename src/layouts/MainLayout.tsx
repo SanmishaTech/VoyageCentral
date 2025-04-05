@@ -13,13 +13,65 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface RouteConfig {
+  parent?: string;
+  label: string;
+  path: string;
+}
+
+const ROUTE_MAP: Record<string, RouteConfig> = {
+  users: {
+    parent: "Masters",
+    label: "Users",
+    path: "/users",
+  },
+  packages: {
+    parent: "Masters",
+    label: "Packages",
+    path: "/packages",
+  },
+};
+
 export default function MainLayout() {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const location = useLocation();
+
+  const getBreadcrumbs = () => {
+    const currentPath = location.pathname.split("/").filter(Boolean)[0];
+
+    // If the current path is in our route map and has a parent
+    const route = ROUTE_MAP[currentPath];
+    if (route && route.parent) {
+      return [
+        {
+          label: route.parent,
+          path: "",
+          isLast: false,
+        },
+        {
+          label: route.label,
+          path: route.path,
+          isLast: true,
+        },
+      ];
+    }
+
+    // Default fallback for unmapped routes
+    return [
+      {
+        label: currentPath
+          ? currentPath.charAt(0).toUpperCase() + currentPath.slice(1)
+          : "Home",
+        path: `/${currentPath}`,
+        isLast: true,
+      },
+    ];
+  };
 
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -57,13 +109,22 @@ export default function MainLayout() {
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
                 <BreadcrumbList>
-                  <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="#">Masters</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="hidden md:block" />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>Users</BreadcrumbPage>
-                  </BreadcrumbItem>
+                  {getBreadcrumbs().map((crumb, index) => (
+                    <div key={crumb.path} className="flex items-center">
+                      <BreadcrumbItem className="hidden md:block">
+                        {crumb.isLast ? (
+                          <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink href={crumb.path}>
+                            {crumb.label}
+                          </BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                      {!crumb.isLast && (
+                        <BreadcrumbSeparator className="hidden md:block" />
+                      )}
+                    </div>
+                  ))}
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
