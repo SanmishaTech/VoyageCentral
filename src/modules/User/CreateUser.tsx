@@ -1,12 +1,27 @@
 import React from "react";
 import UserForm from "./UserForm";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-const CreateUser = () => {
+interface CreateUserDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const CreateUser = ({ isOpen, onClose }: CreateUserDialogProps) => {
   return (
-    <div className="mt-2 p-6">
-      <h1 className="text-2xl font-bold mb-6">Create User</h1>
-      <UserForm mode="create" />
-    </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Create New User</DialogTitle>
+        </DialogHeader>
+        <UserForm mode="create" onSuccess={onClose} className="mt-4" />
+      </DialogContent>
+    </Dialog>
   );
 };
 

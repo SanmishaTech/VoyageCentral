@@ -283,7 +283,7 @@ const PackageList = () => {
               <TableBody>
                 {packages.map((pkg: any) => (
                   <TableRow key={pkg.id}>
-                    <TableCell className="text-center">
+                    <TableCell className="text-start">
                       {pkg.packageName}
                     </TableCell>
                     <TableCell className="text-center">

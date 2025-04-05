@@ -1,20 +1,23 @@
 import UpdateProfile from "./UpdateProfile";
 import ChangePassword from "./ChangePassword";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function ProfilePage() {
   return (
     <div className="mt-2 p-6">
       <h1 className="text-2xl font-bold mb-6">Profile Settings</h1>
-      <div className="space-y-8">
-        {/* Update Profile Section */}
-        <section>
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="profile">Update Profile</TabsTrigger>
+          <TabsTrigger value="password">Change Password</TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile">
           <UpdateProfile />
-        </section>
-        {/* Change Password Section */}
-        <section>
+        </TabsContent>
+        <TabsContent value="password">
           <ChangePassword />
-        </section>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

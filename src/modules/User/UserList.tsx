@@ -51,6 +51,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
+import CreateUser from "./CreateUser"; // Import CreateUser component
+import EditUser from "./EditUser"; // Add this import
 
 const fetchUsers = async (
   page: number,
@@ -83,6 +85,9 @@ const UserList = () => {
   const [selectedUser, setSelectedUser] = useState<number | null>(null); // Track the selected user for password change
   const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
   const [userToDelete, setUserToDelete] = useState<number | null>(null); // Track the user ID to delete
+  const [showCreateDialog, setShowCreateDialog] = useState(false); // Add state for create user dialog
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Fetch roles from API
@@ -249,6 +254,16 @@ const UserList = () => {
     setShowChangePassword(false); // Hide the ChangePassword dialog
   };
 
+  const handleEdit = (userId: string) => {
+    setSelectedUserId(userId);
+    setShowEditDialog(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setShowEditDialog(false);
+    setSelectedUserId(null);
+  };
+
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
@@ -272,16 +287,27 @@ const UserList = () => {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                variant="outline"
-                className={`${
-                  roles.length > 0 || active !== "all" ? "bg-blue-50" : ""
-                }`}
+                variant={
+                  showFilters || roles.length > 0 || active !== "all"
+                    ? "default"
+                    : "outline"
+                }
+                className={`
+                  ${
+                    showFilters || roles.length > 0 || active !== "all"
+                      ? "bg-primary hover:bg-primary/90 text-white shadow-sm"
+                      : "hover:bg-accent"
+                  }
+                  transition-all duration-200
+                `}
                 onClick={() => setShowFilters(!showFilters)}
               >
-                <Filter className="mr-2 h-4 w-4" />
+                <Filter
+                  className={`mr-2 h-4 w-4 ${showFilters ? "text-white" : ""}`}
+                />
                 Filters
                 {(roles.length > 0 || active !== "all") && (
-                  <span className="ml-2 bg-blue-500 text-white rounded-full px-2 py-0.5 text-xs">
+                  <span className="ml-2 bg-white text-primary font-medium rounded-full px-2 py-0.5 text-xs">
                     {roles.length + (active !== "all" ? 1 : 0)}
                   </span>
                 )}
@@ -295,11 +321,11 @@ const UserList = () => {
                 Export
               </Button>
               <Button
-                onClick={() => navigate("/users/create")}
+                onClick={() => setShowCreateDialog(true)}
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Create
+                Create User
               </Button>
             </div>
           </div>
@@ -347,20 +373,19 @@ const UserList = () => {
                     </div>
                   )}
                 </div>
-              </div>
-
-              {/* Clear Filters Button */}
-              <div className="flex justify-end mt-4">
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setSearch("");
-                    setRoles([]);
-                    setActive("all");
-                  }}
-                >
-                  Clear Filters
-                </Button>
+                {/* Clear Filters Button */}
+                <div className="flex justify-end mt-7">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setSearch("");
+                      setRoles([]);
+                      setActive("all");
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
               </div>
             </Card>
           )}
@@ -494,7 +519,7 @@ const UserList = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => navigate(`/users/${user.id}/edit`)}
+                            onClick={() => handleEdit(user.id.toString())}
                           >
                             <Edit size={16} />
                           </Button>
@@ -594,6 +619,21 @@ const UserList = () => {
         }}
         onConfirm={handleDelete}
       />
+
+      {/* Add CreateUser dialog */}
+      <CreateUser
+        isOpen={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+      />
+
+      {/* Add EditUser dialog */}
+      {selectedUserId && (
+        <EditUser
+          isOpen={showEditDialog}
+          onClose={handleCloseEditDialog}
+          userId={selectedUserId}
+        />
+      )}
     </div>
   );
 };
