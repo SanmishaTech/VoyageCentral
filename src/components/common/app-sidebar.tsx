@@ -68,8 +68,8 @@ const initialData = {
           url: "/users",
         },
         {
-          title: "Starred",
-          url: "#",
+          title: "Packages",
+          url: "/packages",
         },
         {
           title: "Settings",

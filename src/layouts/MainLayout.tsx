@@ -1,4 +1,4 @@
-import { AppSidebar } from "@/components/common/app-sidebar"
+import { AppSidebar } from "@/components/common/app-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -6,17 +6,17 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { Outlet } from "react-router-dom"
-import { useState, useEffect } from "react"
-import { Sun, Moon } from "lucide-react"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/sidebar";
+import { Outlet } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Sun, Moon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function MainLayout() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -58,13 +58,11 @@ export default function MainLayout() {
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="#">
-                      Building Your Application
-                    </BreadcrumbLink>
+                    <BreadcrumbLink href="#">Masters</BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="hidden md:block" />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                    <BreadcrumbPage>Users</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
@@ -75,7 +73,7 @@ export default function MainLayout() {
               onClick={toggleDarkMode}
               className="size-7 cursor-pointer"
               variant="ghost"
-              size="icon"              
+              size="icon"
               aria-label="Toggle Dark Mode"
             >
               {isDarkMode ? <Moon /> : <Sun />}

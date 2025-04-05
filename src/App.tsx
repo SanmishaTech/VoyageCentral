@@ -1,27 +1,29 @@
-import { useEffect } from 'react';
-import { appName } from './config'; // Import appName from config
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from "react";
+import { appName } from "./config"; // Import appName from config
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import AuthLayout from './layouts/AuthLayout';
-import MainLayout from './layouts/MainLayout';
+import AuthLayout from "./layouts/AuthLayout";
+import MainLayout from "./layouts/MainLayout";
 
-import Login from './modules/Auth/Login';
-import Register from './modules/Auth/Register';
-import ForgotPassword from './modules/Auth/ForgotPassword';
-import ResetPassword from './modules/Auth/ResetPassword';
+import Login from "./modules/Auth/Login";
+import Register from "./modules/Auth/Register";
+import ForgotPassword from "./modules/Auth/ForgotPassword";
+import ResetPassword from "./modules/Auth/ResetPassword";
 
-import ProtectedRoute from './components/common/protected-route'; // Correct path
+import ProtectedRoute from "./components/common/protected-route"; // Correct path
 
-import Dashboard from './modules/Dashboard/DashboardPage';
+import Dashboard from "./modules/Dashboard/DashboardPage";
 
-import ProfilePage from './modules/Profile/ProfilePage';
+import ProfilePage from "./modules/Profile/ProfilePage";
 
 import UserList from "@/modules/User/UserList";
 import CreateUser from "@/modules/User/CreateUser";
 import EditUser from "@/modules/User/EditUser";
 
-import { Toaster } from 'sonner';
-import './App.css';
+import { Toaster } from "sonner";
+import "./App.css";
+import PackageList from "./modules/Package/PackageList";
+import CreatePackage from "./modules/Package/CreatePackage";
 
 const App = () => {
   useEffect(() => {
@@ -56,11 +58,50 @@ const App = () => {
                   <ProfilePage />
                 </ProtectedRoute>
               }
-            />      
-            <Route path="/users" element={<ProtectedRoute><UserList /></ProtectedRoute>} />
-            <Route path="/users/create" element={<ProtectedRoute><CreateUser /></ProtectedRoute>} />
-            <Route path="/users/:id/edit" element={<ProtectedRoute><EditUser /></ProtectedRoute>} />                  
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <UserList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users/create"
+              element={
+                <ProtectedRoute>
+                  <CreateUser />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditUser />
+                </ProtectedRoute>
+              }
+            />
             {/* Add other main routes here */}
+
+            <Route
+              path="/packages"
+              element={
+                <ProtectedRoute>
+                  <PackageList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/packages/create"
+              element={
+                <ProtectedRoute>
+                  <CreatePackage />
+                </ProtectedRoute>
+              }
+            />
+            {/* Remove the /packages/edit/:id route as we're using dialog now */}
           </Route>
         </Routes>
       </Router>

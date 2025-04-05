@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,49 +11,39 @@ import {
 import { Button } from "@/components/ui/button";
 
 interface ConfirmDialogProps {
+  isOpen: boolean;
   title: string;
   description: string;
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm: () => void;
+  onCancel: () => void;
   children: React.ReactNode;
 }
 
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
+  isOpen,
   title,
   description,
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
   onConfirm,
+  onCancel,
   children,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleConfirm = () => {
-    onConfirm();
-    setIsOpen(false); // Close the dialog after confirming
-  };
-
-  const handleCancel = () => {
-    setIsOpen(false); // Close the dialog when canceled
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={onCancel}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent
-        className="sm:max-w-[425px]"
-        onClick={(e) => e.stopPropagation()} // Prevent event propagation
-      >
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="secondary" onClick={handleCancel}>
+          <Button variant="secondary" onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button variant="default" onClick={handleConfirm}>
+          <Button variant="destructive" onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </DialogFooter>
