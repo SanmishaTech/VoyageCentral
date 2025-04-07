@@ -35,6 +35,11 @@ const ROUTE_MAP: Record<string, RouteConfig> = {
     label: "Packages",
     path: "/packages",
   },
+  agencies: {
+    parent: "Masters",
+    label: "Agencies",
+    path: "/agencies",
+  },
 };
 
 export default function MainLayout() {

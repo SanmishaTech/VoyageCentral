@@ -17,13 +17,12 @@ import Dashboard from "./modules/Dashboard/DashboardPage";
 import ProfilePage from "./modules/Profile/ProfilePage";
 
 import UserList from "@/modules/User/UserList";
-import CreateUser from "@/modules/User/CreateUser";
-import EditUser from "@/modules/User/EditUser";
+
+import AgencyList from "@/modules/Agency/AgencyList";
 
 import { Toaster } from "sonner";
 import "./App.css";
 import PackageList from "./modules/Package/PackageList";
-import CreatePackage from "./modules/Package/CreatePackage";
 
 const App = () => {
   useEffect(() => {
@@ -67,22 +66,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/users/create"
-              element={
-                <ProtectedRoute>
-                  <CreateUser />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <EditUser />
-                </ProtectedRoute>
-              }
-            />
+
             {/* Add other main routes here */}
 
             <Route
@@ -93,15 +77,16 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+
+            {/* Remove the /packages/edit/:id route as we're using dialog now */}
             <Route
-              path="/packages/create"
+              path="/agencies"
               element={
                 <ProtectedRoute>
-                  <CreatePackage />
+                  <AgencyList />
                 </ProtectedRoute>
               }
             />
-            {/* Remove the /packages/edit/:id route as we're using dialog now */}
           </Route>
         </Routes>
       </Router>

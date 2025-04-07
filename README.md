@@ -1,6 +1,6 @@
-# React Star
+# VoyageCentral
 
-React Star is a modern React-based project built with Vite, TypeScript, TailwindCSS, and Radix UI components. It includes advanced features like form validation, routing, and reusable UI components.
+VoyageCentral is a modern React-based project built with Vite, TypeScript, TailwindCSS, and Radix UI components. It includes advanced features like form validation, routing, and reusable UI components.
 
 ---
 
@@ -22,22 +22,26 @@ React Star is a modern React-based project built with Vite, TypeScript, Tailwind
 
 ## Features Needed
 
-1. **Common ConfirmDialog**: 
+1. **Common ConfirmDialog**:
+
    - A reusable confirmation dialog component for consistent user interactions across the application.
 
 2. **UserList Page - Better UI for Filter and Add Button**:
+
    - Improve the layout and design of the filter section and the "Add User" button for a more user-friendly experience.
 
 3. **Implement Badge for Role and Status Display**:
+
    - Add badges to display user roles and statuses (e.g., Active, Inactive) for better visual clarity.
 
 4. **Add Commands for Each Row**:
+
    - Include actions for each user row, such as:
      - **Set Active/Deactivate**: Toggle the active status of a user.
      - **Change Password**: Provide a function to reset or change the user's password.
 
 5. **Persistent Filter Parameters**:
-   - Ensure that filter parameters (e.g., search, roles, active status) persist across page reloads or navigation.   
+   - Ensure that filter parameters (e.g., search, roles, active status) persist across page reloads or navigation.
 
 ---
 
