@@ -19,6 +19,8 @@ import ProfilePage from "./modules/Profile/ProfilePage";
 import UserList from "@/modules/User/UserList";
 
 import AgencyList from "@/modules/Agency/AgencyList";
+import CreateAgency from "@/modules/Agency/CreateAgency";
+import EditAgency from "@/modules/Agency/EditAgency";
 
 import { Toaster } from "sonner";
 import "./App.css";
@@ -78,12 +80,30 @@ const App = () => {
               }
             />
 
-            {/* Remove the /packages/edit/:id route as we're using dialog now */}
+            {/* Removed the /packages/edit/:id route as we're using dialog now */}
             <Route
               path="/agencies"
               element={
                 <ProtectedRoute>
                   <AgencyList />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/agencies/create"
+              element={
+                <ProtectedRoute>
+                  <CreateAgency />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/agencies/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditAgency />
                 </ProtectedRoute>
               }
             />

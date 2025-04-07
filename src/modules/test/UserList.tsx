@@ -43,6 +43,7 @@ import {
 import ConfirmDialog from "@/components/common/confirm-dialog";
 import { saveAs } from "file-saver";
 import { Badge } from "@/components/ui/badge"; // Ensure Badge is imported
+import ChangePasswordDialog from "./ChangePasswordDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,7 +63,7 @@ const fetchUsers = async (
 ) => {
   const rolesQuery = roles.length > 0 ? `&roles=${roles.join(",")}` : "";
   const response = await get(
-    `/agencies?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&active=${active}${rolesQuery}&limit=${recordsPerPage}`
+    `/users?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&active=${active}${rolesQuery}&limit=${recordsPerPage}`
   );
   return response;
 };
@@ -71,7 +72,7 @@ const UserList = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10); // Add recordsPerPage state
-  const [sortBy, setSortBy] = useState("businessName"); // Default sort column
+  const [sortBy, setSortBy] = useState("name"); // Default sort column
   const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
   const [search, setSearch] = useState(""); // Search query
   const [active, setActive] = useState("all"); // Active filter (all, true, false)
@@ -134,13 +135,13 @@ const UserList = () => {
 
   // Mutation for deleting a user
   const deleteUserMutation = useMutation({
-    mutationFn: (id: number) => del(`/agencies/${id}`),
+    mutationFn: (id: number) => del(`/users/${id}`),
     onSuccess: () => {
       toast.success("User deleted successfully");
-      queryClient.invalidateQueries(["agencies"]);
+      queryClient.invalidateQueries(["users"]);
     },
     onError: () => {
-      toast.error("Failed to delete agency");
+      toast.error("Failed to delete user");
     },
   });
 
@@ -155,6 +156,23 @@ const UserList = () => {
       setShowConfirmation(false);
       setUserToDelete(null);
     }
+  };
+
+  // Mutation for changing user status
+  const changeStatusMutation = useMutation({
+    mutationFn: ({ userId, active }: { userId: string; active: boolean }) =>
+      patch(`/users/${userId}/status`, { active }),
+    onSuccess: () => {
+      toast.success("User status updated successfully");
+      queryClient.invalidateQueries(["users"]);
+    },
+    onError: () => {
+      toast.error("Failed to update user status");
+    },
+  });
+
+  const handleChangeStatus = (userId: string, currentStatus: boolean) => {
+    changeStatusMutation.mutate({ userId, active: !currentStatus });
   };
 
   // Handle sorting
@@ -187,6 +205,40 @@ const UserList = () => {
     setCurrentPage(1); // Reset to the first page
   };
 
+  // Function to export user data
+  const handleExport = async () => {
+    try {
+      // Safely encode query parameters
+      const rolesQuery =
+        roles.length > 0 ? `roles=${encodeURIComponent(roles.join(","))}` : "";
+      const queryParams = [
+        `sortBy=${encodeURIComponent(sortBy)}`,
+        `sortOrder=${encodeURIComponent(sortOrder)}`,
+        `search=${encodeURIComponent(search)}`,
+        `active=${encodeURIComponent(active)}`,
+        rolesQuery,
+        `export=true`, // Ensure export=true is at the end
+      ]
+        .filter(Boolean) // Remove empty parameters
+        .join("&"); // Join parameters with '&'
+
+      const exportUrl = `/users?${queryParams}`;
+
+      // Fetch the Excel file using the updated get() function
+      const response = await get(exportUrl, null, { responseType: "blob" });
+
+      // Trigger file download
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(blob, "users.xlsx"); // Save the file with a .xlsx extension
+      toast.success("User data exported successfully");
+    } catch (error) {
+      console.error("Export Error:", error);
+      toast.error("Failed to export user data");
+    }
+  };
+
   const handleOpenChangePassword = (userId: number) => {
     setSelectedUser(userId); // Set the selected user
     setShowChangePassword(true); // Show the ChangePassword dialog
@@ -200,7 +252,7 @@ const UserList = () => {
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Agency Management
+        User Management
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>
@@ -209,7 +261,7 @@ const UserList = () => {
             {/* Search Input */}
             <div className="flex-grow">
               <Input
-                placeholder="Search agencies..."
+                placeholder="Search users..."
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
@@ -220,7 +272,30 @@ const UserList = () => {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                onClick={() => navigate("/agencies/create")}
+                variant="outline"
+                className={`${
+                  roles.length > 0 || active !== "all" ? "bg-blue-50" : ""
+                }`}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+                {(roles.length > 0 || active !== "all") && (
+                  <span className="ml-2 bg-blue-500 text-white rounded-full px-2 py-0.5 text-xs">
+                    {roles.length + (active !== "all" ? 1 : 0)}
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleExport}
+                disabled={isLoading || users.length === 0}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+              <Button
+                onClick={() => navigate("/users/create")}
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
@@ -228,6 +303,67 @@ const UserList = () => {
               </Button>
             </div>
           </div>
+
+          {/* Collapsible Filters Section */}
+          {showFilters && (
+            <Card className="p-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {/* Status Filter */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Status
+                  </label>
+                  <Select value={active} onValueChange={handleActiveChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Users</SelectItem>
+                      <SelectItem value="true">Active Users</SelectItem>
+                      <SelectItem value="false">Inactive Users</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Roles Filter */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Roles
+                  </label>
+                  {availableRoles.length > 0 ? (
+                    <MultipleSelector
+                      defaultOptions={availableRoles}
+                      selectedOptions={roles.map((role) => ({
+                        label: role,
+                        value: role,
+                      }))}
+                      onChange={handleRoleChange}
+                      placeholder="Select roles"
+                    />
+                  ) : (
+                    <div className="h-10 flex items-center text-gray-500">
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Loading roles...
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Clear Filters Button */}
+              <div className="flex justify-end mt-4">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setSearch("");
+                    setRoles([]);
+                    setActive("all");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </Card>
+          )}
 
           <Separator className="mb-4" />
 
@@ -238,7 +374,7 @@ const UserList = () => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load agencies.
+              Failed to load users.
             </div>
           ) : users.length > 0 ? (
             <div className="overflow-x-auto">
@@ -250,8 +386,8 @@ const UserList = () => {
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Business Name</span>
-                        {sortBy === "businessName" && (
+                        <span>Name</span>
+                        {sortBy === "name" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -438,6 +574,15 @@ const UserList = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Render ChangePasswordDialog */}
+      {selectedUser && (
+        <ChangePasswordDialog
+          userId={selectedUser}
+          isOpen={showChangePassword}
+          onClose={handleCloseChangePassword}
+        />
+      )}
 
       <ConfirmDialog
         isOpen={showConfirmation}
