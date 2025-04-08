@@ -263,10 +263,10 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="mx-auto mt-10">
+        <Card className="mx-auto mt-10 ">
           <CardContent>
             {/* Agency Details */}
-            <CardTitle>Agency Details</CardTitle>
+            <CardTitle className="text-lg">Agency Details</CardTitle>
             <div className="grid gap-4 mt-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -593,34 +593,34 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
               </>
             )}
           </CardContent>
+          <div className="justify-end mr-5 flex gap-4">
+            <Button
+              type="submit"
+              disabled={
+                createUserMutation.isLoading || updateUserMutation.isLoading
+              }
+              className="flex items-center justify-center gap-2"
+            >
+              {createUserMutation.isLoading || updateUserMutation.isLoading ? (
+                <>
+                  <LoaderCircle className="animate-spin h-4 w-4" /> Saving...
+                </>
+              ) : mode === "create" ? (
+                "Create Agency"
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/agencies")}
+            >
+              Cancel
+            </Button>
+          </div>
         </Card>
         {/* Submit and Cancel Buttons */}
-        <div className="justify-end flex gap-4">
-          <Button
-            type="submit"
-            disabled={
-              createUserMutation.isLoading || updateUserMutation.isLoading
-            }
-            className="flex items-center justify-center gap-2"
-          >
-            {createUserMutation.isLoading || updateUserMutation.isLoading ? (
-              <>
-                <LoaderCircle className="animate-spin h-4 w-4" /> Saving...
-              </>
-            ) : mode === "create" ? (
-              "Create Agency"
-            ) : (
-              "Save Changes"
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/agencies")}
-          >
-            Cancel
-          </Button>
-        </div>
       </form>
 
       {/* Display Users & Subscriptions in Edit Mode */}

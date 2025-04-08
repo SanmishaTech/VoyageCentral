@@ -4,7 +4,7 @@ import UserForm from "./AgencyForm";
 const EditUser = () => {
   return (
     <div className="mt-2 p-6">
-      <h1 className="text-2xl font-bold mb-6">Edit User</h1>
+      <h1 className="text-2xl font-bold mb-6">Edit Agency</h1>
       <UserForm mode="edit" />
     </div>
   );

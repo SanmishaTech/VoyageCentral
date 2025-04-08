@@ -256,7 +256,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
         </div>
 
         {/* Submit and Cancel Buttons */}
-        <div className="flex gap-4">
+        <div className="justify-end flex gap-4">
           <Button
             type="submit"
             disabled={
