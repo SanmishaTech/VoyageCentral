@@ -84,30 +84,10 @@ const UserList = () => {
   const [userToDelete, setUserToDelete] = useState<number | null>(null); // Track the user ID to delete
   const navigate = useNavigate();
 
-  // Fetch roles from API
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const rolesData = await get("/roles");
-        const formattedRoles: Option[] = Object.entries(rolesData.roles).map(
-          ([key, value]) => ({
-            label: value,
-            value: value,
-          })
-        ); // Map roles to Option format
-        setAvailableRoles(formattedRoles);
-      } catch (error: any) {
-        toast.error("Failed to fetch roles");
-      }
-    };
-
-    fetchRoles();
-  }, []);
-
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [
-      "users",
+      "agencies",
       currentPage,
       sortBy,
       sortOrder,
@@ -128,7 +108,7 @@ const UserList = () => {
       ),
   });
 
-  const users = data?.users || [];
+  const agencies = data?.data || [];
   const totalPages = data?.totalPages || 1;
   const totalUsers = data?.totalUsers || 0;
 
@@ -224,7 +204,7 @@ const UserList = () => {
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Create
+                Add Agency
               </Button>
             </div>
           </div>
@@ -240,13 +220,13 @@ const UserList = () => {
             <div className="text-center text-red-500">
               Failed to load agencies.
             </div>
-          ) : users.length > 0 ? (
+          ) : agencies.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead
-                      onClick={() => handleSort("name")}
+                      onClick={() => handleSort("businessName")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
@@ -263,12 +243,12 @@ const UserList = () => {
                       </div>
                     </TableHead>
                     <TableHead
-                      onClick={() => handleSort("email")}
+                      onClick={() => handleSort("addressLine1")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Email</span>
-                        {sortBy === "email" && (
+                        <span>Address Line 1</span>
+                        {sortBy === "addressLine1" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -280,12 +260,12 @@ const UserList = () => {
                       </div>
                     </TableHead>
                     <TableHead
-                      onClick={() => handleSort("role")}
+                      onClick={() => handleSort("addressLine2")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Role</span>
-                        {sortBy === "role" && (
+                        <span>Address Line 2</span>
+                        {sortBy === "addressLine2" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -297,12 +277,12 @@ const UserList = () => {
                       </div>
                     </TableHead>
                     <TableHead
-                      onClick={() => handleSort("lastLogin")}
+                      onClick={() => handleSort("state")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Last Login</span>
-                        {sortBy === "lastLogin" && (
+                        <span>State</span>
+                        {sortBy === "state" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -314,12 +294,12 @@ const UserList = () => {
                       </div>
                     </TableHead>
                     <TableHead
-                      onClick={() => handleSort("active")}
+                      onClick={() => handleSort("city")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Active</span>
-                        {sortBy === "active" && (
+                        <span>City</span>
+                        {sortBy === "city" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -334,45 +314,37 @@ const UserList = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
+                  {agencies.map((agency) => (
+                    <TableRow key={agency.id}>
+                      <TableCell>{agency.businessName}</TableCell>
+                      <TableCell>{agency.addressLine1}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{user.role}</Badge>
+                        <Badge variant="outline">{agency.addressLine2}</Badge>
                       </TableCell>
-                      <TableCell>
-                        {user.lastLogin
-                          ? new Date(user.lastLogin).toLocaleString()
-                          : "Never"}
-                      </TableCell>
-                      <TableCell>
-                        {user.active ? (
-                          <Badge variant="outline">Active</Badge>
-                        ) : (
-                          <Badge variant="secondary">Inactive</Badge>
-                        )}
-                      </TableCell>
+                      <TableCell>{agency.state}</TableCell>
+                      <TableCell>{agency.city}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => navigate(`/users/${user.id}/edit`)}
+                            onClick={() =>
+                              navigate(`/agencies/${agency.id}/edit`)
+                            }
                           >
                             <Edit size={16} />
                           </Button>
                           <ConfirmDialog
                             title="Confirm Deletion"
-                            description="Are you sure you want to delete this user? This action cannot be undone."
+                            description="Are you sure you want to delete this agency? This action cannot be undone."
                             confirmLabel="Delete"
                             cancelLabel="Cancel"
-                            onConfirm={() => handleDelete(user.id)}
+                            onConfirm={() => handleDelete(agency.id)}
                           >
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => confirmDelete(user.id)}
+                              onClick={() => confirmDelete(agency.id)}
                             >
                               <Trash2 size={16} />
                             </Button>
@@ -388,23 +360,24 @@ const UserList = () => {
                               <DropdownMenuGroup>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleChangeStatus(user.id, user.active)
+                                    handleChangeStatus(agency.id, agency.active)
                                   }
                                 >
                                   <div className="flex items-center gap-2">
-                                    {user.active ? (
+                                    {agency.active ? (
                                       <XCircle className="h-4 w-4" />
                                     ) : (
                                       <CheckCircle className="h-4 w-4" />
                                     )}
                                     <span>
-                                      Set {user.active ? "Inactive" : "Active"}
+                                      Set{" "}
+                                      {agency.active ? "Inactive" : "Active"}
                                     </span>
                                   </div>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleOpenChangePassword(user.id)
+                                    handleOpenChangePassword(agency.id)
                                   }
                                 >
                                   <div className="flex items-center gap-2">
@@ -434,7 +407,7 @@ const UserList = () => {
               />
             </div>
           ) : (
-            <div className="text-center">No users found.</div>
+            <div className="text-center">No Agency Found.</div>
           )}
         </CardContent>
       </Card>

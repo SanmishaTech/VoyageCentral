@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatter.js';
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatter.js";
 import { Button, Input } from "@/components/ui";
 import {
   Select,
@@ -326,7 +326,7 @@ const UserList = () => {
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Create User
+                Add User
               </Button>
             </div>
           </div>
