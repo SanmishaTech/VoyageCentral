@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronsUpDown, Check } from "lucide-react";
 import {
   Command,
@@ -35,6 +35,7 @@ const AddSubscription = ({ agencyId }: Props) => {
   const [packagePopoverOpen, setPackagePopoverOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
 
+  const queryClient = useQueryClient();
   const mode = "create";
   const errors: any = {};
 
@@ -60,7 +61,7 @@ const AddSubscription = ({ agencyId }: Props) => {
     queryKey: ["agency", agencyId],
     queryFn: async () => {
       const response = await get(`/agencies/${agencyId}`);
-      return response; // ✅ Fixed: no `.agency` here
+      return response;
     },
     enabled: !!agencyId,
   });
@@ -69,22 +70,28 @@ const AddSubscription = ({ agencyId }: Props) => {
     console.error("Agency fetch error:", agencyError);
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const addSubscriptionMutation = useMutation({
+    mutationFn: (data: { agencyId: number; packageId: number }) =>
+      post("/subscriptions", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["subscriptions", agencyId]);
+      setSelectedPackage(null);
+      setOpen(false);
+      window.location.reload(); // 👈 This will reload the whole page
+    },
+    onError: (error) => {
+      console.error("Failed to add subscription:", error);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPackage) return;
 
-    try {
-      await post("/subscriptions", {
-        agencyId: Number(agencyId),
-        packageId: selectedPackage.id,
-      });
-
-      console.log("Subscription added successfully.");
-      setSelectedPackage(null);
-      setOpen(false);
-    } catch (error) {
-      console.error("Failed to add subscription:", error);
-    }
+    addSubscriptionMutation.mutate({
+      agencyId: Number(agencyId),
+      packageId: selectedPackage.id,
+    });
   };
 
   return (
@@ -113,16 +120,15 @@ const AddSubscription = ({ agencyId }: Props) => {
                       agencyData.businessName.slice(1)
                     : "N/A"}
                 </div>
-                {/* <div>
-                  <strong>ID:</strong> {agencyId}
-                </div> */}
               </div>
             </div>
           </div>
 
           {/* Package selection */}
           <div>
-            <Label htmlFor="subscription.packageId">Select Package</Label>
+            <Label className="mb-2" htmlFor="subscription.packageId">
+              Select Package
+            </Label>
             <Popover
               open={packagePopoverOpen}
               onOpenChange={setPackagePopoverOpen}
@@ -178,8 +184,11 @@ const AddSubscription = ({ agencyId }: Props) => {
 
           {/* Footer */}
           <DialogFooter className="flex justify-end space-x-2">
-            <Button type="submit" disabled={!selectedPackage}>
-              Add
+            <Button
+              type="submit"
+              disabled={!selectedPackage || addSubscriptionMutation.isLoading}
+            >
+              {addSubscriptionMutation.isLoading ? "Adding..." : "Add"}
             </Button>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
