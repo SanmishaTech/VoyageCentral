@@ -678,7 +678,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
           <Card>
             <div className="flex items-center justify-between px-6 pt-4">
               <CardTitle className="text-lg">Subscriptions</CardTitle>
-              <AddSubscription />
+              {id && <AddSubscription agencyId={id} />}
             </div>
             <CardContent>
               <Table>
@@ -690,7 +690,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {userData.subscriptions.map((s) => (
+                  {userData?.subscriptions.map((s) => (
                     <TableRow key={s.id}>
                       <TableCell>{s.package.packageName}</TableCell>
                       <TableCell>

@@ -4,12 +4,12 @@
  * @returns {string} - The formatted currency string.
  */
 export function formatCurrency(amount) {
-  const locale = import.meta.env.VITE_LOCALE || 'en-US';
-  const currency = import.meta.env.VITE_CURRENCY || 'USD';
+  const locale = import.meta.env.VITE_LOCALE || "en-US";
+  const currency = import.meta.env.VITE_CURRENCY || "USD";
 
   return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency,
+    style: "currency",
+    currency: currency,
   }).format(amount);
 }
 
@@ -19,13 +19,13 @@ export function formatCurrency(amount) {
  * @returns {string} - The formatted date string.
  */
 export function formatDate(date) {
-  const locale = import.meta.env.VITE_LOCALE || 'en-US';
+  const locale = import.meta.env.VITE_LOCALE || "en-US";
 
-  const parsedDate = typeof date === 'string' ? new Date(date) : date;
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
   return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   }).format(parsedDate);
 }
 
@@ -35,15 +35,16 @@ export function formatDate(date) {
  * @returns {string} - The formatted date and time string.
  */
 export function formatDateTime(dateTime) {
-  const locale = import.meta.env.VITE_LOCALE || 'en-US';
+  const locale = import.meta.env.VITE_LOCALE || "en-US";
 
-  const parsedDateTime = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
+  const parsedDateTime =
+    typeof dateTime === "string" ? new Date(dateTime) : dateTime;
   return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
     // second: '2-digit',
   }).format(parsedDateTime);
 }
