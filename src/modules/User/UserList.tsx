@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatter.js';
 import { Button, Input } from "@/components/ui";
 import {
   Select,
@@ -504,7 +505,7 @@ const UserList = () => {
                       </TableCell>
                       <TableCell>
                         {user.lastLogin
-                          ? new Date(user.lastLogin).toLocaleString()
+                          ? formatDateTime(user.lastLogin)
                           : "Never"}
                       </TableCell>
                       <TableCell>

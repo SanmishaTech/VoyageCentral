@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatter.js';
 import { Button, Input } from "@/components/ui";
 import {
   Table,
@@ -296,7 +297,7 @@ const PackageList = () => {
                       {pkg.periodInMonths}
                     </TableCell>
                     <TableCell className="text-center">
-                      ₹{pkg.cost.toLocaleString("en-IN")}
+                      { formatCurrency(pkg.cost) }
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-2">
