@@ -1,15 +1,15 @@
-import axios from 'axios';
-import { backendUrl } from '../config';
+import axios from "axios";
+import { backendUrl } from "../config";
 
 const api = axios.create({
   baseURL: backendUrl,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -25,18 +25,18 @@ export const get = async (url: string, params?: any, config?: any) => {
 
     const response = await api.get(url, finalConfig);
 
-    if (config?.responseType === 'blob') {
+    if (config?.responseType === "blob") {
       return response;
     }
 
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      window.location.href = '/';
+      window.location.href = "/";
     }
     throw {
       status: error.response?.status,
-      message: error.response?.data?.errors?.message || 'Request failed',
+      message: error.response?.data?.errors?.message || "Request failed",
     };
   }
 };
@@ -47,11 +47,11 @@ export const post = async (url: string, data: any) => {
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      window.location.href = '/';
-    }    
+      // window.location.href = '/';
+    }
     throw {
       status: error.response?.status,
-      message: error.response?.data?.errors?.message || 'Request failed',
+      message: error.response?.data?.errors?.message || "Request failed",
     };
   }
 };
@@ -62,11 +62,11 @@ export const put = async (url: string, data: any) => {
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      window.location.href = '/';
-    }    
+      window.location.href = "/";
+    }
     throw {
       status: error.response?.status,
-      message: error.response?.data?.errors?.message || 'Request failed',
+      message: error.response?.data?.errors?.message || "Request failed",
     };
   }
 };
@@ -77,11 +77,11 @@ export const patch = async (url: string, data: any) => {
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      window.location.href = '/';
-    }    
+      window.location.href = "/";
+    }
     throw {
       status: error.response?.status,
-      message: error.response?.data?.errors?.message || 'Request failed',
+      message: error.response?.data?.errors?.message || "Request failed",
     };
   }
 };
@@ -92,11 +92,11 @@ export const del = async (url: string) => {
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      window.location.href = '/';
-    }    
+      window.location.href = "/";
+    }
     throw {
       status: error.response?.status,
-      message: error.response?.data?.errors?.message || 'Request failed',
+      message: error.response?.data?.errors?.message || "Request failed",
     };
   }
 };

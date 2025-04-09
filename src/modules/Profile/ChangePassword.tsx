@@ -1,48 +1,54 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { joiResolver } from "@hookform/resolvers/joi";
-import Joi from "joi";
+import { useNavigate } from "react-router-dom";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { post } from "@/services/apiService";
 import { LoaderCircle } from "lucide-react";
 import { PasswordInput } from "@/components/ui/password-input";
 
-type ChangePasswordInputs = {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-};
+interface ApiError extends Error {
+  message: string;
+}
 
-const changePasswordSchema = Joi.object({
-  currentPassword: Joi.string().required().messages({
-    "string.empty": "Current password is required",
-  }),
-  newPassword: Joi.string().min(6).required().messages({
-    "string.empty": "New password is required",
-    "string.min": "New password must be at least 6 characters long",
-  }),
-  confirmPassword: Joi.string()
-    .valid(Joi.ref("newPassword"))
-    .required()
-    .messages({
-      "any.only": "Passwords must match",
-      "string.empty": "Confirm password is required",
-    }),
-});
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current Password is required"),
+    newPassword: z
+      .string()
+      .min(6, "Password must be at least 6 characters long")
+      .min(1, "New Password is required"),
+    confirmPassword: z.string().min(1, "Confirm Password is required"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords must match",
+    path: ["confirmPassword"],
+  });
+
+type ChangePasswordInputs = z.infer<typeof passwordSchema>;
 
 const ChangePassword = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<ChangePasswordInputs>({
-    resolver: joiResolver(changePasswordSchema),
+    resolver: zodResolver(passwordSchema),
   });
 
   const onSubmit: SubmitHandler<ChangePasswordInputs> = async (data) => {
@@ -55,8 +61,10 @@ const ChangePassword = () => {
       });
 
       toast.success("Password changed successfully");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to change password");
+      navigate("/dashboard");
+    } catch (error) {
+      const apiError = error as ApiError;
+      toast.error(apiError.message || "Failed to change password");
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +74,9 @@ const ChangePassword = () => {
     <Card className="mx-auto mt-10">
       <CardHeader>
         <CardTitle>Change Password</CardTitle>
-        <CardDescription>Update your account password securely.</CardDescription>
+        <CardDescription>
+          Update your account password securely.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -78,7 +88,9 @@ const ChangePassword = () => {
               {...register("currentPassword")}
             />
             {errors.currentPassword && (
-              <span className="text-red-500 text-sm">{errors.currentPassword.message}</span>
+              <span className="text-red-500 text-sm">
+                {errors.currentPassword.message}
+              </span>
             )}
           </div>
           <div className="grid gap-2">
@@ -89,7 +101,9 @@ const ChangePassword = () => {
               {...register("newPassword")}
             />
             {errors.newPassword && (
-              <span className="text-red-500 text-sm">{errors.newPassword.message}</span>
+              <span className="text-red-500 text-sm">
+                {errors.newPassword.message}
+              </span>
             )}
           </div>
           <div className="grid gap-2">
@@ -101,7 +115,9 @@ const ChangePassword = () => {
               {...register("confirmPassword")}
             />
             {errors.confirmPassword && (
-              <span className="text-red-500 text-sm">{errors.confirmPassword.message}</span>
+              <span className="text-red-500 text-sm">
+                {errors.confirmPassword.message}
+              </span>
             )}
           </div>
           <Button type="submit" disabled={isLoading}>

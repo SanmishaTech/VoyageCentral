@@ -1,53 +1,59 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { joiResolver } from "@hookform/resolvers/joi";
-import Joi from "joi";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { LoaderCircle } from "lucide-react"; // Import the LoaderCircle icon
+import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { get } from "@/services/apiService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
-import { PasswordInput } from '@/components/ui/password-input';
+import { PasswordInput } from "@/components/ui/password-input";
 
-type UserFormInputs = {
+interface Role {
+  name: string;
+  permissions: string[];
+}
+
+interface ApiResponse {
+  roles: Record<string, Role>;
+}
+
+interface User {
   name: string;
   email: string;
-  password?: string;
   role: string;
   active: boolean;
-};
+}
 
-const userFormSchema = Joi.object({
-  name: Joi.string().required().messages({
-    "string.empty": "Name is required",
-  }),
-  email: Joi.string()
-    .email({ tlds: { allow: false } })
-    .required()
-    .messages({
-      "string.empty": "Email is required",
-      "string.email": "Invalid email address",
-    }),
-  password: Joi.string().min(6).optional().messages({
-    "string.min": "Password must be at least 6 characters long",
-  }),
-  role: Joi.string().required().messages({
-    "string.empty": "Role is required",
-  }),
-  active: Joi.boolean().optional()
+const userFormSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters long")
+    .optional(),
+  role: z.string().min(1, "Role is required"),
+  active: z.boolean().optional(),
 });
+
+type UserFormInputs = z.infer<typeof userFormSchema>;
 
 const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id } = useParams<{ id: string }>();
-  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
-  const [roles, setRoles] = useState<string[]>([]); // Roles fetched from API
+  const [roles, setRoles] = useState<string[]>([]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -58,7 +64,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     watch,
     formState: { errors },
   } = useForm<UserFormInputs>({
-    resolver: joiResolver(userFormSchema),
+    resolver: zodResolver(userFormSchema),
   });
 
   const active = watch("active");
@@ -67,14 +73,13 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        setIsLoadingRoles(true);
-        const rolesData = await get("/roles");
-        const formattedRoles = Object.values(rolesData.roles); // Use only role values
+        const response = (await get("/roles")) as ApiResponse;
+        const formattedRoles = Object.values(response.roles).map(
+          (role) => role.name
+        );
         setRoles(formattedRoles);
-      } catch (error: any) {
+      } catch (error) {
         toast.error("Failed to fetch roles");
-      } finally {
-        setIsLoadingRoles(false);
       }
     };
 
@@ -86,12 +91,12 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     if (mode === "edit" && id) {
       const fetchUser = async () => {
         try {
-          const user = await get(`/users/${id}`);
-          setValue("name", user.name);
-          setValue("email", user.email);
-          setValue("role", user.role);
-          setValue("active", user.active);
-        } catch (error: any) {
+          const response = (await get(`/users/${id}`)) as User;
+          setValue("name", response.name);
+          setValue("email", response.email);
+          setValue("role", response.role);
+          setValue("active", response.active);
+        } catch (error) {
           toast.error("Failed to fetch user details");
         }
       };
@@ -101,45 +106,37 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
   }, [id, mode, setValue]);
 
   // Mutation for creating a user
-  const createUserMutation = useMutation({
+  const createUserMutation = useMutation<unknown, Error, UserFormInputs>({
     mutationFn: (data: UserFormInputs) => post("/users", data),
     onSuccess: () => {
       toast.success("User created successfully");
-      queryClient.invalidateQueries(["users"]); // Refetch the users list
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       navigate("/users");
     },
-    onError: (error: any) => {
-      if (error.message) {
-        toast.error(error.message);      
-      } else {
-        toast.error("Failed to create user");
-      }
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to create user");
     },
   });
 
   // Mutation for updating a user
-  const updateUserMutation = useMutation({
+  const updateUserMutation = useMutation<unknown, Error, UserFormInputs>({
     mutationFn: (data: UserFormInputs) => put(`/users/${id}`, data),
     onSuccess: () => {
       toast.success("User updated successfully");
-      queryClient.invalidateQueries(["users"]); // Refetch the users list
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       navigate("/users");
     },
-    onError: (error: any) => {
-      if (error.message) {
-        toast.error(error.message);      
-      } else {
-        toast.error("Failed to create user");
-      }
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update user");
     },
   });
 
   // Handle form submission
   const onSubmit: SubmitHandler<UserFormInputs> = (data) => {
     if (mode === "create") {
-      createUserMutation.mutate(data); // Trigger create mutation
+      createUserMutation.mutate(data);
     } else {
-      updateUserMutation.mutate(data); // Trigger update mutation
+      updateUserMutation.mutate(data);
     }
   };
 
@@ -157,7 +154,9 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
               {...register("name")}
             />
             {errors.name && (
-              <span className="text-red-500 text-sm">{errors.name.message}</span>
+              <span className="text-red-500 text-sm">
+                {errors.name.message}
+              </span>
             )}
           </div>
 
@@ -171,7 +170,9 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
               {...register("email")}
             />
             {errors.email && (
-              <span className="text-red-500 text-sm">{errors.email.message}</span>
+              <span className="text-red-500 text-sm">
+                {errors.email.message}
+              </span>
             )}
           </div>
 
@@ -185,7 +186,9 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                 {...register("password")}
               />
               {errors.password && (
-                <span className="text-red-500 text-sm">{errors.password.message}</span>
+                <span className="text-red-500 text-sm">
+                  {errors.password.message}
+                </span>
               )}
             </div>
           )}
@@ -211,7 +214,9 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                 </SelectContent>
               </Select>
               {errors.role && (
-                <span className="text-red-500 text-sm">{errors.role.message}</span>
+                <span className="text-red-500 text-sm">
+                  {errors.role.message}
+                </span>
               )}
             </div>
 
@@ -223,17 +228,19 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                 checked={active}
                 onCheckedChange={(checked) => setValue("active", checked)}
               />
-            </div>       
+            </div>
           </div>
 
           {/* Submit and Cancel Buttons */}
           <div className="flex gap-4">
             <Button
               type="submit"
-              disabled={createUserMutation.isLoading || updateUserMutation.isLoading}
+              disabled={
+                createUserMutation.isPending || updateUserMutation.isPending
+              }
               className="flex items-center justify-center gap-2"
             >
-              {(createUserMutation.isLoading || updateUserMutation.isLoading) ? (
+              {createUserMutation.isPending || updateUserMutation.isPending ? (
                 <>
                   <LoaderCircle className="animate-spin h-4 w-4" />
                   Saving...

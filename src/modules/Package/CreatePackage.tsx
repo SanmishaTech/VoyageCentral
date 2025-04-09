@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { post } from "@/services/apiService";
@@ -10,7 +10,29 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label"; // Import the Label component
+import { Label } from "@/components/ui/label";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const packageSchema = z.object({
+  packageName: z.string().min(1, "Package name is required"),
+  numberOfBranches: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().min(1, "Must have at least 1 branch")),
+  usersPerBranch: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().min(1, "Must have at least 1 User")),
+  periodInMonths: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().min(1, "Period must be at least 1 month")),
+  cost: z.coerce.number().min(1, "Cost must be at least 1"),
+});
+
+type PackageFormData = z.infer<typeof packageSchema>;
 
 interface CreatePackageProps {
   isOpen: boolean;
@@ -19,34 +41,37 @@ interface CreatePackageProps {
 
 const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
   const queryClient = useQueryClient();
-
-  const [packageName, setPackageName] = useState("");
-  const [numberOfBranches, setNumberOfBranches] = useState(1);
-  const [usersPerBranch, setUsersPerBranch] = useState(1);
-  const [periodInMonths, setPeriodInMonths] = useState(1);
-  const [cost, setCost] = useState(0);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<PackageFormData>({
+    resolver: zodResolver(packageSchema),
+    defaultValues: {
+      packageName: "",
+      numberOfBranches: "",
+      usersPerBranch: "",
+      periodInMonths: "",
+      cost: "",
+    },
+  });
 
   const createPackageMutation = useMutation({
-    mutationFn: (newPackage: any) => post("/packages", newPackage),
+    mutationFn: (newPackage: PackageFormData) => post("/packages", newPackage),
     onSuccess: () => {
       toast.success("Package created successfully");
       queryClient.invalidateQueries(["packages"]);
-      onClose(); // Close the dialog after success
+      reset();
+      onClose();
     },
     onError: () => {
       toast.error("Failed to create package");
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createPackageMutation.mutate({
-      packageName,
-      numberOfBranches,
-      usersPerBranch,
-      periodInMonths,
-      cost,
-    });
+  const onSubmit = (data: PackageFormData) => {
+    createPackageMutation.mutate(data);
   };
 
   return (
@@ -55,73 +80,78 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
         <DialogHeader>
           <DialogTitle>Add Package</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <Label htmlFor="packageName" className="mb-2">
-              Package Name
-            </Label>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <div className="grid gap-2 relative">
+            <Label htmlFor="packageName">Package Name</Label>
             <Input
               id="packageName"
               placeholder="Enter package name"
-              value={packageName}
-              onChange={(e) => setPackageName(e.target.value)}
-              required
+              {...register("packageName")}
             />
+            {errors.packageName && (
+              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                {errors.packageName.message}
+              </span>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <Label htmlFor="numberOfBranches" className="mb-2">
-                Number of Branches
-              </Label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2 relative">
+              <Label htmlFor="numberOfBranches">Number of Branches</Label>
               <Input
                 id="numberOfBranches"
-                type="number"
                 placeholder="Enter number of branches"
-                value={numberOfBranches}
-                onChange={(e) => setNumberOfBranches(Number(e.target.value))}
-                required
+                type="number"
+                {...register("numberOfBranches")}
               />
+              {errors.numberOfBranches && (
+                <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                  {errors.numberOfBranches.message}
+                </span>
+              )}
             </div>
-            <div>
-              <Label htmlFor="usersPerBranch" className="mb-2">
-                Users Per Branch
-              </Label>
+            <div className="grid gap-2 relative">
+              <Label htmlFor="usersPerBranch">Users Per Branch</Label>
               <Input
                 id="usersPerBranch"
-                type="number"
                 placeholder="Enter users per branch"
-                value={usersPerBranch}
-                onChange={(e) => setUsersPerBranch(Number(e.target.value))}
-                required
+                type="number"
+                {...register("usersPerBranch")}
               />
+              {errors.usersPerBranch && (
+                <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                  {errors.usersPerBranch.message}
+                </span>
+              )}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <Label htmlFor="periodInMonths" className="mb-2">
-                Period (Months)
-              </Label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2 relative">
+              <Label htmlFor="periodInMonths">Period (Months)</Label>
               <Input
                 id="periodInMonths"
-                type="number"
                 placeholder="Enter period in months"
-                value={periodInMonths}
-                onChange={(e) => setPeriodInMonths(Number(e.target.value))}
-                required
+                type="number"
+                {...register("periodInMonths")}
               />
+              {errors.periodInMonths && (
+                <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                  {errors.periodInMonths.message}
+                </span>
+              )}
             </div>
-            <div>
-              <Label htmlFor="cost" className="mb-2">
-                Cost
-              </Label>
+            <div className="grid gap-2 relative">
+              <Label htmlFor="cost">Cost</Label>
               <Input
                 id="cost"
-                type="number"
                 placeholder="Enter cost"
-                value={cost}
-                onChange={(e) => setCost(Number(e.target.value))}
-                required
+                type="number"
+                {...register("cost")}
               />
+              {errors.cost && (
+                <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                  {errors.cost.message}
+                </span>
+              )}
             </div>
           </div>
           <DialogFooter>
