@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { z } from "zod";
 import {
   Dialog,
   DialogTrigger,
@@ -26,11 +27,11 @@ import {
 import { cn } from "@/lib/utils";
 import { get, post } from "@/services/apiService";
 
-type Props = {
-  agencyId: number;
-};
+interface AddSubscriptionProps {
+  agencyId: string; // Change from number to string to match the type coming from params
+}
 
-const AddSubscription = ({ agencyId }: Props) => {
+const AddSubscription: React.FC<AddSubscriptionProps> = ({ agencyId }) => {
   const [open, setOpen] = useState(false);
   const [packagePopoverOpen, setPackagePopoverOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);

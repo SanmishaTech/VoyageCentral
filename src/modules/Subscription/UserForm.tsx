@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { joiResolver } from "@hookform/resolvers/joi";
-import Joi from "joi";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectTrigger,
@@ -14,54 +13,51 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { LoaderCircle } from "lucide-react"; // Import the LoaderCircle icon
+import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { get } from "@/services/apiService";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 import { PasswordInput } from "@/components/ui/password-input";
 
-type UserFormInputs = {
+interface Role {
+  name: string;
+  permissions: string[];
+}
+
+interface ApiResponse {
+  roles: Record<string, Role>;
+}
+
+interface User {
   name: string;
   email: string;
-  password?: string;
   role: string;
   active: boolean;
-};
+}
 
-const userFormSchema = Joi.object({
-  name: Joi.string().required().messages({
-    "string.empty": "Name is required",
-  }),
-  email: Joi.string()
-    .email({ tlds: { allow: false } })
-    .required()
-    .messages({
-      "string.empty": "Email is required",
-      "string.email": "Invalid email address",
-    }),
-  password: Joi.string().min(6).optional().messages({
-    "string.min": "Password must be at least 6 characters long",
-  }),
-  role: Joi.string().required().messages({
-    "string.empty": "Role is required",
-  }),
-  active: Joi.boolean().optional(),
+const userFormSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters long")
+    .optional(),
+  role: z.string().min(1, "Role is required"),
+  active: z.boolean().optional(),
 });
+
+type UserFormInputs = z.infer<typeof userFormSchema>;
 
 interface UserFormProps {
   mode: "create" | "edit";
-  userId?: string; // Make sure userId is in props
+  userId?: string;
   onSuccess?: () => void;
-  className?: string;
 }
 
-const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
-  const { id: paramId } = useParams<{ id: string }>();
-  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
-  const [roles, setRoles] = useState<string[]>([]); // Roles fetched from API
-  const navigate = useNavigate();
+const UserForm = ({ mode, userId, onSuccess }: UserFormProps) => {
+  const [roles, setRoles] = useState<string[]>([]);
   const queryClient = useQueryClient();
 
   const {
@@ -71,7 +67,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
     watch,
     formState: { errors },
   } = useForm<UserFormInputs>({
-    resolver: joiResolver(userFormSchema),
+    resolver: zodResolver(userFormSchema),
   });
 
   const active = watch("active");
@@ -80,14 +76,13 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        setIsLoadingRoles(true);
-        const rolesData = await get("/roles");
-        const formattedRoles = Object.values(rolesData.roles); // Use only role values
+        const response = (await get("/roles")) as ApiResponse;
+        const formattedRoles = Object.values(response.roles).map(
+          (role) => role.name
+        );
         setRoles(formattedRoles);
-      } catch (error: any) {
+      } catch (_error: unknown) {
         toast.error("Failed to fetch roles");
-      } finally {
-        setIsLoadingRoles(false);
       }
     };
 
@@ -99,12 +94,12 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
     if (mode === "edit" && userId) {
       const fetchUser = async () => {
         try {
-          const user = await get(`/users/${userId}`);
-          setValue("name", user.name);
-          setValue("email", user.email);
-          setValue("role", user.role);
-          setValue("active", user.active);
-        } catch (error: any) {
+          const response = (await get(`/users/${userId}`)) as User;
+          setValue("name", response.name);
+          setValue("email", response.email);
+          setValue("role", response.role);
+          setValue("active", response.active);
+        } catch (_error: unknown) {
           toast.error("Failed to fetch user details");
         }
       };
@@ -114,174 +109,149 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
   }, [userId, mode, setValue]);
 
   // Mutation for creating a user
-  const createUserMutation = useMutation({
+  const createUserMutation = useMutation<unknown, Error, UserFormInputs>({
     mutationFn: (data: UserFormInputs) => post("/users", data),
     onSuccess: () => {
       toast.success("User created successfully");
-      queryClient.invalidateQueries(["users"]); // Refetch the users list
-      onSuccess?.(); // Call onSuccess callback if provided
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      onSuccess?.();
     },
-    onError: (error: any) => {
-      if (error.message) {
-        toast.error(error.message);
-      } else {
-        toast.error("Failed to create user");
-      }
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to create user");
     },
   });
 
   // Mutation for updating a user
-  const updateUserMutation = useMutation({
+  const updateUserMutation = useMutation<unknown, Error, UserFormInputs>({
     mutationFn: (data: UserFormInputs) => put(`/users/${userId}`, data),
     onSuccess: () => {
       toast.success("User updated successfully");
-      queryClient.invalidateQueries(["users"]);
-      onSuccess?.(); // Call onSuccess instead of navigating
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      onSuccess?.();
     },
-    onError: (error: any) => {
-      if (error.message) {
-        toast.error(error.message);
-      } else {
-        toast.error("Failed to update user");
-      }
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update user");
     },
   });
 
   // Handle form submission
   const onSubmit: SubmitHandler<UserFormInputs> = (data) => {
     if (mode === "create") {
-      createUserMutation.mutate(data); // Trigger create mutation
+      createUserMutation.mutate(data);
     } else {
-      updateUserMutation.mutate(data); // Trigger update mutation
+      updateUserMutation.mutate(data);
     }
   };
 
-  const handleCancel = () => {
-    if (onSuccess) {
-      onSuccess();
-    }
-  };
-
-  // Remove the Card wrapper conditional and always use the dialog form style
   return (
-    <div className={className}>
-      <FormContent />
-    </div>
-  );
-
-  function FormContent() {
-    return (
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Name Field */}
-        <div className="grid gap-2">
-          <Label htmlFor="name">Full Name</Label>
-          <Input
-            id="name"
-            type="text"
-            placeholder="John Doe"
-            {...register("name")}
-          />
-          {errors.name && (
-            <span className="text-red-500 text-sm">{errors.name.message}</span>
-          )}
-        </div>
-
-        {/* Email Field */}
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email Address</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="m@example.com"
-            {...register("email")}
-          />
-          {errors.email && (
-            <span className="text-red-500 text-sm">{errors.email.message}</span>
-          )}
-        </div>
-
-        {/* Password Field (Only for Create Mode) */}
-        {mode === "create" && (
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <PasswordInput
-              id="password"
-              placeholder="Enter a secure password"
-              {...register("password")}
-            />
-            {errors.password && (
-              <span className="text-red-500 text-sm">
-                {errors.password.message}
-              </span>
-            )}
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Name Field */}
+      <div className="grid gap-2">
+        <Label htmlFor="name">Full Name</Label>
+        <Input
+          id="name"
+          type="text"
+          placeholder="John Doe"
+          {...register("name")}
+        />
+        {errors.name && (
+          <span className="text-red-500 text-sm">{errors.name.message}</span>
         )}
+      </div>
 
-        {/* Role and Active Fields in the Same Row */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* Role Dropdown */}
-          <div className="grid gap-2">
-            <Label htmlFor="role">Role</Label>
-            <Select
-              value={watch("role")} // Use value instead of defaultValue
-              onValueChange={(value) => setValue("role", value)} // Update the form state
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.role && (
-              <span className="text-red-500 text-sm">
-                {errors.role.message}
-              </span>
-            )}
-          </div>
+      {/* Email Field */}
+      <div className="grid gap-2">
+        <Label htmlFor="email">Email Address</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="m@example.com"
+          {...register("email")}
+        />
+        {errors.email && (
+          <span className="text-red-500 text-sm">{errors.email.message}</span>
+        )}
+      </div>
 
-          {/* Active Toggle */}
-          <div className="flex items-center gap-2">
-            <Label htmlFor="active">Active</Label>
-            <Switch
-              id="active"
-              checked={active}
-              onCheckedChange={(checked) => setValue("active", checked)}
-            />
-          </div>
+      {/* Password Field (Only for Create Mode) */}
+      {mode === "create" && (
+        <div className="grid gap-2">
+          <Label htmlFor="password">Password</Label>
+          <PasswordInput
+            id="password"
+            placeholder="Enter a secure password"
+            {...register("password")}
+          />
+          {errors.password && (
+            <span className="text-red-500 text-sm">
+              {errors.password.message}
+            </span>
+          )}
         </div>
+      )}
 
-        {/* Submit and Cancel Buttons */}
-        <div className="flex gap-4">
-          <Button
-            type="submit"
-            disabled={
-              createUserMutation.isLoading || updateUserMutation.isLoading
-            }
-            className="flex items-center justify-center gap-2"
+      {/* Role and Active Fields in the Same Row */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Role Dropdown */}
+        <div className="grid gap-2">
+          <Label htmlFor="role">Role</Label>
+          <Select
+            value={watch("role")}
+            onValueChange={(value) => setValue("role", value)}
           >
-            {createUserMutation.isLoading || updateUserMutation.isLoading ? (
-              <>
-                <LoaderCircle className="animate-spin h-4 w-4" />
-                Saving...
-              </>
-            ) : mode === "create" ? (
-              "Create User"
-            ) : (
-              "Save Changes"
-            )}
-          </Button>
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a role" />
+            </SelectTrigger>
+            <SelectContent>
+              {roles.map((role) => (
+                <SelectItem key={role} value={role}>
+                  {role}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.role && (
+            <span className="text-red-500 text-sm">{errors.role.message}</span>
+          )}
         </div>
-      </form>
-    );
-  }
+
+        {/* Active Toggle */}
+        <div className="flex items-center gap-2">
+          <Label htmlFor="active">Active</Label>
+          <Switch
+            id="active"
+            checked={active}
+            onCheckedChange={(checked) => setValue("active", checked)}
+          />
+        </div>
+      </div>
+
+      {/* Submit and Cancel Buttons */}
+      <div className="flex gap-4">
+        <Button
+          type="submit"
+          disabled={
+            createUserMutation.isPending || updateUserMutation.isPending
+          }
+          className="flex items-center justify-center gap-2"
+        >
+          {createUserMutation.isPending || updateUserMutation.isPending ? (
+            <>
+              <LoaderCircle className="animate-spin h-4 w-4" />
+              Saving...
+            </>
+          ) : mode === "create" ? (
+            "Create User"
+          ) : (
+            "Save Changes"
+          )}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => onSuccess?.()}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
 };
 
 export default UserForm;

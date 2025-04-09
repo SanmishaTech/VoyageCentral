@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -10,13 +11,25 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { useMutation } from "@tanstack/react-query"; // Import useMutation
 import { patch } from "@/services/apiService"; // Import the patch method
 import { toast } from "sonner"; // Import toast for notifications
-import Joi from "joi"; // Import Joi for validation
 
 interface ChangePasswordDialogProps {
-  userId: number;
+  userId: string;
   isOpen: boolean;
   onClose: () => void;
 }
+
+const passwordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(6, "Password must be at least 6 characters long")
+      .min(1, "New Password is required"),
+    confirmPassword: z.string().min(1, "Confirm Password is required"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords must match",
+    path: ["confirmPassword"],
+  });
 
 const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
   userId,
@@ -26,36 +39,30 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Joi schema for password validation
-  const schema = Joi.object({
-    newPassword: Joi.string().min(6).required().label("New Password"),
-    confirmPassword: Joi.string()
-      .valid(Joi.ref("newPassword"))
-      .required()
-      .label("Confirm Password")
-      .messages({ "any.only": "Passwords do not match!" }),
-  });
-
   // Mutation for changing the password
-  const changePasswordMutation = useMutation({
+  const changePasswordMutation = useMutation<unknown, Error, string>({
     mutationFn: (password: string) =>
       patch(`/users/${userId}/password`, { password }),
     onSuccess: () => {
       toast.success("Password changed successfully!");
       onClose(); // Close the dialog after success
     },
-    onError: () => {
-      toast.error("Failed to change password. Please try again.");
+    onError: (error: Error) => {
+      toast.error(
+        error.message || "Failed to change password. Please try again."
+      );
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Validate passwords using Joi
-    const { error } = schema.validate({ newPassword, confirmPassword });
-    if (error) {
-      toast.error(error.details[0].message);
+    // Validate passwords using Zod
+    const result = passwordSchema.safeParse({ newPassword, confirmPassword });
+    if (!result.success) {
+      // Get the first error message
+      const errorMessage = result.error.errors[0]?.message;
+      toast.error(errorMessage || "Validation failed");
       return;
     }
 
@@ -74,14 +81,18 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
             <PasswordInput
               placeholder="New Password"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setNewPassword(e.target.value)
+              }
               required
               className="w-full"
             />
             <PasswordInput
               placeholder="Confirm Password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setConfirmPassword(e.target.value)
+              }
               required
               className="w-full"
             />
@@ -90,15 +101,14 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
             <Button
               variant="secondary"
               onClick={onClose}
-              disabled={changePasswordMutation.isLoading}
+              disabled={changePasswordMutation.isPending}
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={changePasswordMutation.isLoading}
-            >
-              {changePasswordMutation.isLoading ? "Changing..." : "Change Password"}
+            <Button type="submit" disabled={changePasswordMutation.isPending}>
+              {changePasswordMutation.isPending
+                ? "Changing..."
+                : "Change Password"}
             </Button>
           </div>
         </form>

@@ -5,35 +5,32 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, put } from "@/services/apiService";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Button } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
 
-// Schema for package validation
 const packageSchema = z.object({
   packageName: z.string().min(1, "Package name is required"),
-  numberOfBranches: z.coerce
-    .number()
-    .min(1, "Number of branches must be at least 1"),
-  usersPerBranch: z.coerce
-    .number()
-    .min(1, "Users per branch must be at least 1"),
-  periodInMonths: z.coerce.number().min(1, "Period must be at least 1 month"),
-  cost: z.coerce.number().min(0, "Cost must be a non-negative number"),
+  numberOfBranches: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().min(1, "Must have at least 1 branch")),
+  usersPerBranch: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().min(1, "Must have at least 1 User")),
+  periodInMonths: z
+    .string()
+    .transform(Number)
+    .pipe(z.number().min(1, "Period must be at least 1 month")),
+  cost: z.coerce.number().min(1, "Cost must be at least 1"),
 });
 
 type PackageFormData = z.infer<typeof packageSchema>;
@@ -46,15 +43,19 @@ interface EditPackageProps {
 
 const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
   const queryClient = useQueryClient();
-
-  const form = useForm<PackageFormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<PackageFormData>({
     resolver: zodResolver(packageSchema),
     defaultValues: {
       packageName: "",
-      numberOfBranches: 1,
-      usersPerBranch: 1,
-      periodInMonths: 1,
-      cost: 0,
+      numberOfBranches: "",
+      usersPerBranch: "",
+      periodInMonths: "",
+      cost: "",
     },
   });
 
@@ -71,15 +72,15 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
   // Update form when data is loaded
   useEffect(() => {
     if (packageData) {
-      form.reset({
+      reset({
         packageName: packageData.packageName,
-        numberOfBranches: packageData.numberOfBranches,
-        usersPerBranch: packageData.usersPerBranch,
-        periodInMonths: packageData.periodInMonths,
+        numberOfBranches: String(packageData.numberOfBranches),
+        usersPerBranch: String(packageData.usersPerBranch),
+        periodInMonths: String(packageData.periodInMonths),
         cost: packageData.cost,
       });
     }
-  }, [packageData, form]);
+  }, [packageData, reset]);
 
   // Update package mutation
   const updatePackageMutation = useMutation({
@@ -100,7 +101,7 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Package</DialogTitle>
         </DialogHeader>
@@ -109,102 +110,99 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
             <Loader className="h-8 w-8 animate-spin" />
           </div>
         ) : (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="packageName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Package Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <div className="grid gap-2 relative">
+              <Label htmlFor="packageName">Package Name</Label>
+              <Input
+                id="packageName"
+                placeholder="Enter package name"
+                {...register("packageName")}
               />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="numberOfBranches"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of Branches</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              {errors.packageName && (
+                <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                  {errors.packageName.message}
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2 relative">
+                <Label htmlFor="numberOfBranches">Number of Branches</Label>
+                <Input
+                  id="numberOfBranches"
+                  placeholder="Enter number of branches"
+                  type="number"
+                  {...register("numberOfBranches")}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="usersPerBranch"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Users Per Branch</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {errors.numberOfBranches && (
+                  <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                    {errors.numberOfBranches.message}
+                  </span>
+                )}
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="periodInMonths"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Period (Months)</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <div className="grid gap-2 relative">
+                <Label htmlFor="usersPerBranch">Users Per Branch</Label>
+                <Input
+                  id="usersPerBranch"
+                  placeholder="Enter users per branch"
+                  type="number"
+                  {...register("usersPerBranch")}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="cost"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cost (₹)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          placeholder="Enter amount in ₹"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                {errors.usersPerBranch && (
+                  <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                    {errors.usersPerBranch.message}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2 relative">
+                <Label htmlFor="periodInMonths">Period (Months)</Label>
+                <Input
+                  id="periodInMonths"
+                  placeholder="Enter period in months"
+                  type="number"
+                  {...register("periodInMonths")}
                 />
+                {errors.periodInMonths && (
+                  <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                    {errors.periodInMonths.message}
+                  </span>
+                )}
               </div>
-
-              <div className="flex justify-end gap-4 mt-6">
-                <Button
-                  type="submit"
-                  loading={updatePackageMutation.isLoading}
-                  disabled={updatePackageMutation.isLoading}
-                >
-                  Update Package
-                </Button>
-                <Button type="button" variant="outline" onClick={onClose}>
-                  Cancel
-                </Button>
+              <div className="grid gap-2 relative">
+                <Label htmlFor="cost">Cost (₹)</Label>
+                <Input
+                  id="cost"
+                  placeholder="Enter cost"
+                  type="number"
+                  step="0.01"
+                  {...register("cost")}
+                />
+                {errors.cost && (
+                  <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                    {errors.cost.message}
+                  </span>
+                )}
               </div>
-            </form>
-          </Form>
+            </div>
+            <DialogFooter>
+              <Button
+                type="submit"
+                className="bg-primary text-white"
+                disabled={updatePackageMutation.isLoading}
+              >
+                Update Package
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="ml-2"
+              >
+                Cancel
+              </Button>
+            </DialogFooter>
+          </form>
         )}
       </DialogContent>
     </Dialog>

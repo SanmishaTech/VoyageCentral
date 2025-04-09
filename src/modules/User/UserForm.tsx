@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { joiResolver } from "@hookform/resolvers/joi";
-import Joi from "joi";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,37 +22,22 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 import { PasswordInput } from "@/components/ui/password-input";
 
-type UserFormInputs = {
-  name: string;
-  email: string;
-  password?: string;
-  role: string;
-  active: boolean;
-};
-
-const userFormSchema = Joi.object({
-  name: Joi.string().required().messages({
-    "string.empty": "Name is required",
-  }),
-  email: Joi.string()
-    .email({ tlds: { allow: false } })
-    .required()
-    .messages({
-      "string.empty": "Email is required",
-      "string.email": "Invalid email address",
-    }),
-  password: Joi.string().min(6).optional().messages({
-    "string.min": "Password must be at least 6 characters long",
-  }),
-  role: Joi.string().required().messages({
-    "string.empty": "Role is required",
-  }),
-  active: Joi.boolean().optional(),
+const userFormSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters long")
+    .optional(),
+  role: z.string().min(1, "Role is required"),
+  active: z.boolean().optional(),
 });
+
+type UserFormInputs = z.infer<typeof userFormSchema>;
 
 interface UserFormProps {
   mode: "create" | "edit";
-  userId?: string; // Make sure userId is in props
+  userId?: string;
   onSuccess?: () => void;
   className?: string;
 }
@@ -69,9 +54,10 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<UserFormInputs>({
-    resolver: joiResolver(userFormSchema),
+    resolver: zodResolver(userFormSchema),
   });
 
   const active = watch("active");
@@ -171,9 +157,9 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
 
   function FormContent() {
     return (
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
         {/* Name Field */}
-        <div className="grid gap-2">
+        <div className="grid gap-2 relative">
           <Label htmlFor="name">Full Name</Label>
           <Input
             id="name"
@@ -182,12 +168,14 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
             {...register("name")}
           />
           {errors.name && (
-            <span className="text-red-500 text-sm">{errors.name.message}</span>
+            <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              {errors.name.message}
+            </span>
           )}
         </div>
 
         {/* Email Field */}
-        <div className="grid gap-2">
+        <div className="grid gap-2 relative">
           <Label htmlFor="email">Email Address</Label>
           <Input
             id="email"
@@ -196,13 +184,15 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
             {...register("email")}
           />
           {errors.email && (
-            <span className="text-red-500 text-sm">{errors.email.message}</span>
+            <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              {errors.email.message}
+            </span>
           )}
         </div>
 
         {/* Password Field (Only for Create Mode) */}
         {mode === "create" && (
-          <div className="grid gap-2">
+          <div className="grid gap-2 relative">
             <Label htmlFor="password">Password</Label>
             <PasswordInput
               id="password"
@@ -210,7 +200,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
               {...register("password")}
             />
             {errors.password && (
-              <span className="text-red-500 text-sm">
+              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
                 {errors.password.message}
               </span>
             )}
@@ -220,25 +210,28 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
         {/* Role and Active Fields in the Same Row */}
         <div className="grid gap-4 md:grid-cols-2">
           {/* Role Dropdown */}
-          <div className="grid gap-2">
+          <div className="grid gap-2 relative">
             <Label htmlFor="role">Role</Label>
-            <Select
-              value={watch("role")} // Use value instead of defaultValue
-              onValueChange={(value) => setValue("role", value)} // Update the form state
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              name="role"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {role}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
             {errors.role && (
-              <span className="text-red-500 text-sm">
+              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
                 {errors.role.message}
               </span>
             )}

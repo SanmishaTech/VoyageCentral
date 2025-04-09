@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { joiResolver } from "@hookform/resolvers/joi";
-import Joi from "joi";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { LoaderCircle, Check, ChevronsUpDown } from "lucide-react";
@@ -76,102 +75,66 @@ interface ApiResponse {
   }>;
 }
 
-type UserFormInputs = {
-  businessName: string;
-  gstin: string;
-  addressLine1: string;
-  addressLine2: string;
-  state: string;
-  city: string;
-  pincode: string;
-  contactPersonName: string;
-  contactPersonEmail: string;
-  contactPersonPhone: string;
-  letterHead?: string;
-  logo?: string;
-  user?: {
-    name: string;
-    email: string;
-    password?: string;
-  };
-  subscription?: {
-    packageId: number;
-    startDate: string;
-  };
-};
-
-const userFormSchema = Joi.object({
-  businessName: Joi.string()
-    .required()
-    .messages({ "string.empty": "Business Name is required" }),
-  gstin: Joi.string().length(15).required().messages({
-    "string.empty": "GSTIN is required",
-    "string.length": "GSTIN must be exactly 15 characters long",
-  }),
-  addressLine1: Joi.string()
-    .required()
-    .messages({ "string.empty": "Address Line 1 is required" }),
-  addressLine2: Joi.string()
-    .required()
-    .messages({ "string.empty": "Address Line 2 is required" }),
-  state: Joi.string()
-    .required()
-    .messages({ "string.empty": "State is required" }),
-  city: Joi.string()
-    .required()
-    .messages({ "string.empty": "City is required" }),
-  pincode: Joi.string()
-    .required()
-    .messages({ "string.empty": "Pincode is required" }),
-  contactPersonName: Joi.string()
-    .required()
-    .messages({ "string.empty": "Contact Person Name is required" }),
-  contactPersonEmail: Joi.string()
-    .email({ tlds: { allow: false } })
-    .required()
-    .messages({
-      "string.empty": "Contact Person Email is required",
-      "string.email": "Invalid email format",
-    }),
-  contactPersonPhone: Joi.string()
-    .required()
-    .messages({ "string.empty": "Contact Person Phone is required" }),
-  letterHead: Joi.string().optional(),
-  logo: Joi.string().optional(),
-  user: Joi.when("$mode", {
-    is: "create",
-    then: Joi.object({
-      name: Joi.string()
-        .required()
-        .messages({ "string.empty": "Name is required" }),
-      email: Joi.string()
-        .email({ tlds: { allow: false } })
-        .required()
-        .messages({
-          "string.empty": "Email is required",
-          "string.email": "Invalid email format",
+const userFormSchema = z
+  .object({
+    businessName: z.string().min(1, "Business Name is required"),
+    gstin: z.string().length(15, "GSTIN must be exactly 15 characters long"),
+    addressLine1: z.string().min(1, "Address Line 1 is required"),
+    addressLine2: z.string().min(1, "Address Line 2 is required"),
+    state: z.string().min(1, "State is required"),
+    city: z.string().min(1, "City is required"),
+    pincode: z.string().min(1, "Pincode is required"),
+    contactPersonName: z.string().min(1, "Contact Person Name is required"),
+    contactPersonEmail: z
+      .string()
+      .email("Invalid email format")
+      .min(1, "Contact Person Email is required"),
+    contactPersonPhone: z.string().min(1, "Contact Person Phone is required"),
+    letterHead: z.string().optional(),
+    logo: z.string().optional(),
+    user: z
+      .object({
+        name: z.string().min(1, "Name is required"),
+        email: z
+          .string()
+          .email("Invalid email format")
+          .min(1, "Email is required"),
+        password: z
+          .string()
+          .min(5, "Password must be at least 5 characters long")
+          .optional(),
+      })
+      .optional(),
+    subscription: z
+      .object({
+        packageId: z.number({
+          required_error: "Package is required",
+          invalid_type_error: "Package is required",
         }),
-      password: Joi.string().min(8).required().messages({
-        "string.empty": "Password is required",
-        "string.min": "Password must be at least 8 characters long",
-      }),
-    }).required(),
-    otherwise: Joi.forbidden(),
-  }),
-  subscription: Joi.when("$mode", {
-    is: "create",
-    then: Joi.object({
-      packageId: Joi.number().required().messages({
-        "number.base": "Package is required",
-        "any.required": "Package is required",
-      }),
-      startDate: Joi.string()
-        .required()
-        .messages({ "string.empty": "Start date is required" }),
-    }).required(),
-    otherwise: Joi.forbidden(),
-  }),
-});
+        startDate: z.string().min(1, "Start date is required"),
+      })
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (ctx.path[0] === "$mode" && ctx.path[1] === "create") {
+      if (!data.user) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "User details are required when creating an agency",
+          path: ["user"],
+        });
+      }
+      if (!data.subscription) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Subscription details are required when creating an agency",
+          path: ["subscription"],
+        });
+      }
+    }
+  });
+
+type UserFormInputs = z.infer<typeof userFormSchema>;
 
 const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id } = useParams<{ id: string }>();
@@ -197,7 +160,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     reset,
     formState: { errors },
   } = useForm<UserFormInputs>({
-    resolver: joiResolver(userFormSchema),
+    resolver: zodResolver(userFormSchema),
     context: { mode },
   });
 
@@ -209,7 +172,6 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
           setUserData(resp);
 
           const sub = resp.subscriptions?.[0];
-          const usr = resp.users?.[0];
 
           reset({
             businessName: resp.businessName,
@@ -234,26 +196,28 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     }
   }, [id, mode, reset]);
 
-  const createUserMutation = useMutation({
+  const createUserMutation = useMutation<unknown, Error, UserFormInputs>({
     mutationFn: (data: UserFormInputs) => post("/agencies", data),
     onSuccess: () => {
       toast.success("Agency created successfully");
       queryClient.invalidateQueries({ queryKey: ["agencies"] });
       navigate("/agencies");
     },
-    onError: (error: Error) =>
-      toast.error(error.message || "Failed to create agency"),
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to create agency");
+    },
   });
 
-  const updateUserMutation = useMutation({
+  const updateUserMutation = useMutation<unknown, Error, UserFormInputs>({
     mutationFn: (data: UserFormInputs) => put(`/agencies/${id}`, data),
     onSuccess: () => {
       toast.success("Agency updated successfully");
       queryClient.invalidateQueries({ queryKey: ["agencies"] });
       navigate("/agencies");
     },
-    onError: (error: Error) =>
-      toast.error(error.message || "Failed to update agency"),
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update agency");
+    },
   });
 
   const onSubmit: SubmitHandler<UserFormInputs> = (data) => {
@@ -447,7 +411,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div className="grid gap-6 mt-5">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="subscription.packageId">
+                      <Label className="mb-2" htmlFor="subscription.packageId">
                         Select Package
                       </Label>
                       <Popover open={open} onOpenChange={setOpen}>
@@ -501,7 +465,9 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                       )}
                     </div>
                     <div>
-                      <Label htmlFor="subscription.startDate">Start Date</Label>
+                      <Label className="mb-2" htmlFor="subscription.startDate">
+                        Start Date
+                      </Label>
                       <Input
                         id="subscription.startDate"
                         type="date"
@@ -597,11 +563,11 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
             <Button
               type="submit"
               disabled={
-                createUserMutation.isLoading || updateUserMutation.isLoading
+                createUserMutation.isPending || updateUserMutation.isPending
               }
               className="flex items-center justify-center gap-2"
             >
-              {createUserMutation.isLoading || updateUserMutation.isLoading ? (
+              {createUserMutation.isPending || updateUserMutation.isPending ? (
                 <>
                   <LoaderCircle className="animate-spin h-4 w-4" /> Saving...
                 </>
