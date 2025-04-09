@@ -55,6 +55,14 @@ import {
 import CreateUser from "./CreateUser"; // Import CreateUser component
 import EditUser from "./EditUser"; // Add this import
 
+// Function to format role name
+const formatRoleName = (role: string) => {
+  return role
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
+
 const fetchUsers = async (
   page: number,
   sortBy: string,
@@ -98,10 +106,10 @@ const UserList = () => {
         const rolesData = await get("/roles");
         const formattedRoles: Option[] = Object.entries(rolesData.roles).map(
           ([key, value]) => ({
-            label: value,
+            label: formatRoleName(value),
             value: value,
           })
-        ); // Map roles to Option format
+        );
         setAvailableRoles(formattedRoles);
       } catch (error: any) {
         toast.error("Failed to fetch roles");
@@ -361,7 +369,7 @@ const UserList = () => {
                     <MultipleSelector
                       defaultOptions={availableRoles}
                       selectedOptions={roles.map((role) => ({
-                        label: role,
+                        label: formatRoleName(role),
                         value: role,
                       }))}
                       onChange={handleRoleChange}
@@ -380,8 +388,10 @@ const UserList = () => {
                     size="sm"
                     onClick={() => {
                       setSearch("");
-                      setRoles([]);
                       setActive("all");
+                      setRoles([]);
+                      setCurrentPage(1); // Reset to first page when clearing filters
+                      setShowFilters(false); // Optionally hide the filters panel after clearing
                     }}
                   >
                     Clear Filters
@@ -501,8 +511,17 @@ const UserList = () => {
                       <TableCell>{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{user.role}</Badge>
+                        <Badge variant="outline">
+                          {user.role
+                            .split(" ")
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() + word.slice(1)
+                            )
+                            .join(" ")}
+                        </Badge>
                       </TableCell>
+
                       <TableCell>
                         {user.lastLogin
                           ? formatDateTime(user.lastLogin)
