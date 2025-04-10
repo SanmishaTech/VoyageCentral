@@ -7,12 +7,13 @@ import {
   BookOpen,
   Bot,
   Command,
-  Frame,
+  UsersRound,
   GalleryVerticalEnd,
   Map,
   PieChart,
   Settings2,
   SquareTerminal,
+  Icon,
 } from "lucide-react";
 
 import { NavMain } from "@/components/common/nav-main";
@@ -75,16 +76,28 @@ const initialData = {
           title: "Agencies",
           url: "/agencies",
         },
+        {
+          title: "Country",
+          url: "#",
+        },
+        {
+          title: "State",
+          url: "#",
+        },
+        {
+          title: "City",
+          url: "#",
+        },
       ],
     },
   ],
-  // projects: [
-  //   {
-  //     name: "Design Engineering",
-  //     url: "#",
-  //     icon: Frame,
-  //   },
-  // ],
+  projects: [
+    {
+      name: "Manage Users",
+      url: "/users",
+      icon: UsersRound,
+    },
+  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -126,7 +139,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
+        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
