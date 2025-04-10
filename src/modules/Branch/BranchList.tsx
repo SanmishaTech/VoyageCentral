@@ -142,7 +142,7 @@ const UserList = () => {
       ),
   });
 
-  const branches = data?.data || [];
+  const branches = data?.branches || [];
   const totalPages = data?.totalPages || 1;
   const total = data?.totalBranches || 0;
 
