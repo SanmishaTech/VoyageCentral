@@ -50,7 +50,7 @@ const ROUTE_MAP: Record<string, RouteConfig> = {
     label: "States",
     path: "/states",
   },
-  city: {
+  cities: {
     parent: "Masters",
     label: "Cities",
     path: "/cities",
