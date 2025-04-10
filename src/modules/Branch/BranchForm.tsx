@@ -20,15 +20,26 @@ import { useNavigate, useParams } from "react-router-dom";
 import { get } from "@/services/apiService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
-import { PasswordInput } from "@/components/ui/password-input";
 
 const FormSchema = z.object({
   // agencyId: z.string().min(1),
-  branchName: z.string().min(1, "Branch Name is required"),
-  contactName: z.string().min(1, "Contact Name field is required"),
-  contactMobile: z.string().min(1, "Mobile field is required"),
+  branchName: z
+    .string()
+    .min(1, "Branch Name is required")
+    .max(100, "Branch Name should not exceed 100 characters"),
+
+  contactName: z
+    .string()
+    .min(1, "Contact Name field is required")
+    .max(100, "Contact Name should not exceed 100 characters"),
+  contactMobile: z.string().refine((val) => /^[0-9]{10}$/.test(val), {
+    message: "Mobile number must contain exact 10 digits.",
+  }),
   contactEmail: z.string().email("email field is required"),
-  address: z.string().min(1, "Address field is required"),
+  address: z
+    .string()
+    .min(1, "Address field is required")
+    .max(100, "Address field should not exceed 100 characters"),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;

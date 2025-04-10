@@ -450,23 +450,7 @@ const UserList = () => {
                         )}
                       </div>
                     </TableHead>
-                    <TableHead
-                      onClick={() => handleSort("address")}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-center">
-                        <span>Address</span>
-                        {sortBy === "address" && (
-                          <span className="ml-1">
-                            {sortOrder === "asc" ? (
-                              <ChevronUp size={16} />
-                            ) : (
-                              <ChevronDown size={16} />
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
+
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -477,7 +461,6 @@ const UserList = () => {
                       <TableCell>{branch.contactName}</TableCell>
                       <TableCell>{branch.contactEmail}</TableCell>
                       <TableCell>{branch.contactMobile}</TableCell>
-                      <TableCell>{branch.address}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
@@ -502,45 +485,6 @@ const UserList = () => {
                               <Trash2 size={16} />
                             </Button>
                           </ConfirmDialog>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56">
-                              <DropdownMenuGroup>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleChangeStatus(branch.id, branch.active)
-                                  }
-                                >
-                                  <div className="flex items-center gap-2">
-                                    {branch.active ? (
-                                      <XCircle className="h-4 w-4" />
-                                    ) : (
-                                      <CheckCircle className="h-4 w-4" />
-                                    )}
-                                    <span>
-                                      Set{" "}
-                                      {branch.active ? "Inactive" : "Active"}
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleOpenChangePassword(branch.id)
-                                  }
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <ShieldEllipsis className="h-4 w-4" />
-                                    <span>Change Password</span>
-                                  </div>
-                                </DropdownMenuItem>
-                              </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
