@@ -82,11 +82,11 @@ const initialData = {
         },
         {
           title: "State",
-          url: "#",
+          url: "./states",
         },
         {
           title: "City",
-          url: "#",
+          url: "/cities",
         },
         {
           title: "Branches",
