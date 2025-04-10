@@ -80,7 +80,7 @@ const CreateSector: React.FC<CreateSectorProps> = ({ isOpen, onClose }) => {
 
           <DialogFooter>
             <Button type="submit" className="bg-primary text-white">
-              Save Sector
+              Create Sector
             </Button>
             <Button
               type="button"

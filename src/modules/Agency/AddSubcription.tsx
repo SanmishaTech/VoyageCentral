@@ -189,7 +189,9 @@ const AddSubscription: React.FC<AddSubscriptionProps> = ({ agencyId }) => {
               type="submit"
               disabled={!selectedPackage || addSubscriptionMutation.isLoading}
             >
-              {addSubscriptionMutation.isLoading ? "Adding..." : "Add"}
+              {addSubscriptionMutation.isLoading
+                ? "Adding..."
+                : "Add Supcription"}
             </Button>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel

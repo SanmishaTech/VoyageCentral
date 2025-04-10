@@ -265,7 +265,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
             ) : mode === "create" ? (
               "Create User"
             ) : (
-              "Save Changes"
+              "Update User"
             )}
           </Button>
           <Button type="button" variant="outline" onClick={handleCancel}>

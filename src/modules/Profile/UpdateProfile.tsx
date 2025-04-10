@@ -130,7 +130,7 @@ const UpdateProfile = () => {
                 Saving...
               </>
             ) : (
-              "Save Changes"
+              "Save Profile"
             )}
           </Button>
         </form>
