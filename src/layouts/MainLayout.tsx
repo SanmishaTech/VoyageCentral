@@ -26,7 +26,7 @@ interface RouteConfig {
 
 const ROUTE_MAP: Record<string, RouteConfig> = {
   users: {
-    parent: "Masters",
+    parent: "Manage Users",
     label: "Users",
     path: "/users",
   },
@@ -39,6 +39,31 @@ const ROUTE_MAP: Record<string, RouteConfig> = {
     parent: "Masters",
     label: "Agencies",
     path: "/agencies",
+  },
+  countries: {
+    parent: "Masters",
+    label: "Countries",
+    path: "/countries",
+  },
+  states: {
+    parent: "Masters",
+    label: "States",
+    path: "/states",
+  },
+  city: {
+    parent: "Masters",
+    label: "Cities",
+    path: "/cities",
+  },
+  sectors: {
+    parent: "Masters",
+    label: "Sectors",
+    path: "/sectors",
+  },
+  branches: {
+    parent: "Masters",
+    label: "Branches",
+    path: "/branches",
   },
 };
 
