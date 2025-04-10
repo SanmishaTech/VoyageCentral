@@ -89,6 +89,10 @@ const initialData = {
           url: "/cities",
         },
         {
+          title: "Sector",
+          url: "/sectors",
+        },
+        {
           title: "Branches",
           url: "/branches",
         },

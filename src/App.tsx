@@ -28,6 +28,7 @@ import PackageList from "./modules/Package/PackageList";
 import Countries from "./modules/Country/CountryList";
 import Cities from "./modules/City/CityList";
 import State from "./modules/State/StateList";
+import Sector from "./modules/Sector/SectorList";
 
 const App = () => {
   useEffect(() => {
@@ -134,6 +135,15 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <State />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/sectors"
+              element={
+                <ProtectedRoute>
+                  <Sector />
                 </ProtectedRoute>
               }
             />
