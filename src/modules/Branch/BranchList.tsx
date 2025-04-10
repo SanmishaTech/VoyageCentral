@@ -400,12 +400,12 @@ const UserList = () => {
                       </div>
                     </TableHead>
                     <TableHead
-                      onClick={() => handleSort("ContactName")}
+                      onClick={() => handleSort("contactName")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
                         <span>Contact Name</span>
-                        {sortBy === "ContactName" && (
+                        {sortBy === "contactName" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -417,12 +417,12 @@ const UserList = () => {
                       </div>
                     </TableHead>
                     <TableHead
-                      onClick={() => handleSort("Contact Email")}
+                      onClick={() => handleSort("contactEmail")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
                         <span>Contact Email</span>
-                        {sortBy === "ContactEmail" && (
+                        {sortBy === "contactEmail" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
