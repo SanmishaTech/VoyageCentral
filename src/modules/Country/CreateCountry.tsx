@@ -80,7 +80,7 @@ const CreateCountry: React.FC<CreateCountryProps> = ({ isOpen, onClose }) => {
 
           <DialogFooter>
             <Button type="submit" className="bg-primary text-white">
-              Save Country
+              Create Country
             </Button>
             <Button
               type="button"

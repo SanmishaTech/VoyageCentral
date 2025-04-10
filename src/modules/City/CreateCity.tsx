@@ -179,7 +179,7 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
 
           <DialogFooter>
             <Button type="submit" className="bg-primary text-white">
-              Save City
+              Create City
             </Button>
             <Button
               type="button"

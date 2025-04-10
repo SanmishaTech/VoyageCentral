@@ -176,7 +176,7 @@ const CreateState: React.FC<CreateStateProps> = ({ isOpen, onClose }) => {
 
           <DialogFooter>
             <Button type="submit" className="bg-primary text-white">
-              Save State
+              Create State
             </Button>
             <Button
               type="button"

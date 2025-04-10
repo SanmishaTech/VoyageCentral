@@ -156,7 +156,7 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
           </div>
           <DialogFooter>
             <Button type="submit" className="bg-primary text-white">
-              Save Package
+              Create Package
             </Button>
             <Button
               type="button"
