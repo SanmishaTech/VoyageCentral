@@ -37,7 +37,7 @@ const fetchPackages = async (
   recordsPerPage: number
 ) => {
   const response = await get(
-    `/packages?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&limit=${recordsPerPage}`
+    `/countries?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&limit=${recordsPerPage}`
   );
   return response; // Return the full response object
 };
