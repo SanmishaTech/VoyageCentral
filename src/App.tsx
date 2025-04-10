@@ -22,6 +22,10 @@ import AgencyList from "@/modules/Agency/AgencyList";
 import CreateAgency from "@/modules/Agency/CreateAgency";
 import EditAgency from "@/modules/Agency/EditAgency";
 
+import BranchList from "@/modules/Branch/BranchList";
+// import CreateBranch from "@/modules/Branch/CreateBranch";
+// import EditBranch from "@/modules/Branch/EditBranch";
+
 import { Toaster } from "sonner";
 import "./App.css";
 import PackageList from "./modules/Package/PackageList";
@@ -126,6 +130,15 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <Cities />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/branches"
+              element={
+                <ProtectedRoute>
+                  <BranchList />
                 </ProtectedRoute>
               }
             />

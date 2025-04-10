@@ -51,11 +51,14 @@ const Login = () => {
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     setIsLoading(true);
     try {
-      const response = await post("/auth/login", data);
-      localStorage.setItem("authToken", response.token);
-      localStorage.setItem("user", JSON.stringify(response.user));
-      navigate("/dashboard");
-      toast.success("Login successful!");
+      const response = await post("/auth/login", data).then((res) => {
+        localStorage.setItem("authToken", res.token);
+        localStorage.setItem("refreshToken", res.accesstoken);
+        localStorage.setItem("user", JSON.stringify(res.user));
+        // Redirect to the dashboard or the page they were trying to access
+        navigate("/dashboard");
+        toast.success("Login successful!");
+      });
     } catch (error) {
       const apiError = error as ApiError;
       if (apiError.message) {

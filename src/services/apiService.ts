@@ -20,62 +20,9 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  console.log("Jbdfusdfubsdf");
   return config;
 });
-
-axios.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    console.log("Response Interceptor triggered. Error:", error); // Log the entire error object
-
-    if (error.response) {
-      // Check if error.response exists
-      console.log("Error Response Status:", error.response.status);
-      console.log("Error Response Headers:", error.response.headers);
-
-      let tokenExpiredHeader = null;
-      if (error.response.headers) {
-        // Check if error.response.headers exists before accessing
-        tokenExpiredHeader = error.response.headers["token-expired"];
-      }
-      console.log("Token-Expired Header Value:", tokenExpiredHeader);
-
-      if (
-        error.response.status === 401 &&
-        tokenExpiredHeader === "true" // Use the logged variable here
-      ) {
-        console.log("Token expired detected (inside condition)!");
-        const refreshToken = localStorage.getItem("refreshToken");
-        console.log("Refresh Token from localStorage:", refreshToken); // Log refresh token value
-
-        if (refreshToken) {
-          console.log("Refresh token found, attempting refresh...");
-          try {
-            const refreshResponse = await axios.post("/auth/refresh", {
-              refreshToken,
-            });
-            console.log("Refresh successful!", refreshResponse.data);
-            const newAccessToken = refreshResponse.data.accessToken;
-            console.log("New access token received:", newAccessToken);
-            localStorage.setItem("authToken", newAccessToken);
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-            return axios(originalRequest);
-          } catch (refreshError) {
-            console.error("Token refresh failed:", refreshError);
-          }
-        } else {
-          console.log("No refresh token found.");
-        }
-      }
-    } else {
-      console.log("No error.response object found in error.");
-    }
-
-    return Promise.reject(error);
-  }
-);
 
 export const get = async (url: string, params?: any, config?: any) => {
   try {
@@ -86,12 +33,13 @@ export const get = async (url: string, params?: any, config?: any) => {
 
     const response = await api.get(url, { withCredentials: true });
 
-    if (config?.responseType === "blob") {
-      return response;
-    }
+    // if (config?.responseType === "blob") {
+    //   return response;
+    // }
 
     return response.data;
   } catch (error: any) {
+    console.log("sdasd");
     throw {
       status: error.response?.status,
       message: error.response?.data?.errors?.message || "Request failed",
