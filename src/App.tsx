@@ -25,6 +25,7 @@ import EditAgency from "@/modules/Agency/EditAgency";
 import { Toaster } from "sonner";
 import "./App.css";
 import PackageList from "./modules/Package/PackageList";
+import Countries from "./modules/Country/CountryList";
 
 const App = () => {
   useEffect(() => {
@@ -104,6 +105,15 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <EditAgency />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/countries"
+              element={
+                <ProtectedRoute>
+                  <Countries />
                 </ProtectedRoute>
               }
             />
