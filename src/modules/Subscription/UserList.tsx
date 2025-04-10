@@ -51,8 +51,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
-import CreateUser from "./CreateUser"; // Import CreateUser component
-import EditUser from "./EditUser"; // Add this import
+import CreateUser from "./CreateSubscription"; // Import CreateUser component
+import EditUser from "./EditSubscription"; // Add this import
 
 const fetchUsers = async (
   page: number,
