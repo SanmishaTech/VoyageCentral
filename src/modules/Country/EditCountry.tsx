@@ -16,94 +16,70 @@ import {
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
 
-const packageSchema = z.object({
-  packageName: z.string().min(1, "Package name is required"),
-  numberOfBranches: z
-    .string()
-    .transform(Number)
-    .pipe(z.number().min(1, "Must have at least 1 branch")),
-  usersPerBranch: z
-    .string()
-    .transform(Number)
-    .pipe(z.number().min(1, "Must have at least 1 User")),
-  periodInMonths: z
-    .string()
-    .transform(Number)
-    .pipe(z.number().min(1, "Period must be at least 1 month")),
-  cost: z.coerce.number().min(1, "Cost must be at least 1"),
+const countrySchema = z.object({
+  countryName: z.string().min(1, "Country name is required"),
 });
 
-type PackageFormData = z.infer<typeof packageSchema>;
+type CountryFormData = z.infer<typeof countrySchema>;
 
-interface EditPackageProps {
-  packageId: number | null;
+interface EditCountryProps {
+  countryId: number | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
-const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
+const EditCountry = ({ countryId, isOpen, onClose }: EditCountryProps) => {
   const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<PackageFormData>({
-    resolver: zodResolver(packageSchema),
+  } = useForm<CountryFormData>({
+    resolver: zodResolver(countrySchema),
     defaultValues: {
-      packageName: "",
-      numberOfBranches: "",
-      usersPerBranch: "",
-      periodInMonths: "",
-      cost: "",
+      countryName: "",
     },
   });
 
-  // Fetch package details
-  const { data: packageData, isLoading } = useQuery({
-    queryKey: ["package", packageId],
+  const { data: countryData, isLoading } = useQuery({
+    queryKey: ["countries", countryId],
     queryFn: async () => {
-      const response = await get(`/packages/${packageId}`);
-      return response;
+      const response = await get(`/countries/${countryId}`);
+      return response; // API returns the country object directly
     },
-    enabled: !!packageId && isOpen,
+    enabled: !!countryId && isOpen,
   });
 
-  // Update form when data is loaded
   useEffect(() => {
-    if (packageData) {
+    if (countryData) {
       reset({
-        packageName: packageData.packageName,
-        numberOfBranches: String(packageData.numberOfBranches),
-        usersPerBranch: String(packageData.usersPerBranch),
-        periodInMonths: String(packageData.periodInMonths),
-        cost: packageData.cost,
+        countryName: countryData.countryName, // Access the countryName directly from response
       });
     }
-  }, [packageData, reset]);
+  }, [countryData, reset]);
 
-  // Update package mutation
-  const updatePackageMutation = useMutation({
-    mutationFn: (data: PackageFormData) => put(`/packages/${packageId}`, data),
+  const updateCountryMutation = useMutation({
+    mutationFn: (data: CountryFormData) => put(`/countries/${countryId}`, data),
     onSuccess: () => {
-      toast.success("Package updated successfully");
-      queryClient.invalidateQueries(["packages"]);
+      toast.success("Country updated successfully");
+      queryClient.invalidateQueries(["countries"]);
       onClose();
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update package");
+      toast.error(error.response?.data?.message || "Failed to update country");
     },
   });
 
-  const onSubmit = (data: PackageFormData) => {
-    updatePackageMutation.mutate(data);
+  const onSubmit = (data: CountryFormData) => {
+    updateCountryMutation.mutate(data);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Package</DialogTitle>
+          <DialogTitle>Edit Country</DialogTitle>
         </DialogHeader>
         {isLoading ? (
           <div className="flex justify-center items-center h-[200px]">
@@ -112,86 +88,26 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid gap-2 relative">
-              <Label htmlFor="packageName">Package Name</Label>
+              <Label htmlFor="countryName">Country Name</Label>
               <Input
-                id="packageName"
-                placeholder="Enter package name"
-                {...register("packageName")}
+                id="countryName"
+                placeholder="Enter country name"
+                {...register("countryName")}
               />
-              {errors.packageName && (
+              {errors.countryName && (
                 <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                  {errors.packageName.message}
+                  {errors.countryName.message}
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2 relative">
-                <Label htmlFor="numberOfBranches">Number of Branches</Label>
-                <Input
-                  id="numberOfBranches"
-                  placeholder="Enter number of branches"
-                  type="number"
-                  {...register("numberOfBranches")}
-                />
-                {errors.numberOfBranches && (
-                  <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                    {errors.numberOfBranches.message}
-                  </span>
-                )}
-              </div>
-              <div className="grid gap-2 relative">
-                <Label htmlFor="usersPerBranch">Users Per Branch</Label>
-                <Input
-                  id="usersPerBranch"
-                  placeholder="Enter users per branch"
-                  type="number"
-                  {...register("usersPerBranch")}
-                />
-                {errors.usersPerBranch && (
-                  <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                    {errors.usersPerBranch.message}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2 relative">
-                <Label htmlFor="periodInMonths">Period (Months)</Label>
-                <Input
-                  id="periodInMonths"
-                  placeholder="Enter period in months"
-                  type="number"
-                  {...register("periodInMonths")}
-                />
-                {errors.periodInMonths && (
-                  <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                    {errors.periodInMonths.message}
-                  </span>
-                )}
-              </div>
-              <div className="grid gap-2 relative">
-                <Label htmlFor="cost">Cost (₹)</Label>
-                <Input
-                  id="cost"
-                  placeholder="Enter cost"
-                  type="number"
-                  step="0.01"
-                  {...register("cost")}
-                />
-                {errors.cost && (
-                  <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                    {errors.cost.message}
-                  </span>
-                )}
-              </div>
-            </div>
+
             <DialogFooter>
               <Button
                 type="submit"
                 className="bg-primary text-white"
-                disabled={updatePackageMutation.isLoading}
+                disabled={updateCountryMutation.isLoading}
               >
-                Update Package
+                Update Country
               </Button>
               <Button
                 type="button"
@@ -209,4 +125,4 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
   );
 };
 
-export default EditPackage;
+export default EditCountry;

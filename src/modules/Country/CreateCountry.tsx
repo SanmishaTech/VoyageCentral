@@ -15,148 +15,72 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-const packageSchema = z.object({
-  packageName: z.string().min(1, "Package name is required"),
-  numberOfBranches: z
-    .string()
-    .transform(Number)
-    .pipe(z.number().min(1, "Must have at least 1 branch")),
-  usersPerBranch: z
-    .string()
-    .transform(Number)
-    .pipe(z.number().min(1, "Must have at least 1 User")),
-  periodInMonths: z
-    .string()
-    .transform(Number)
-    .pipe(z.number().min(1, "Period must be at least 1 month")),
-  cost: z.coerce.number().min(1, "Cost must be at least 1"),
+const countriesSchema = z.object({
+  countryName: z.string().min(1, "Country name is required"),
 });
 
-type PackageFormData = z.infer<typeof packageSchema>;
+type CountryFormData = z.infer<typeof countriesSchema>;
 
-interface CreatePackageProps {
+interface CreateCountryProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
+const CreateCountry: React.FC<CreateCountryProps> = ({ isOpen, onClose }) => {
   const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<PackageFormData>({
-    resolver: zodResolver(packageSchema),
+  } = useForm<CountryFormData>({
+    resolver: zodResolver(countriesSchema),
     defaultValues: {
-      packageName: "",
-      numberOfBranches: "",
-      usersPerBranch: "",
-      periodInMonths: "",
-      cost: "",
+      countryName: "",
     },
   });
 
-  const createPackageMutation = useMutation({
-    mutationFn: (newPackage: PackageFormData) => post("/packages", newPackage),
+  const createCountryMutation = useMutation({
+    mutationFn: (newCountry: CountryFormData) => post("/countries", newCountry),
     onSuccess: () => {
-      toast.success("Package created successfully");
-      queryClient.invalidateQueries(["packages"]);
+      toast.success("Country created successfully");
+      queryClient.invalidateQueries(["countries"]);
       reset();
       onClose();
     },
     onError: () => {
-      toast.error("Failed to create package");
+      toast.error("Failed to create countries");
     },
   });
 
-  const onSubmit = (data: PackageFormData) => {
-    createPackageMutation.mutate(data);
+  const onSubmit = (data: CountryFormData) => {
+    createCountryMutation.mutate(data);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Package</DialogTitle>
+          <DialogTitle>Add Country</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid gap-2 relative">
-            <Label htmlFor="packageName">Package Name</Label>
+            <Label htmlFor="countryName">Country Name</Label>
             <Input
-              id="packageName"
-              placeholder="Enter package name"
-              {...register("packageName")}
+              id="countryName"
+              placeholder="Enter Country Name..."
+              {...register("countryName")}
             />
-            {errors.packageName && (
+            {errors.countryName && (
               <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                {errors.packageName.message}
+                {errors.countryName.message}
               </span>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2 relative">
-              <Label htmlFor="numberOfBranches">Number of Branches</Label>
-              <Input
-                id="numberOfBranches"
-                placeholder="Enter number of branches"
-                type="number"
-                {...register("numberOfBranches")}
-              />
-              {errors.numberOfBranches && (
-                <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                  {errors.numberOfBranches.message}
-                </span>
-              )}
-            </div>
-            <div className="grid gap-2 relative">
-              <Label htmlFor="usersPerBranch">Users Per Branch</Label>
-              <Input
-                id="usersPerBranch"
-                placeholder="Enter users per branch"
-                type="number"
-                {...register("usersPerBranch")}
-              />
-              {errors.usersPerBranch && (
-                <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                  {errors.usersPerBranch.message}
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2 relative">
-              <Label htmlFor="periodInMonths">Period (Months)</Label>
-              <Input
-                id="periodInMonths"
-                placeholder="Enter period in months"
-                type="number"
-                {...register("periodInMonths")}
-              />
-              {errors.periodInMonths && (
-                <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                  {errors.periodInMonths.message}
-                </span>
-              )}
-            </div>
-            <div className="grid gap-2 relative">
-              <Label htmlFor="cost">Cost</Label>
-              <Input
-                id="cost"
-                placeholder="Enter cost"
-                type="number"
-                {...register("cost")}
-              />
-              {errors.cost && (
-                <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                  {errors.cost.message}
-                </span>
-              )}
-            </div>
-          </div>
+
           <DialogFooter>
             <Button type="submit" className="bg-primary text-white">
-              Save Package
+              Save Country
             </Button>
             <Button
               type="button"
@@ -173,4 +97,4 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
   );
 };
 
-export default CreatePackage;
+export default CreateCountry;
