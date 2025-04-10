@@ -34,6 +34,13 @@ import { appName } from "@/config";
 
 // This is sample data.
 const initialData = {
+  projects: [
+    {
+      name: "Manage Users",
+      url: "/users",
+      icon: UsersRound,
+    },
+  ],
   user: {
     name: "",
     email: "",
@@ -57,6 +64,7 @@ const initialData = {
       plan: "Free",
     },
   ],
+
   navMain: [
     {
       title: "Masters",
@@ -64,10 +72,6 @@ const initialData = {
       icon: SquareTerminal,
       isActive: true,
       items: [
-        {
-          title: "Users",
-          url: "/users",
-        },
         {
           title: "Packages",
           url: "/packages",
@@ -97,13 +101,6 @@ const initialData = {
           url: "/branches",
         },
       ],
-    },
-  ],
-  projects: [
-    {
-      name: "Manage Users",
-      url: "/users",
-      icon: UsersRound,
     },
   ],
 };
@@ -146,8 +143,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
         <NavProjects projects={data.projects} />
+        <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
