@@ -26,6 +26,8 @@ import { Toaster } from "sonner";
 import "./App.css";
 import PackageList from "./modules/Package/PackageList";
 import Countries from "./modules/Country/CountryList";
+import Cities from "./modules/City/CityList";
+import State from "./modules/State/StateList";
 
 const App = () => {
   useEffect(() => {
@@ -114,6 +116,24 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <Countries />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/cities"
+              element={
+                <ProtectedRoute>
+                  <Cities />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/states"
+              element={
+                <ProtectedRoute>
+                  <State />
                 </ProtectedRoute>
               }
             />

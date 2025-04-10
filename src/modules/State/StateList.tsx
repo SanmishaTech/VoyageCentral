@@ -50,10 +50,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
-import EditCountry from "./EditCountry";
-import CreateCountry from "./CreateCountry";
+import EditState from "./EditState";
+import CreateState from "./CreateState";
 
-const fetchCountry = async (
+const fetchState = async (
   page: number,
   sortBy: string,
   sortOrder: string,
@@ -64,7 +64,7 @@ const fetchCountry = async (
 ) => {
   const rolesQuery = roles.length > 0 ? `&roles=${roles.join(",")}` : "";
   const response = await get(
-    `/countries?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&active=${active}${rolesQuery}&limit=${recordsPerPage}`
+    `/states?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&active=${active}${rolesQuery}&limit=${recordsPerPage}`
   );
   return response;
 };
@@ -73,7 +73,7 @@ const UserList = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10); // Add recordsPerPage state
-  const [sortBy, setSortBy] = useState("countryName"); // Default sort column
+  const [sortBy, setSortBy] = useState("stateName"); // Default sort column
   const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
   const [search, setSearch] = useState(""); // Search query
   const [active, setActive] = useState("all"); // Active filter (all, true, false)
@@ -86,15 +86,13 @@ const UserList = () => {
   const [userToDelete, setUserToDelete] = useState<number | null>(null); // Track the user ID to delete
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedCountryId, setSelectedCountryId] = useState<number | null>(
-    null
-  );
+  const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
   const navigate = useNavigate();
 
-  // Fetch country using react-query
+  // Fetch state using react-query
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [
-      "countries",
+      "states",
       currentPage,
       sortBy,
       sortOrder,
@@ -104,7 +102,7 @@ const UserList = () => {
       recordsPerPage,
     ],
     queryFn: () =>
-      fetchCountry(
+      fetchState(
         currentPage,
         sortBy,
         sortOrder,
@@ -115,19 +113,19 @@ const UserList = () => {
       ),
   });
 
-  const countries = data?.countries || [];
+  const states = data?.states || [];
   const totalPages = data?.totalPages || 1;
-  const totalCountry = data?.totalCountry || 0;
+  const totalState = data?.totalState || 0;
 
   // Mutation for deleting a user
   const deleteUserMutation = useMutation({
-    mutationFn: (id: number) => del(`/countries/${id}`),
+    mutationFn: (id: number) => del(`/states/${id}`),
     onSuccess: () => {
       toast.success("User deleted successfully");
-      queryClient.invalidateQueries(["countries"]);
+      queryClient.invalidateQueries(["states"]);
     },
     onError: () => {
-      toast.error("Failed to delete countries");
+      toast.error("Failed to delete states");
     },
   });
 
@@ -184,8 +182,8 @@ const UserList = () => {
     setShowChangePassword(false); // Hide the ChangePassword dialog
   };
 
-  const handleEdit = (countryId: number) => {
-    setSelectedCountryId(countryId);
+  const handleEdit = (stateId: number) => {
+    setSelectedStateId(stateId);
     setShowEditDialog(true);
   };
 
@@ -196,7 +194,7 @@ const UserList = () => {
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Country Management
+        State Management
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>
@@ -205,7 +203,7 @@ const UserList = () => {
             {/* Search Input */}
             <div className="flex-grow">
               <Input
-                placeholder="Search countries..."
+                placeholder="Search states..."
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
@@ -220,7 +218,7 @@ const UserList = () => {
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add Country
+                Add State
               </Button>
             </div>
           </div>
@@ -234,20 +232,20 @@ const UserList = () => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load countries.
+              Failed to load states.
             </div>
-          ) : countries.length > 0 ? (
+          ) : states.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead
-                      onClick={() => handleSort("countryName")}
+                      onClick={() => handleSort("stateName")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Country Name</span>
-                        {sortBy === "countryName" && (
+                        <span>State Name</span>
+                        {sortBy === "stateName" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -258,35 +256,41 @@ const UserList = () => {
                         )}
                       </div>
                     </TableHead>
+                    <TableHead className="cursor-pointer">
+                      <div className="flex items-center">
+                        <span>Country Name</span>
+                      </div>
+                    </TableHead>
 
                     <TableHead className="text-end">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {countries.map((country) => (
-                    <TableRow key={country.id}>
-                      <TableCell>{country.countryName}</TableCell>
+                  {states.map((state) => (
+                    <TableRow key={state.id}>
+                      <TableCell>{state.stateName}</TableCell>
+                      <TableCell>{state.country.countryName}</TableCell>
 
                       <TableCell>
                         <div className="justify-end flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleEdit(country.id)}
+                            onClick={() => handleEdit(state.id)}
                           >
                             <Edit size={16} />
                           </Button>
                           <ConfirmDialog
                             title="Confirm Deletion"
-                            description="Are you sure you want to delete this country? This action cannot be undone."
+                            description="Are you sure you want to delete this state? This action cannot be undone."
                             confirmLabel="Delete"
                             cancelLabel="Cancel"
-                            onConfirm={() => handleDelete(country.id)}
+                            onConfirm={() => handleDelete(state.id)}
                           >
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => confirmDelete(country.id)}
+                              onClick={() => confirmDelete(state.id)}
                             >
                               <Trash2 size={16} />
                             </Button>
@@ -302,27 +306,23 @@ const UserList = () => {
                               <DropdownMenuGroup>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleChangeStatus(
-                                      country.id,
-                                      country.active
-                                    )
+                                    handleChangeStatus(state.id, state.active)
                                   }
                                 >
                                   <div className="flex items-center gap-2">
-                                    {country.active ? (
+                                    {state.active ? (
                                       <XCircle className="h-4 w-4" />
                                     ) : (
                                       <CheckCircle className="h-4 w-4" />
                                     )}
                                     <span>
-                                      Set{" "}
-                                      {country.active ? "Inactive" : "Active"}
+                                      Set {state.active ? "Inactive" : "Active"}
                                     </span>
                                   </div>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>
-                                    handleOpenChangePassword(country.id)
+                                    handleOpenChangePassword(state.id)
                                   }
                                 >
                                   <div className="flex items-center gap-2">
@@ -342,7 +342,7 @@ const UserList = () => {
               <CustomPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                totalRecords={totalCountry}
+                totalRecords={totalState}
                 recordsPerPage={recordsPerPage}
                 onPageChange={setCurrentPage} // Pass setCurrentPage directly
                 onRecordsPerPageChange={(newRecordsPerPage) => {
@@ -352,7 +352,7 @@ const UserList = () => {
               />
             </div>
           ) : (
-            <div className="text-center">No Country Found.</div>
+            <div className="text-center">No State Found.</div>
           )}
         </CardContent>
       </Card>
@@ -368,16 +368,16 @@ const UserList = () => {
         onConfirm={handleDelete}
       />
 
-      <EditCountry
-        countryId={selectedCountryId}
+      <EditState
+        stateId={selectedStateId}
         isOpen={showEditDialog}
         onClose={() => {
           setShowEditDialog(false);
-          setSelectedCountryId(null);
+          setSelectedStateId(null);
         }}
       />
 
-      <CreateCountry
+      <CreateState
         isOpen={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
       />
