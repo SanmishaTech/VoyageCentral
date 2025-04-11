@@ -54,14 +54,6 @@ import {
 import CreateBranch from "./CreateBranch"; // Import CreateUser component
 import EditBranch from "./EditBranch"; // Add this import
 
-// Function to format role name
-const formatRoleName = (role: string) => {
-  return role
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-};
-
 const fetchBranches = async (
   page: number,
   sortBy: string,
@@ -97,26 +89,6 @@ const UserList = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  // Fetch roles from API
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const rolesData = await get("/roles");
-        const formattedRoles: Option[] = Object.entries(rolesData.roles).map(
-          ([key, value]) => ({
-            label: formatRoleName(value),
-            value: value,
-          })
-        );
-        setAvailableRoles(formattedRoles);
-      } catch (error: any) {
-        toast.error("Failed to fetch roles");
-      }
-    };
-
-    fetchRoles();
-  }, []);
 
   // Fetch branches using react-query
   const { data, isLoading, isError, refetch } = useQuery({
@@ -171,23 +143,6 @@ const UserList = () => {
     }
   };
 
-  // Mutation for changing user status
-  const changeStatusMutation = useMutation({
-    mutationFn: ({ branchId, active }: { branchId: string; active: boolean }) =>
-      patch(`/branches/${branchId}/status`, { active }),
-    onSuccess: () => {
-      toast.success("User status updated successfully");
-      queryClient.invalidateQueries(["branches"]);
-    },
-    onError: () => {
-      toast.error("Failed to update user status");
-    },
-  });
-
-  const handleChangeStatus = (branchId: string, currentStatus: boolean) => {
-    changeStatusMutation.mutate({ branchId, active: !currentStatus });
-  };
-
   // Handle sorting
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -204,62 +159,6 @@ const UserList = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setCurrentPage(1); // Reset to the first page
-  };
-
-  // Handle active filter change
-  const handleActiveChange = (value: string) => {
-    setActive(value);
-    setCurrentPage(1); // Reset to the first page
-  };
-
-  // Handle role filter change
-  const handleRoleChange = (selectedRoles: Option[]) => {
-    setRoles(selectedRoles.map((role) => role.value)); // Extract values from selected options
-    setCurrentPage(1); // Reset to the first page
-  };
-
-  // Function to export user data
-  const handleExport = async () => {
-    try {
-      // Safely encode query parameters
-      const rolesQuery =
-        roles.length > 0 ? `roles=${encodeURIComponent(roles.join(","))}` : "";
-      const queryParams = [
-        `sortBy=${encodeURIComponent(sortBy)}`,
-        `sortOrder=${encodeURIComponent(sortOrder)}`,
-        `search=${encodeURIComponent(search)}`,
-        `active=${encodeURIComponent(active)}`,
-        rolesQuery,
-        `export=true`, // Ensure export=true is at the end
-      ]
-        .filter(Boolean) // Remove empty parameters
-        .join("&"); // Join parameters with '&'
-
-      const exportUrl = `/branches?${queryParams}`;
-
-      // Fetch the Excel file using the updated get() function
-      const response = await get(exportUrl, null, { responseType: "blob" });
-
-      // Trigger file download
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      saveAs(blob, "branches.xlsx"); // Save the file with a .xlsx extension
-      toast.success("User data exported successfully");
-    } catch (error) {
-      console.error("Export Error:", error);
-      toast.error("Failed to export user data");
-    }
-  };
-
-  const handleOpenChangePassword = (branchId: number) => {
-    setSelectedBranch(branchId); // Set the selected user
-    setShowChangePassword(true); // Show the ChangePassword dialog
-  };
-
-  const handleCloseChangePassword = () => {
-    setSelectedBranch(null); // Clear the selected user
-    setShowChangePassword(false); // Hide the ChangePassword dialog
   };
 
   const handleEdit = (branchId: string) => {
@@ -303,68 +202,6 @@ const UserList = () => {
               </Button>
             </div>
           </div>
-
-          {/* Collapsible Filters Section */}
-          {showFilters && (
-            <Card className="p-4">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Status Filter */}
-                <div>
-                  <label className="text-sm font-medium mb-1 block">
-                    Status
-                  </label>
-                  <Select value={active} onValueChange={handleActiveChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Users</SelectItem>
-                      <SelectItem value="true">Active Users</SelectItem>
-                      <SelectItem value="false">Inactive Users</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Roles Filter */}
-                <div>
-                  <label className="text-sm font-medium mb-1 block">
-                    Roles
-                  </label>
-                  {availableRoles.length > 0 ? (
-                    <MultipleSelector
-                      defaultOptions={availableRoles}
-                      selectedOptions={roles.map((role) => ({
-                        label: formatRoleName(role),
-                        value: role,
-                      }))}
-                      onChange={handleRoleChange}
-                      placeholder="Select roles"
-                    />
-                  ) : (
-                    <div className="h-10 flex items-center text-gray-500">
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                      Loading roles...
-                    </div>
-                  )}
-                </div>
-                {/* Clear Filters Button */}
-                <div className="flex justify-end mt-7">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setSearch("");
-                      setActive("all");
-                      setRoles([]);
-                      setCurrentPage(1); // Reset to first page when clearing filters
-                      setShowFilters(false); // Optionally hide the filters panel after clearing
-                    }}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          )}
 
           <Separator className="mb-4" />
 

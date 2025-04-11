@@ -22,16 +22,20 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 
 const FormSchema = z.object({
-  // agencyId: z.string().min(1),
   branchName: z
     .string()
-    .min(1, "Branch Name is required")
-    .max(100, "Branch Name should not exceed 100 characters"),
-
+    .min(1, "Branch Name cannot be left blank.") // Ensuring minimum length of 2
+    .max(100, "Branch Name must not exceed 100 characters.")
+    .refine((val) => /^[A-Za-z\s\u0900-\u097F]+$/.test(val), {
+      message: "Branch Name can only contain letters.",
+    }),
   contactName: z
     .string()
-    .min(1, "Contact Name field is required")
-    .max(100, "Contact Name should not exceed 100 characters"),
+    .min(1, "Contact Name cannot be left blank.") // Ensuring minimum length of 2
+    .max(100, "Contact Name must not exceed 100 characters.")
+    .refine((val) => /^[A-Za-z\s\u0900-\u097F]+$/.test(val), {
+      message: "Contact Name can only contain letters.",
+    }),
   contactMobile: z.string().refine((val) => /^[0-9]{10}$/.test(val), {
     message: "Mobile number must contain exact 10 digits.",
   }),
@@ -68,26 +72,6 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
   } = useForm<FormInputs>({
     resolver: zodResolver(FormSchema),
   });
-
-  const active = watch("active");
-
-  // Fetch roles from API
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        setIsLoadingRoles(true);
-        const rolesData = await get("/roles");
-        const formattedRoles = Object.values(rolesData.roles); // Use only role values
-        setRoles(formattedRoles);
-      } catch (error: any) {
-        toast.error("Failed to fetch roles");
-      } finally {
-        setIsLoadingRoles(false);
-      }
-    };
-
-    fetchRoles();
-  }, []);
 
   // Fetch user data for edit mode
   useEffect(() => {
