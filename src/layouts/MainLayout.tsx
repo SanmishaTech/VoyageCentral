@@ -26,19 +26,19 @@ interface RouteConfig {
 
 const ROUTE_MAP: Record<string, RouteConfig> = {
   users: {
-    parent: "Manage Users",
+    parent: "Management",
     label: "Users",
     path: "/users",
+  },
+  agencies: {
+    parent: "Management",
+    label: "Agencies",
+    path: "/agencies",
   },
   packages: {
     parent: "Masters",
     label: "Packages",
     path: "/packages",
-  },
-  agencies: {
-    parent: "Masters",
-    label: "Agencies",
-    path: "/agencies",
   },
   countries: {
     parent: "Masters",
