@@ -35,7 +35,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Masters</SidebarGroupLabel>
+      {items.length > 0 && <SidebarGroupLabel>Masters</SidebarGroupLabel>}
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible

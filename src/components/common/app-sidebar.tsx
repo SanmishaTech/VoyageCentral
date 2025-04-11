@@ -47,23 +47,27 @@ const initialData = {
           url: "/agencies",
           icon: UsersRound,
         },
-      ],
-      navMain: [
         {
-          title: "Masters",
-          url: "#",
-          icon: SquareTerminal,
-          isActive: true,
-          items: [
-            { title: "Packages", url: "/packages" },
-            { title: "Country", url: "/countries" },
-            { title: "State", url: "./states" },
-            { title: "City", url: "/cities" },
-            { title: "Sector", url: "/sectors" },
-            { title: "Branches", url: "/branches" },
-          ],
+          name: "Packages",
+          url: "/packages",
+          icon: UsersRound,
         },
       ],
+      // navMain: [
+      //   {
+      //     title: "Masters",
+      //     url: "#",
+      //     icon: SquareTerminal,
+      //     isActive: true,
+      //     items: [
+      //       { title: "Country", url: "/countries" },
+      //       { title: "State", url: "./states" },
+      //       { title: "City", url: "/cities" },
+      //       { title: "Sector", url: "/sectors" },
+      //       { title: "Branches", url: "/branches" },
+      //     ],
+      //   },
+      // ],
     },
     admin: {
       projects: [],
@@ -74,7 +78,6 @@ const initialData = {
           icon: SquareTerminal,
           isActive: false,
           items: [
-            { title: "Packages", url: "/packages" },
             { title: "Country", url: "/countries" },
             { title: "State", url: "./states" },
             { title: "City", url: "/cities" },
