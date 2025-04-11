@@ -36,6 +36,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --skeleton: oklch(0.85 0 0);
+  --skeleton-highlight: oklch(0.9 0 0);
 }
 
 .dark {
@@ -85,6 +87,9 @@
   --chart-3: oklch(0.75 0.18 70.08);
   --chart-4: oklch(0.65 0.25 303.9);
   --chart-5: oklch(0.65 0.22 16.439);
+
+  --skeleton: oklch(0.22 0 0);
+  --skeleton-highlight: oklch(0.25 0 0);
 }
 
 @theme inline {
@@ -123,6 +128,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-skeleton: var(--skeleton);
+  --color-skeleton-highlight: var(--skeleton-highlight);
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 
@@ -170,5 +177,28 @@
   }
   div[role="menuitem"] {
     cursor: pointer !important; /* Add pointer cursor for menu items */
+  }
+}
+
+@layer components {
+  .skeleton {
+    @apply relative isolate overflow-hidden rounded-md bg-skeleton;
+  }
+  .skeleton::after {
+    @apply absolute inset-0 -translate-x-full;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--color-skeleton-highlight) 50%,
+      transparent 100%
+    );
+    animation: skeleton-loading 1.5s infinite;
+    content: "";
+  }
+
+  @keyframes skeleton-loading {
+    100% {
+      transform: translateX(100%);
+    }
   }
 }

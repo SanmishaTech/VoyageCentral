@@ -40,7 +40,7 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({
     <div className="flex flex-wrap justify-between items-center mt-4 gap-4">
       {/* Number of Records */}
       <div className="text-sm text-gray-600">
-        Showing {startRecord} to {endRecord} of {totalRecords} records
+        Showing {startRecord} of {totalPages} pages
       </div>
 
       {/* Records Per Page Selector */}
@@ -69,8 +69,8 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({
           <PaginationItem>
             {currentPage !== 1 ? (
               <PaginationPrevious onClick={() => onPageChange(currentPage - 1)}>
-              Previous
-            </PaginationPrevious>
+                Previous
+              </PaginationPrevious>
             ) : (
               <PaginationPrevious isActive={false}>Previous</PaginationPrevious>
             )}

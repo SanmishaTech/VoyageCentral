@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatter.js';
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatter.js";
 import { Button, Input } from "@/components/ui";
 import {
   Table,
@@ -148,8 +148,8 @@ const PackageList = () => {
   const handleCloseDialog = () => setIsDialogOpen(false);
 
   const packages = data?.packages || [];
-  const totalPages = data?.meta?.totalPages || 1;
-  const totalPackages = data?.meta?.total || 0;
+  const totalPages = data?.totalPages || 1;
+  const totalPackages = data?.totalPackages || 0;
 
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error loading packages</div>;
@@ -297,7 +297,7 @@ const PackageList = () => {
                       {pkg.periodInMonths}
                     </TableCell>
                     <TableCell className="text-center">
-                      { formatCurrency(pkg.cost) }
+                      {formatCurrency(pkg.cost)}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-2">
