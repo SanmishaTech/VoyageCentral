@@ -34,13 +34,53 @@ import { appName } from "@/config";
 
 // This is sample data.
 const initialData = {
-  projects: [
-    {
-      name: "Manage Users",
-      url: "/users",
-      icon: UsersRound,
+  roles: {
+    super_admin: {
+      projects: [
+        {
+          name: "Manage Users",
+          url: "/users",
+          icon: UsersRound,
+        },
+      ],
+      navMain: [
+        {
+          title: "Masters",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: true,
+          items: [
+            { title: "Packages", url: "/packages" },
+            { title: "Agencies", url: "/agencies" },
+            { title: "Country", url: "/countries" },
+            { title: "State", url: "./states" },
+            { title: "City", url: "/cities" },
+            { title: "Sector", url: "/sectors" },
+            { title: "Branches", url: "/branches" },
+          ],
+        },
+      ],
     },
-  ],
+    admin: {
+      projects: [],
+      navMain: [
+        {
+          title: "Masters",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: false,
+          items: [
+            { title: "Packages", url: "/packages" },
+            { title: "Country", url: "/countries" },
+            { title: "State", url: "./states" },
+            { title: "City", url: "/cities" },
+            { title: "Sector", url: "/sectors" },
+            { title: "Branches", url: "/branches" },
+          ],
+        },
+      ],
+    },
+  },
   user: {
     name: "",
     email: "",
@@ -64,49 +104,14 @@ const initialData = {
       plan: "Free",
     },
   ],
-
-  navMain: [
-    {
-      title: "Masters",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: "Packages",
-          url: "/packages",
-        },
-        {
-          title: "Agencies",
-          url: "/agencies",
-        },
-        {
-          title: "Country",
-          url: "/countries",
-        },
-        {
-          title: "State",
-          url: "./states",
-        },
-        {
-          title: "City",
-          url: "/cities",
-        },
-        {
-          title: "Sector",
-          url: "/sectors",
-        },
-        {
-          title: "Branches",
-          url: "/branches",
-        },
-      ],
-    },
-  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [data, setData] = React.useState(initialData);
+  const [data, setData] = React.useState({
+    ...initialData,
+    projects: [],
+    navMain: [],
+  });
 
   React.useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -114,8 +119,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       try {
         const parsedUser = JSON.parse(storedUser);
         parsedUser.avatarName = parsedUser.name.charAt(0).toUpperCase();
+        const role = parsedUser.role || "admin";
+        const roleData = initialData.roles[role];
+
         setData((prevData) => ({
           ...prevData,
+          projects: roleData?.projects || [],
+          navMain: roleData?.navMain || [],
           user: parsedUser,
         }));
       } catch (error) {
@@ -143,8 +153,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavProjects projects={data.projects} />
-        <NavMain items={data.navMain} />
+        <NavProjects projects={data.projects || []} />
+        <NavMain items={data.navMain || []} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

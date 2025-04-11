@@ -12,15 +12,15 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("authToken");
   const refreshToken = localStorage.getItem("refreshToken");
-  console.log("Request Interceptor triggered. Token:", token); // Log the token value
-  console.log("Request Interceptor triggered. Refresh Token:", refreshToken); // Log the refresh token value
+  // console.log("Request Interceptor triggered. Token:", token); // Log the token value
+  // console.log("Request Interceptor triggered. Refresh Token:", refreshToken); // Log the refresh token value
   if (refreshToken) {
     config.headers["x-refresh-token"] = refreshToken;
   }
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  console.log("Jbdfusdfubsdf");
+  // console.log("Jbdfusdfubsdf");
   return config;
 });
 
