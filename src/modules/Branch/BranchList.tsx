@@ -307,21 +307,14 @@ const UserList = () => {
                           >
                             <Edit size={16} />
                           </Button>
-                          <ConfirmDialog
-                            title="Confirm Deletion"
-                            description="Are you sure you want to delete this branch? This action cannot be undone."
-                            confirmLabel="Delete"
-                            cancelLabel="Cancel"
-                            onConfirm={() => handleDelete(branch.id)}
+
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => confirmDelete(branch.id)}
                           >
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => confirmDelete(branch.id)}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </ConfirmDialog>
+                            <Trash2 size={16} />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

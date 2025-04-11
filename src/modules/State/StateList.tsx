@@ -280,21 +280,14 @@ const UserList = () => {
                           >
                             <Edit size={16} />
                           </Button>
-                          <ConfirmDialog
-                            title="Confirm Deletion"
-                            description="Are you sure you want to delete this state? This action cannot be undone."
-                            confirmLabel="Delete"
-                            cancelLabel="Cancel"
-                            onConfirm={() => handleDelete(state.id)}
+
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => confirmDelete(state.id)}
                           >
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => confirmDelete(state.id)}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </ConfirmDialog>
+                            <Trash2 size={16} />
+                          </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
