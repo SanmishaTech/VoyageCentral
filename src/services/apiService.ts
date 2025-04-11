@@ -1,6 +1,5 @@
 import axios from "axios";
 import { backendUrl } from "../config";
-import { useEffect } from "react";
 
 const api = axios.create({
   baseURL: backendUrl,
@@ -11,16 +10,9 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("authToken");
-  const refreshToken = localStorage.getItem("refreshToken");
-  // console.log("Request Interceptor triggered. Token:", token); // Log the token value
-  // console.log("Request Interceptor triggered. Refresh Token:", refreshToken); // Log the refresh token value
-  if (refreshToken) {
-    config.headers["x-refresh-token"] = refreshToken;
-  }
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  // console.log("Jbdfusdfubsdf");
   return config;
 });
 
@@ -31,15 +23,17 @@ export const get = async (url: string, params?: any, config?: any) => {
       ...config,
     };
 
-    const response = await api.get(url, { withCredentials: true });
+    const response = await api.get(url, finalConfig);
 
-    // if (config?.responseType === "blob") {
-    //   return response;
-    // }
+    if (config?.responseType === "blob") {
+      return response;
+    }
 
     return response.data;
   } catch (error: any) {
-    console.log("sdasd");
+    if (error.response?.status === 401) {
+      window.location.href = "/";
+    }
     throw {
       status: error.response?.status,
       message: error.response?.data?.errors?.message || "Request failed",
@@ -49,9 +43,12 @@ export const get = async (url: string, params?: any, config?: any) => {
 
 export const post = async (url: string, data: any) => {
   try {
-    const response = await api.post(url, data, { withCredentials: true });
+    const response = await api.post(url, data);
     return response.data;
   } catch (error: any) {
+    if (error.response?.status === 401) {
+      window.location.href = "/";
+    }
     throw {
       status: error.response?.status,
       message: error.response?.data?.errors?.message || "Request failed",
@@ -64,6 +61,9 @@ export const put = async (url: string, data: any) => {
     const response = await api.put(url, data);
     return response.data;
   } catch (error: any) {
+    if (error.response?.status === 401) {
+      window.location.href = "/";
+    }
     throw {
       status: error.response?.status,
       message: error.response?.data?.errors?.message || "Request failed",
@@ -76,6 +76,9 @@ export const patch = async (url: string, data: any) => {
     const response = await api.patch(url, data);
     return response.data;
   } catch (error: any) {
+    if (error.response?.status === 401) {
+      window.location.href = "/";
+    }
     throw {
       status: error.response?.status,
       message: error.response?.data?.errors?.message || "Request failed",
@@ -88,6 +91,9 @@ export const del = async (url: string) => {
     const response = await api.delete(url);
     return response.data;
   } catch (error: any) {
+    if (error.response?.status === 401) {
+      window.location.href = "/";
+    }
     throw {
       status: error.response?.status,
       message: error.response?.data?.errors?.message || "Request failed",
