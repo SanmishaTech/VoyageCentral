@@ -17,6 +17,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import * as React from "react";
 
 interface RouteConfig {
   parent?: string;
@@ -68,7 +69,34 @@ const ROUTE_MAP: Record<string, RouteConfig> = {
 };
 
 export default function MainLayout() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check localStorage first
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      return savedTheme === "dark";
+    }
+    // If no saved preference, check system preference
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  // Effect to sync dark mode state with HTML class
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
+
+  // Effect to listen for system preference changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem("theme")) {
+        setIsDarkMode(e.matches);
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
   const location = useLocation();
 
   const getBreadcrumbs = () => {
@@ -103,35 +131,18 @@ export default function MainLayout() {
     ];
   };
 
-  // Toggle dark mode
   const toggleDarkMode = () => {
-    const html = document.documentElement;
-    if (html.classList.contains("dark")) {
-      html.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-      setIsDarkMode(false);
-    } else {
-      html.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-      setIsDarkMode(true);
-    }
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    localStorage.setItem("theme", newDarkMode ? "dark" : "light");
   };
-
-  // Load theme from localStorage
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-      setIsDarkMode(true);
-    }
-  }, []);
 
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         {/* Sticky Header */}
-        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 bg-white dark:bg-gray-900 shadow-md transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background shadow-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4 w-full justify-between">
             {/* Sidebar Trigger and Breadcrumb */}
             <div className="flex items-center gap-2">
