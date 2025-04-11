@@ -108,7 +108,7 @@ const UserList = () => {
       ),
   });
 
-  const agencies = data?.data || [];
+  const agencies = data?.agencies || [];
   const totalPages = data?.totalPages || 1;
   const totalUsers = data?.totalUsers || 0;
 
