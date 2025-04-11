@@ -42,6 +42,11 @@ const initialData = {
           url: "/users",
           icon: UsersRound,
         },
+        {
+          name: "Agencies",
+          url: "/agencies",
+          icon: UsersRound,
+        },
       ],
       navMain: [
         {
@@ -51,7 +56,6 @@ const initialData = {
           isActive: true,
           items: [
             { title: "Packages", url: "/packages" },
-            { title: "Agencies", url: "/agencies" },
             { title: "Country", url: "/countries" },
             { title: "State", url: "./states" },
             { title: "City", url: "/cities" },
