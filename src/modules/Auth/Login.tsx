@@ -116,8 +116,8 @@ const Login = () => {
     unknown, // Use unknown for error type, as we'll check its structure
     LoginFormInputs
   >({
-    mutationFn: (loginData: LoginFormInputs) => {
-      return post<LoginResponse>("/auth/login", loginData);
+    mutationFn: async (loginData: LoginFormInputs) => {
+      return await post("/auth/login", loginData);
     },
     onSuccess: (data) => {
       console.log("Login successful:", data);
@@ -129,8 +129,8 @@ const Login = () => {
       toast.success("Login successful!");
     },
     onError: (error: unknown) => {
-      console.log(error);
-      throwAsZodError(error);
+      // console.log(error);
+      // throwAsZodError(error);
       console.error("Login error details:", error);
     },
   });
