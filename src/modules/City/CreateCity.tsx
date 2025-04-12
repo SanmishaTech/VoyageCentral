@@ -31,6 +31,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 const citiesSchema = z.object({
   cityName: z.string().min(1, "City name is required"),
+  countryId: z.number().min(0, "Country is required"),
   stateId: z.number().min(0, "State is required"),
 });
 
@@ -57,13 +58,23 @@ interface StateResponse {
   totalStates: number;
 }
 
+interface CountryResponse {
+  countries: {
+    id: number;
+    countryName: string;
+    createdAt: string;
+    updatedAt: string;
+  }[];
+}
+
 const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
   const queryClient = useQueryClient();
-  const [open, setOpen] = React.useState(false);
+  const [openState, setOpenState] = React.useState(false);
+  const [openCountry, setOpenCountry] = React.useState(false);
 
-  const { data: statesData } = useQuery<StateResponse>({
-    queryKey: ["states"],
-    queryFn: () => get("/states"),
+  const { data: countriesData } = useQuery<CountryResponse>({
+    queryKey: ["countries"],
+    queryFn: () => get("/countries"),
   });
 
   const {
@@ -77,9 +88,22 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
     resolver: zodResolver(citiesSchema),
     defaultValues: {
       cityName: "",
+      countryId: undefined,
       stateId: undefined,
     },
   });
+
+  const selectedCountryId = watch("countryId");
+
+  const { data: statesData } = useQuery<StateResponse>({
+    queryKey: ["states", selectedCountryId],
+    queryFn: () =>
+      selectedCountryId ? get(`/states?countryId=${selectedCountryId}`) : null,
+    enabled: !!selectedCountryId,
+  });
+
+  // Replace the filteredStates memo with direct states access
+  const states = statesData?.states ?? [];
 
   const createCityMutation = useMutation({
     mutationFn: (newCity: CityFormData) => post("/cities", newCity),
@@ -107,33 +131,76 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid gap-4">
             <div className="grid gap-2 relative">
-              <Label htmlFor="cityName">City Name</Label>
-              <Input
-                id="cityName"
-                placeholder="Enter City Name..."
-                {...register("cityName")}
-              />
-              {errors.cityName && (
+              <Label>Select Country</Label>
+              <Popover open={openCountry} onOpenChange={setOpenCountry}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openCountry}
+                    className="justify-between"
+                  >
+                    {watch("countryId")
+                      ? countriesData?.countries.find(
+                          (country) => country.id === watch("countryId")
+                        )?.countryName
+                      : "Select country..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search country..." />
+                    <CommandEmpty>No country found.</CommandEmpty>
+                    <CommandGroup>
+                      {countriesData?.countries.map((country) => (
+                        <CommandItem
+                          key={country.id}
+                          value={country.id.toString()}
+                          onSelect={() => {
+                            setValue("countryId", country.id, {
+                              shouldValidate: true,
+                            });
+                            setValue("stateId", undefined);
+                            setOpenCountry(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              watch("countryId") === country.id
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                          {country.countryName}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {errors.countryId && (
                 <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-                  {errors.cityName.message}
+                  {errors.countryId.message}
                 </span>
               )}
             </div>
 
             <div className="grid gap-2 relative">
               <Label>Select State</Label>
-              <Popover open={open} onOpenChange={setOpen}>
+              <Popover open={openState} onOpenChange={setOpenState}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
-                    aria-expanded={open}
+                    aria-expanded={openState}
                     className="justify-between"
+                    disabled={!selectedCountryId}
                   >
                     {watch("stateId")
-                      ? statesData?.states.find(
-                          (state) => state.id === Number(watch("stateId"))
-                        )?.stateName
+                      ? states.find((state) => state.id === watch("stateId"))
+                          ?.stateName
                       : "Select state..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -143,21 +210,19 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
                     <CommandInput placeholder="Search state..." />
                     <CommandEmpty>No state found.</CommandEmpty>
                     <CommandGroup>
-                      {statesData?.states.map((state) => (
+                      {states.map((state) => (
                         <CommandItem
                           key={state.id}
-                          value={state.id.toString()}
+                          value={state.stateName}
                           onSelect={() => {
-                            setValue("stateId", state.id, {
-                              shouldValidate: true,
-                            });
-                            setOpen(false);
+                            setValue("stateId", state.id);
+                            setOpenState(false);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              watch("stateId") === state.id.toString()
+                              watch("stateId") === state.id
                                 ? "opacity-100"
                                 : "opacity-0"
                             )}
@@ -172,6 +237,20 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
               {errors.stateId && (
                 <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
                   {errors.stateId.message}
+                </span>
+              )}
+            </div>
+
+            <div className="grid gap-2 relative">
+              <Label htmlFor="cityName">City Name</Label>
+              <Input
+                id="cityName"
+                placeholder="Enter City Name..."
+                {...register("cityName")}
+              />
+              {errors.cityName && (
+                <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                  {errors.cityName.message}
                 </span>
               )}
             </div>
