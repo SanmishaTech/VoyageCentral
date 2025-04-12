@@ -157,6 +157,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     register,
     handleSubmit,
     setValue,
+    trigger,
     reset,
     formState: { errors },
   } = useForm<UserFormInputs>({
@@ -437,7 +438,9 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                                   key={pkg.id}
                                   value={pkg.packageName}
                                   onSelect={() => {
-                                    setValue("subscription.packageId", pkg.id);
+                                    setValue("subscription.packageId", pkg.id, {
+                                      shouldValidate: true,
+                                    });
                                     setSelectedPackage(pkg);
                                     setOpen(false);
                                   }}
@@ -460,7 +463,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                       </Popover>
                       {errors.subscription?.packageId && (
                         <span className="text-red-500 text-sm">
-                          {errors.subscription.packageId.message}
+                          {errors.subscription?.packageId.message}
                         </span>
                       )}
                     </div>
