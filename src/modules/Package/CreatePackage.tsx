@@ -14,6 +14,17 @@ import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ZodError, ZodIssue } from "zod";
+
+//
+// 1. Define the shape of what your backend is returning
+//
+interface BackendErrorResponse {
+  errors: Array<{
+    path: Array<string | number>;
+    message: string;
+  }>;
+}
 
 const packageSchema = z.object({
   packageName: z.string().min(1, "Package name is required"),
@@ -56,6 +67,22 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
       cost: "",
     },
   });
+  function mapBackendErrorToIssue(err: BackendErrorResponse): ZodIssue[] {
+    return err.errors.map(({ path, message }) => ({
+      // you can choose a more specific code if you like,
+      // but "custom" is fine for server‐side messages
+      code: "custom" as const,
+      path,
+      message,
+    }));
+  }
+
+  //
+  // 3a. If you just want the array of issues:
+  //
+  function getZodIssuesFromBackend(err: BackendErrorResponse): ZodIssue[] {
+    return mapBackendErrorToIssue(err);
+  }
 
   const createPackageMutation = useMutation({
     mutationFn: (newPackage: PackageFormData) => post("/packages", newPackage),
@@ -65,7 +92,8 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
       reset();
       onClose();
     },
-    onError: () => {
+    onError: (error) => {
+      throwAsZodError(backendErr);
       toast.error("Failed to create package");
     },
   });

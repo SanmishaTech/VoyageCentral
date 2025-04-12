@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -36,6 +36,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { handleApiValidationErrors } from "@/lib/Handlevalidation"; // Adjust path as needed
 
 interface Package {
   id: number;
@@ -159,11 +160,18 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     setValue,
     trigger,
     reset,
+    setError,
+    getValues,
     formState: { errors },
   } = useForm<UserFormInputs>({
     resolver: zodResolver(userFormSchema),
     context: { mode },
   });
+
+  const formFieldNames = React.useMemo(
+    () => Object.keys(getValues()) as ReadonlyArray<keyof LoginFormInputs>,
+    [getValues] // Dependency array ensures it updates if form structure changes (unlikely here)
+  );
 
   useEffect(() => {
     if (mode === "edit" && id) {
@@ -205,6 +213,8 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
       navigate("/agencies");
     },
     onError: (error: Error) => {
+      handleApiValidationErrors(error, setError, formFieldNames);
+
       toast.error(error.message || "Failed to create agency");
     },
   });
@@ -217,6 +227,8 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
       navigate("/agencies");
     },
     onError: (error: Error) => {
+      handleApiValidationErrors(error, setError, formFieldNames);
+
       toast.error(error.message || "Failed to update agency");
     },
   });

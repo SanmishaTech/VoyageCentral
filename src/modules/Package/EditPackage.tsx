@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
+import { handleApiValidationErrors } from "@/lib/Handlevalidation"; // Adjust path as needed
 
 const packageSchema = z.object({
   packageName: z.string().min(1, "Package name is required"),
@@ -48,6 +49,9 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
     handleSubmit,
     formState: { errors },
     reset,
+    setError, // Get setError
+
+    getValues, // Still useful for getting field names
   } = useForm<PackageFormData>({
     resolver: zodResolver(packageSchema),
     defaultValues: {
@@ -58,6 +62,10 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
       cost: "",
     },
   });
+  const formFieldNames = React.useMemo(
+    () => Object.keys(getValues()) as ReadonlyArray<keyof LoginFormInputs>,
+    [getValues] // Dependency array ensures it updates if form structure changes (unlikely here)
+  );
 
   // Fetch package details
   const { data: packageData, isLoading } = useQuery({
@@ -91,6 +99,7 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
       onClose();
     },
     onError: (error: any) => {
+      handleApiValidationErrors(error, setError, formFieldNames);
       toast.error(error.response?.data?.message || "Failed to update package");
     },
   });
