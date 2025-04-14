@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-
+import Validate from "@/lib/Handlevalidation";
 const countrySchema = z.object({
   countryName: z.string().min(1, "Country name is required"),
 });
@@ -34,6 +34,7 @@ const EditCountry = ({ countryId, isOpen, onClose }: EditCountryProps) => {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
     reset,
   } = useForm<CountryFormData>({
     resolver: zodResolver(countrySchema),
@@ -67,6 +68,7 @@ const EditCountry = ({ countryId, isOpen, onClose }: EditCountryProps) => {
       onClose();
     },
     onError: (error: any) => {
+      Validate(error, setError);
       toast.error(error.response?.data?.message || "Failed to update country");
     },
   });

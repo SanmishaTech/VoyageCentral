@@ -13,6 +13,7 @@ import { appName, allowRegistration } from "@/config";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ZodError, ZodIssue } from "zod";
+import Validate from "@/lib/Handlevalidation";
 
 //
 // 1. Define the shape of what your backend is returning
@@ -129,6 +130,7 @@ const Login = () => {
       toast.success("Login successful!");
     },
     onError: (error: unknown) => {
+      Validate(error, setError);
       // console.log(error);
       // throwAsZodError(error);
       console.error("Login error details:", error);

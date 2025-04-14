@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import Validate from "@/lib/Handlevalidation";
+
 import { LoaderCircle } from "lucide-react"; // Import the LoaderCircle icon
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
@@ -68,6 +70,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
     setValue,
     watch,
     control,
+    setError,
     formState: { errors },
   } = useForm<FormInputs>({
     resolver: zodResolver(FormSchema),
@@ -102,6 +105,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
       onSuccess?.(); // Call onSuccess callback if provided
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {
@@ -119,6 +123,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
       onSuccess?.(); // Call onSuccess instead of navigating
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {

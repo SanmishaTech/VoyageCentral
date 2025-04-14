@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
+import Validate from "@/lib/Handlevalidation";
 
 const sectorSchema = z.object({
   sectorName: z.string().min(1, "Sector name is required"),
@@ -34,6 +35,7 @@ const EditSector = ({ sectorId, isOpen, onClose }: EditSectorProps) => {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
     reset,
   } = useForm<SectorFormData>({
     resolver: zodResolver(sectorSchema),
@@ -67,6 +69,7 @@ const EditSector = ({ sectorId, isOpen, onClose }: EditSectorProps) => {
       onClose();
     },
     onError: (error: any) => {
+      Validate(error, setError);
       toast.error(error.response?.data?.message || "Failed to update sector");
     },
   });

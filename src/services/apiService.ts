@@ -32,9 +32,6 @@ export const get = async (url: string, params?: any, config?: any) => {
 
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      window.location.href = "/";
-    }
     throw {
       status: error.response?.status,
       errors: error.response?.data?.errors,
@@ -48,9 +45,6 @@ export const post = async (url: string, data: any) => {
     const response = await api.post(url, data);
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      window.location.href = "/";
-    }
     throw {
       status: error.response?.status,
       errors: error.response?.data?.errors,
@@ -64,9 +58,6 @@ export const put = async (url: string, data: any) => {
     const response = await api.put(url, data);
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      window.location.href = "/";
-    }
     throw {
       status: error.response?.status,
       errors: error.response?.data?.errors,
@@ -80,9 +71,6 @@ export const patch = async (url: string, data: any) => {
     const response = await api.patch(url, data);
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      window.location.href = "/";
-    }
     throw {
       status: error.response?.status,
       errors: error.response?.data?.errors,
@@ -96,9 +84,6 @@ export const del = async (url: string) => {
     const response = await api.delete(url);
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      window.location.href = "/";
-    }
     throw {
       status: error.response?.status,
       errors: error.response?.data?.errors,

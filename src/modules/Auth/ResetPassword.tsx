@@ -10,6 +10,7 @@ import { post } from "@/services/apiService";
 import { LoaderCircle } from "lucide-react"; // Import the spinner icon
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
+import Validate from "@/lib/Handlevalidation";
 
 // Define expected API response structure
 interface ResetPasswordResponse {
@@ -39,6 +40,7 @@ type ResetPasswordFormInputs = z.infer<typeof resetPasswordSchema>;
 const ResetPassword = () => {
   const {
     register,
+    setError,
     handleSubmit,
     formState: { errors },
   } = useForm<ResetPasswordFormInputs>({
@@ -59,6 +61,7 @@ const ResetPassword = () => {
       navigate("/");
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {
