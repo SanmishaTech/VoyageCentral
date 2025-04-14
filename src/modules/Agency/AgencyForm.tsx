@@ -36,6 +36,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import Validate from "@/lib/Handlevalidation";
 
 interface Package {
   id: number;
@@ -159,6 +160,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     setValue,
     trigger,
     reset,
+    setError,
     formState: { errors },
   } = useForm<UserFormInputs>({
     resolver: zodResolver(userFormSchema),
@@ -205,6 +207,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
       navigate("/agencies");
     },
     onError: (error: Error) => {
+      Validate(error, setError);
       toast.error(error.message || "Failed to create agency");
     },
   });
@@ -217,6 +220,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
       navigate("/agencies");
     },
     onError: (error: Error) => {
+      Validate(error, setError);
       toast.error(error.message || "Failed to update agency");
     },
   });

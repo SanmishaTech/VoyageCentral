@@ -12,6 +12,7 @@ import { appName } from "@/config";
 import { LoaderCircle } from "lucide-react"; // Spinner icon
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
+import Validate from "@/lib/Handlevalidation";
 
 // Define expected API response structure
 interface RegisterResponse {
@@ -45,6 +46,7 @@ const Register = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<RegisterFormInputs>({
     resolver: zodResolver(registerSchema),
@@ -61,6 +63,7 @@ const Register = () => {
       navigate("/"); // Redirect to login page
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {

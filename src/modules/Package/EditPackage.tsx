@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
+import Validate from "@/lib/Handlevalidation";
 
 const packageSchema = z.object({
   packageName: z.string().min(1, "Package name is required"),
@@ -48,6 +49,7 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
     handleSubmit,
     formState: { errors },
     reset,
+    setError,
   } = useForm<PackageFormData>({
     resolver: zodResolver(packageSchema),
     defaultValues: {
@@ -91,6 +93,7 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
       onClose();
     },
     onError: (error: any) => {
+      Validate(error, setError);
       toast.error(error.response?.data?.message || "Failed to update package");
     },
   });

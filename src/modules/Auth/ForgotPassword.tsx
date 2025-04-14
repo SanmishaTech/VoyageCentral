@@ -10,7 +10,7 @@ import { post } from "@/services/apiService";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
-
+import Validate from "@/lib/Handlevalidation";
 // Define expected API response structure
 interface ForgotPasswordResponse {
   message: string;
@@ -33,6 +33,7 @@ const ForgotPassword = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<ForgotPasswordFormInputs>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -51,6 +52,7 @@ const ForgotPassword = () => {
       navigate("/");
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {

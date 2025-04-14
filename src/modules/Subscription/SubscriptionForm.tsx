@@ -20,6 +20,7 @@ import { get } from "@/services/apiService";
 import { useMutation } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 import { PasswordInput } from "@/components/ui/password-input";
+import Validate from "@/lib/Handlevalidation";
 
 interface Role {
   name: string;
@@ -117,6 +118,7 @@ const UserForm = ({ mode, userId, onSuccess }: UserFormProps) => {
       onSuccess?.();
     },
     onError: (error: Error) => {
+      Validate(error, setError);
       toast.error(error.message || "Failed to create user");
     },
   });
@@ -130,6 +132,7 @@ const UserForm = ({ mode, userId, onSuccess }: UserFormProps) => {
       onSuccess?.();
     },
     onError: (error: Error) => {
+      Validate(error, setError);
       toast.error(error.message || "Failed to update user");
     },
   });

@@ -46,6 +46,7 @@ const ChangePassword = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<ChangePasswordInputs>({
     resolver: zodResolver(passwordSchema),

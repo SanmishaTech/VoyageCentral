@@ -21,6 +21,7 @@ import { get } from "@/services/apiService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 import { PasswordInput } from "@/components/ui/password-input";
+import Validate from "@/lib/Handlevalidation";
 
 const userFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -55,6 +56,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
     setValue,
     watch,
     control,
+    setError,
     formState: { errors },
   } = useForm<UserFormInputs>({
     resolver: zodResolver(userFormSchema),
@@ -108,6 +110,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
       onSuccess?.(); // Call onSuccess callback if provided
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {
@@ -125,6 +128,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
       onSuccess?.(); // Call onSuccess instead of navigating
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {
