@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, del, patch } from "@/services/apiService";
+import { get, del, put } from "@/services/apiService";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import CustomPagination from "@/components/common/custom-pagination";
@@ -88,13 +88,10 @@ const fetchStaffs = async (
   sortBy: string,
   sortOrder: string,
   search: string,
-  active: string,
-  roles: string[],
   recordsPerPage: number
 ) => {
-  const rolesQuery = roles.length > 0 ? `&roles=${roles.join(",")}` : "";
   const response = await get(
-    `/staff?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&active=${active}${rolesQuery}&limit=${recordsPerPage}`
+    `/staff?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&limit=${recordsPerPage}`
   );
   return response;
 };
@@ -106,10 +103,6 @@ const StaffsList = () => {
   const [sortBy, setSortBy] = useState("name"); // Default sort column
   const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
   const [search, setSearch] = useState(""); // Search query
-  const [active, setActive] = useState("all"); // Active filter (all, true, false)
-  const [roles, setRoles] = useState<string[]>([]); // Selected roles for filtering
-  const [availableRoles, setAvailableRoles] = useState<Option[]>([]); // Roles fetched from API
-  const [showFilters, setShowFilters] = useState(false); // State to show/hide filters
   const [showChangePassword, setShowChangePassword] = useState(false); // State to toggle ChangePassword dialog
   const [selectedStaffs, setSelectedStaffs] = useState<number | null>(null); // Track the selected staff for password change
   const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
@@ -119,26 +112,6 @@ const StaffsList = () => {
   const [selectedStaffsId, setSelectedStaffsId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Fetch roles from API
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const rolesData = await get("/roles");
-        const formattedRoles: Option[] = Object.entries(rolesData.roles).map(
-          ([key, value]) => ({
-            label: formatRoleName(value),
-            value: value,
-          })
-        );
-        setAvailableRoles(formattedRoles);
-      } catch (error: any) {
-        toast.error("Failed to fetch roles");
-      }
-    };
-
-    fetchRoles();
-  }, []);
-
   // Fetch staffs using react-query
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [
@@ -147,20 +120,10 @@ const StaffsList = () => {
       sortBy,
       sortOrder,
       search,
-      active,
-      roles,
       recordsPerPage,
     ],
     queryFn: () =>
-      fetchStaffs(
-        currentPage,
-        sortBy,
-        sortOrder,
-        search,
-        active,
-        roles,
-        recordsPerPage
-      ),
+      fetchStaffs(currentPage, sortBy, sortOrder, search, recordsPerPage),
   });
 
   const staffs = data?.staff || [];
@@ -195,7 +158,7 @@ const StaffsList = () => {
   // Mutation for changing staff status
   const changeStatusMutation = useMutation({
     mutationFn: ({ staffId, active }: { staffId: string; active: boolean }) =>
-      patch(`/staffs/${staffId}/status`, { active }),
+      patch(`/staff/${staffId}/status`, { active }),
     onSuccess: () => {
       toast.success("Staff status updated successfully");
       queryClient.invalidateQueries(["staffs"]);
@@ -224,18 +187,6 @@ const StaffsList = () => {
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    setCurrentPage(1); // Reset to the first page
-  };
-
-  // Handle active filter change
-  const handleActiveChange = (value: string) => {
-    setActive(value);
-    setCurrentPage(1); // Reset to the first page
-  };
-
-  // Handle role filter change
-  const handleRoleChange = (selectedRoles: Option[]) => {
-    setRoles(selectedRoles.map((role) => role.value)); // Extract values from selected options
     setCurrentPage(1); // Reset to the first page
   };
 
@@ -279,35 +230,8 @@ const StaffsList = () => {
               />
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Button */}
             <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant={
-                  showFilters || roles.length > 0 || active !== "all"
-                    ? "default"
-                    : "outline"
-                }
-                className={`
-                  ${
-                    showFilters || roles.length > 0 || active !== "all"
-                      ? "bg-primary hover:bg-primary/90 text-white shadow-sm"
-                      : "hover:bg-accent"
-                  }
-                  transition-all duration-200
-                `}
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter
-                  className={`mr-2 h-4 w-4 ${showFilters ? "text-white" : ""}`}
-                />
-                Filters
-                {(roles.length > 0 || active !== "all") && (
-                  <span className="ml-2 bg-white text-primary font-medium rounded-full px-2 py-0.5 text-xs">
-                    {roles.length + (active !== "all" ? 1 : 0)}
-                  </span>
-                )}
-              </Button>
-
               <Button
                 onClick={() => setShowCreateDialog(true)}
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
@@ -317,68 +241,6 @@ const StaffsList = () => {
               </Button>
             </div>
           </div>
-
-          {/* Collapsible Filters Section */}
-          {showFilters && (
-            <Card className="p-4">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Status Filter */}
-                <div>
-                  <label className="text-sm font-medium mb-1 block">
-                    Status
-                  </label>
-                  <Select value={active} onValueChange={handleActiveChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Staffs</SelectItem>
-                      <SelectItem value="true">Active Staffs</SelectItem>
-                      <SelectItem value="false">Inactive Staffs</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Roles Filter */}
-                <div>
-                  <label className="text-sm font-medium mb-1 block">
-                    Roles
-                  </label>
-                  {availableRoles.length > 0 ? (
-                    <MultipleSelector
-                      defaultOptions={availableRoles}
-                      selectedOptions={roles.map((role) => ({
-                        label: formatRoleName(role),
-                        value: role,
-                      }))}
-                      onChange={handleRoleChange}
-                      placeholder="Select roles"
-                    />
-                  ) : (
-                    <div className="h-10 flex items-center text-gray-500">
-                      <Loader className="mr-2 h-4 w-4 animate-spin" />
-                      Loading roles...
-                    </div>
-                  )}
-                </div>
-                {/* Clear Filters Button */}
-                <div className="flex justify-end mt-7">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setSearch("");
-                      setActive("all");
-                      setRoles([]);
-                      setCurrentPage(1); // Reset to first page when clearing filters
-                      setShowFilters(false); // Optionally hide the filters panel after clearing
-                    }}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          )}
 
           <Separator className="mb-4" />
 
@@ -565,7 +427,7 @@ const StaffsList = () => {
                                     handleChangeStatus(staff.id, staff.active)
                                   }
                                 >
-                                  {/* <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2">
                                     {staff.active ? (
                                       <XCircle className="h-4 w-4" />
                                     ) : (
@@ -574,8 +436,9 @@ const StaffsList = () => {
                                     <span>
                                       Set {staff.active ? "Inactive" : "Active"}
                                     </span>
-                                  </div> */}
+                                  </div>
                                 </DropdownMenuItem>
+
                                 <DropdownMenuItem
                                   onClick={() =>
                                     handleOpenChangePassword(staff.id)

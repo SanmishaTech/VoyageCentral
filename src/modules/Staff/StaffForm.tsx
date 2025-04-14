@@ -34,6 +34,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import Validate from "@/lib/Handlevalidation";
+import { ROLES, ROLE_LABELS, Role } from "@/config/roles";
 
 const staffFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -57,7 +59,9 @@ const staffFormSchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters long")
     .optional(),
-  role: z.string().min(1, "Role is required"),
+  role: z.enum([ROLES.ADMIN, ROLES.BRANCH_ADMIN, ROLES.USER], {
+    errorMap: () => ({ message: "Role is required" }),
+  }),
   active: z.boolean().optional(),
   branchId: z.number().optional(),
 });
@@ -75,35 +79,44 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  const form = useForm<StaffFormInputs>({
-    resolver: zodResolver(staffFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      communicationEmail: "",
-      mobile1: "",
-      mobile2: "",
-      role: "",
-      active: true,
-      branchId: undefined,
+  // First, fetch the staff data
+  const { data: staffData, isLoading: isLoadingStaff } = useQuery({
+    queryKey: ["staff", staffId],
+    queryFn: async () => {
+      const response = await get(`/staff/${staffId}`);
+      return response.data;
     },
+    enabled: mode === "edit" && !!staffId,
   });
 
-  // Update the roles query to properly format the data
-  const { data: rolesData } = useQuery({
-    queryKey: ["roles"],
-    queryFn: async () => {
-      const response = await get("/roles");
-      // Store roles data in a more accessible format
-      return Object.entries(response.roles || {}).reduce(
-        (acc, [key, value]) => ({
-          ...acc,
-          [value as string]: value as string,
-        }),
-        {}
-      );
-    },
+  // Initialize form after data is available
+  const form = useForm<StaffFormInputs>({
+    resolver: zodResolver(staffFormSchema),
+    defaultValues:
+      mode === "edit" && staffData
+        ? {
+            name: staffData.name || "",
+            email: staffData.email || "",
+            communicationEmail: staffData.communicationEmail || "",
+            mobile1: staffData.mobile1 || "",
+            mobile2: staffData.mobile2 || "",
+            role: staffData.role?.toLowerCase() || "",
+            active: staffData.active ?? true,
+            branchId: staffData.branchId,
+          }
+        : {
+            name: "",
+            email: "",
+            communicationEmail: "",
+            mobile1: "",
+            mobile2: "",
+            role: "",
+            active: true,
+            branchId: undefined,
+          },
   });
+
+  // Remove the roles query since we're using predefined roles
 
   // Update branches query to handle paginated response
   const { data: branchesData } = useQuery({
@@ -114,38 +127,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
     },
   });
 
-  // Fetch staff data with proper response handling
-  const { data: staffData, isLoading: isLoadingStaff } = useQuery({
-    queryKey: ["staff", staffId],
-    queryFn: async () => {
-      const response = await get(`/staff/${staffId}`);
-      return response.data;
-    },
-    enabled: mode === "edit" && !!staffId,
-    onSuccess: (data) => {
-      // Set form values with explicit role value
-      form.reset({
-        ...data,
-        role: data.role || "", // Ensure role is set properly
-      });
-    },
-  });
-
-  // Update form when staff data changes
-  useEffect(() => {
-    if (staffData && mode === "edit") {
-      form.reset({
-        name: staffData.name,
-        email: staffData.email,
-        communicationEmail: staffData.communicationEmail,
-        mobile1: staffData.mobile1,
-        mobile2: staffData.mobile2,
-        role: staffData.role,
-        active: staffData.active,
-        branchId: staffData.branchId,
-      });
-    }
-  }, [staffData, mode, form]);
+  // Remove the duplicate useEffect for form reset since we're handling it in onSuccess
 
   // Mutation for creating a staff
   const createStaffMutation = useMutation({
@@ -156,6 +138,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
       onSuccess?.(); // Call onSuccess callback if provided
     },
     onError: (error: any) => {
+      Validate(error, form.setError);
       if (error.message) {
         toast.error(error.message);
       } else {
@@ -173,6 +156,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
       onSuccess?.(); // Call onSuccess instead of navigating
     },
     onError: (error: any) => {
+      Validate(error, form.setError);
       if (error.message) {
         toast.error(error.message);
       } else {
@@ -210,7 +194,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
             {...form.register("name")}
           />
           {form.formState.errors.name && (
-            <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+            <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
               {form.formState.errors.name.message}
             </span>
           )}
@@ -228,7 +212,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
               {...form.register("email")}
             />
             {form.formState.errors.email && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
                 {form.formState.errors.email.message}
               </span>
             )}
@@ -244,7 +228,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
               {...form.register("communicationEmail")}
             />
             {form.formState.errors.communicationEmail && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
                 {form.formState.errors.communicationEmail.message}
               </span>
             )}
@@ -261,7 +245,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
               {...form.register("mobile1")}
             />
             {form.formState.errors.mobile1 && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
                 {form.formState.errors.mobile1.message}
               </span>
             )}
@@ -275,7 +259,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
               {...form.register("mobile2")}
             />
             {form.formState.errors.mobile2 && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
                 {form.formState.errors.mobile2.message}
               </span>
             )}
@@ -292,7 +276,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
               {...form.register("password")}
             />
             {form.formState.errors.password && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
                 {form.formState.errors.password.message}
               </span>
             )}
@@ -308,30 +292,25 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
               name="role"
               control={form.control}
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select
+                  value={field.value || ""}
+                  onValueChange={field.onChange}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    {rolesData &&
-                      Object.entries(rolesData).map(([role, value]) => (
-                        <SelectItem key={role} value={role}>
-                          {role
-                            .split("_")
-                            .map(
-                              (word) =>
-                                word.charAt(0).toUpperCase() +
-                                word.slice(1).toLowerCase()
-                            )
-                            .join(" ")}
-                        </SelectItem>
-                      ))}
+                    {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               )}
             />
             {form.formState.errors.role && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
                 {form.formState.errors.role.message}
               </span>
             )}
@@ -386,7 +365,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
               </PopoverContent>
             </Popover>
             {form.formState.errors.branchId && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
                 {form.formState.errors.branchId.message}
               </span>
             )}

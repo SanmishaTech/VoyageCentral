@@ -13,7 +13,7 @@ import { patch } from "@/services/apiService"; // Import the patch method
 import { toast } from "sonner"; // Import toast for notifications
 
 interface ChangePasswordDialogProps {
-  staffId: string;
+  staffId: number; // Changed from string to number to match the type in StaffList
   isOpen: boolean;
   onClose: () => void;
 }
@@ -42,15 +42,20 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
   // Mutation for changing the password
   const changePasswordMutation = useMutation({
     mutationFn: (password: string) =>
-      patch(`/staff/${staffId}/password`, { password }),
+      patch(`/staff/${staffId}/password`, { password }), // Keep using patch
     onSuccess: () => {
       toast.success("Password changed successfully!");
+      setNewPassword(""); // Clear the form
+      setConfirmPassword(""); // Clear the form
       onClose(); // Close the dialog after success
     },
-    onError: (error: Error) => {
-      toast.error(
-        error.message || "Failed to change password. Please try again."
-      );
+    onError: (error: any) => {
+      // Improve error handling to match user module
+      if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to change password. Please try again.");
+      }
     },
   });
 
