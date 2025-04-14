@@ -9,9 +9,16 @@ import { useNavigate } from "react-router-dom";
 import { post } from "@/services/apiService";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 
-interface ApiError extends Error {
+// Define expected API response structure
+interface ForgotPasswordResponse {
   message: string;
+}
+
+interface ForgotPasswordRequest {
+  email: string;
+  resetUrl: string;
 }
 
 const forgotPasswordSchema = z.object({
@@ -21,7 +28,6 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordFormInputs = z.infer<typeof forgotPasswordSchema>;
 
 const ForgotPassword = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -32,25 +38,30 @@ const ForgotPassword = () => {
     resolver: zodResolver(forgotPasswordSchema),
   });
 
-  const onSubmit: SubmitHandler<ForgotPasswordFormInputs> = async (data) => {
-    setIsLoading(true);
-    try {
-      const resetUrl = `${window.location.origin}/reset-password`;
-      await post("/auth/forgot-password", { ...data, resetUrl });
+  const forgotPasswordMutation = useMutation<
+    ForgotPasswordResponse,
+    unknown,
+    ForgotPasswordRequest
+  >({
+    mutationFn: (data) => post("/auth/forgot-password", data),
+    onSuccess: () => {
       toast.success(
         "Password reset instructions have been sent to your email."
       );
       navigate("/");
-    } catch (error) {
-      const apiError = error as ApiError;
-      if (apiError.message) {
-        toast.error(apiError.message);
+    },
+    onError: (error: any) => {
+      if (error.message) {
+        toast.error(error.message);
       } else {
         toast.error("An unexpected error occurred");
       }
-    } finally {
-      setIsLoading(false);
-    }
+    },
+  });
+
+  const onSubmit: SubmitHandler<ForgotPasswordFormInputs> = (data) => {
+    const resetUrl = `${window.location.origin}/reset-password`;
+    forgotPasswordMutation.mutate({ ...data, resetUrl });
   };
 
   return (
@@ -70,13 +81,18 @@ const ForgotPassword = () => {
             placeholder="m@example.com"
             {...register("email")}
             required
+            disabled={forgotPasswordMutation.isPending}
           />
           {errors.email && (
             <span className="text-red-500">{errors.email.message}</span>
           )}
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={forgotPasswordMutation.isPending}
+        >
+          {forgotPasswordMutation.isPending ? (
             <>
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
               Sending...
