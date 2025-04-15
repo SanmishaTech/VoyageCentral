@@ -172,7 +172,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
             {...register("name")}
           />
           {errors.name && (
-            <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+            <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
               {errors.name.message}
             </span>
           )}
@@ -188,7 +188,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
             {...register("email")}
           />
           {errors.email && (
-            <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+            <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
               {errors.email.message}
             </span>
           )}
@@ -204,7 +204,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
               {...register("password")}
             />
             {errors.password && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
                 {errors.password.message}
               </span>
             )}
@@ -235,7 +235,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
               )}
             />
             {errors.role && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
                 {errors.role.message}
               </span>
             )}

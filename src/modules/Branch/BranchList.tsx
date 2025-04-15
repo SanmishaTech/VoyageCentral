@@ -275,7 +275,7 @@ const UserList = () => {
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>contact Mobile</span>
+                        <span>Contact Mobile</span>
                         {sortBy === "contactMobile" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (

@@ -163,7 +163,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
           <Input
             id="branchName"
             type="text"
-            placeholder="Enter branch name"
+            placeholder="Enter Branch Name"
             {...register("branchName")}
           />
           {errors.branchName && (
@@ -179,7 +179,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
           <Input
             id="contactName"
             type="text"
-            placeholder="Enter contact name"
+            placeholder="Enter Contact Name"
             {...register("contactName")}
           />
           {errors.contactName && (
@@ -195,7 +195,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
           <Input
             id="contactEmail"
             type="email"
-            placeholder="m@example.com"
+            placeholder="Username@example.com"
             {...register("contactEmail")}
           />
           {errors.contactEmail && (
@@ -212,7 +212,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
             id="contactMobile"
             type="text"
             maxLength={10}
-            placeholder="enter mobile number"
+            placeholder="Enter Mobile Number"
             {...register("contactMobile")}
           />
           {errors.contactMobile && (
@@ -228,7 +228,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
           <Input
             id="address"
             type="text"
-            placeholder="enter address"
+            placeholder="Enter Address"
             {...register("address")}
           />
           {errors.address && (

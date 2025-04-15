@@ -33,6 +33,7 @@ import Countries from "./modules/Country/CountryList";
 import Cities from "./modules/City/CityList";
 import State from "./modules/State/StateList";
 import Sector from "./modules/Sector/SectorList";
+import StaffList from "./modules/Staff/StaffList";
 
 const App = () => {
   useEffect(() => {
@@ -73,6 +74,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <UserList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/staff"
+              element={
+                <ProtectedRoute>
+                  <StaffList />
                 </ProtectedRoute>
               }
             />

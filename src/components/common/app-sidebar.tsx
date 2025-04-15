@@ -42,6 +42,7 @@ const initialData = {
           url: "/users",
           icon: UsersRound,
         },
+
         {
           name: "Agencies",
           url: "/agencies",
@@ -71,6 +72,7 @@ const initialData = {
     },
     admin: {
       projects: [],
+
       navMain: [
         {
           title: "Masters",
@@ -83,6 +85,7 @@ const initialData = {
             { title: "City", url: "/cities" },
             { title: "Sector", url: "/sectors" },
             { title: "Branches", url: "/branches" },
+            { title: "Staff", url: "/staff" },
           ],
         },
       ],
