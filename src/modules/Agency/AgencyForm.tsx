@@ -568,6 +568,13 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
           </CardContent>
           <div className="justify-end mr-5 flex gap-4">
             <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/agencies")}
+            >
+              Cancel
+            </Button>
+            <Button
               type="submit"
               disabled={
                 createUserMutation.isPending || updateUserMutation.isPending
@@ -579,17 +586,10 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <LoaderCircle className="animate-spin h-4 w-4" /> Saving...
                 </>
               ) : mode === "create" ? (
-                "Create Agency"
+                "Create"
               ) : (
-                "Update Agency"
+                "Update"
               )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/agencies")}
-            >
-              Cancel
             </Button>
           </div>
         </Card>

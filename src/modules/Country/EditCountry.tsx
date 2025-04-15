@@ -105,19 +105,19 @@ const EditCountry = ({ countryId, isOpen, onClose }: EditCountryProps) => {
 
             <DialogFooter>
               <Button
-                type="submit"
-                className="bg-primary text-white"
-                disabled={updateCountryMutation.isLoading}
-              >
-                Update Country
-              </Button>
-              <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 className="ml-2"
               >
                 Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-primary text-white"
+                disabled={updateCountryMutation.isLoading}
+              >
+                Update
               </Button>
             </DialogFooter>
           </form>

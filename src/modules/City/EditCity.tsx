@@ -318,19 +318,19 @@ const EditCity = ({ cityId, isOpen, onClose }: EditCityProps) => {
 
             <DialogFooter>
               <Button
-                type="submit"
-                className="bg-primary text-white"
-                disabled={updateCityMutation.isLoading}
-              >
-                Update City
-              </Button>
-              <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 className="ml-2"
               >
                 Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-primary text-white"
+                disabled={updateCityMutation.isLoading}
+              >
+                Update
               </Button>
             </DialogFooter>
           </form>

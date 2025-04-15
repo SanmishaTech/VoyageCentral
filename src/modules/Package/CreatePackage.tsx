@@ -78,7 +78,7 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Package</DialogTitle>
+          <DialogTitle>Add</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid gap-2 relative">
@@ -155,9 +155,6 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" className="bg-primary text-white">
-              Create Package
-            </Button>
             <Button
               type="button"
               variant="outline"
@@ -165,6 +162,9 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
               className="ml-2"
             >
               Cancel
+            </Button>
+            <Button type="submit" className="bg-primary text-white">
+              Create
             </Button>
           </DialogFooter>
         </form>

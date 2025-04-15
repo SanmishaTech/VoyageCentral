@@ -237,6 +237,13 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
           {/* Submit and Cancel Buttons */}
           <div className="flex gap-4">
             <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/users")}
+            >
+              Cancel
+            </Button>
+            <Button
               type="submit"
               disabled={
                 createUserMutation.isPending || updateUserMutation.isPending
@@ -249,17 +256,10 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                   Saving...
                 </>
               ) : mode === "create" ? (
-                "Create User"
+                "Create"
               ) : (
                 "Save Changes"
               )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/users")}
-            >
-              Cancel
             </Button>
           </div>
         </form>
