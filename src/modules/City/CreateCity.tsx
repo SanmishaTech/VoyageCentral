@@ -266,7 +266,7 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
               Cancel
             </Button>
             <Button type="submit" className="bg-primary text-white">
-              Create City
+              Create
             </Button>
           </DialogFooter>
         </form>
