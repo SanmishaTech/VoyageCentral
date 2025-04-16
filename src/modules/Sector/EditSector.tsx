@@ -106,19 +106,19 @@ const EditSector = ({ sectorId, isOpen, onClose }: EditSectorProps) => {
 
             <DialogFooter>
               <Button
-                type="submit"
-                className="bg-primary text-white"
-                disabled={updateSectorMutation.isLoading}
-              >
-                Update Sector
-              </Button>
-              <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 className="ml-2"
               >
                 Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-primary text-white"
+                disabled={updateSectorMutation.isLoading}
+              >
+                Update
               </Button>
             </DialogFooter>
           </form>

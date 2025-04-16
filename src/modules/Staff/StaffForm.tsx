@@ -384,6 +384,9 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
 
         {/* Submit and Cancel Buttons */}
         <div className="justify-end flex gap-4">
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
           <Button
             type="submit"
             disabled={
@@ -397,13 +400,10 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
                 Saving...
               </>
             ) : mode === "create" ? (
-              "Create Staff"
+              "Create"
             ) : (
-              "Update Staff"
+              "Update"
             )}
-          </Button>
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
           </Button>
         </div>
       </form>

@@ -210,19 +210,19 @@ const EditState = ({ stateId, isOpen, onClose }: EditStateProps) => {
 
             <DialogFooter>
               <Button
-                type="submit"
-                className="bg-primary text-white"
-                disabled={updateStateMutation.isLoading}
-              >
-                Update State
-              </Button>
-              <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 className="ml-2"
               >
                 Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-primary text-white"
+                disabled={updateStateMutation.isLoading}
+              >
+                Update
               </Button>
             </DialogFooter>
           </form>

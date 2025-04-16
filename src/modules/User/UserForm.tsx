@@ -254,6 +254,9 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
 
         {/* Submit and Cancel Buttons */}
         <div className="justify-end flex gap-4">
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
           <Button
             type="submit"
             disabled={
@@ -267,13 +270,10 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
                 Saving...
               </>
             ) : mode === "create" ? (
-              "Create User"
+              "Create"
             ) : (
-              "Update User"
+              "Update"
             )}
-          </Button>
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
           </Button>
         </div>
       </form>

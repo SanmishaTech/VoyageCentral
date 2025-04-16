@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, ChangeEvent } from "react"; // Added ChangeEvent
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,9 +9,8 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { LoaderCircle, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
-import { get } from "@/services/apiService";
+import { get, post, put } from "@/services/apiService"; // Updated import
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { post, put } from "@/services/apiService";
 import { PasswordInput } from "@/components/ui/password-input";
 import AddSubscription from "./AddSubcription";
 import {
@@ -76,6 +75,35 @@ interface ApiResponse {
   }>;
 }
 
+const MAX_LOGO_SIZE = 2 * 1024 * 1024; // 2MB
+const ACCEPTED_LOGO_TYPES = ["image/jpeg", "image/png", "image/jpg"];
+const MAX_LETTERHEAD_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_LETTERHEAD_TYPES = ["application/pdf"];
+
+const fileSchema = z
+  .instanceof(File, { message: "File is required." })
+  .optional();
+
+const logoSchema = fileSchema
+  .refine(
+    (file) => !file || file.size <= MAX_LOGO_SIZE,
+    `Logo size must be less than 2MB.`
+  )
+  .refine(
+    (file) => !file || ACCEPTED_LOGO_TYPES.includes(file.type),
+    "Invalid logo file type. Only JPG, JPEG, PNG are allowed."
+  );
+
+const letterHeadSchema = fileSchema
+  .refine(
+    (file) => !file || file.size <= MAX_LETTERHEAD_SIZE,
+    `Letterhead size must be less than 5MB.`
+  )
+  .refine(
+    (file) => !file || ACCEPTED_LETTERHEAD_TYPES.includes(file.type),
+    "Invalid letterhead file type. Only PDF is allowed."
+  );
+
 const userFormSchema = z
   .object({
     businessName: z.string().min(1, "Business Name is required"),
@@ -91,8 +119,9 @@ const userFormSchema = z
       .email("Invalid email format")
       .min(1, "Contact Person Email is required"),
     contactPersonPhone: z.string().min(1, "Contact Person Phone is required"),
-    letterHead: z.string().optional(),
-    logo: z.string().optional(),
+    // Change logo and letterHead to accept File objects
+    letterHead: letterHeadSchema,
+    logo: logoSchema,
     user: z
       .object({
         name: z.string().min(1, "Name is required"),
@@ -144,6 +173,10 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
   const [open, setOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [userData, setUserData] = useState<ApiResponse | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [letterHeadPreview, setLetterHeadPreview] = useState<string | null>(
+    null
+  ); // Assuming PDF preview isn't straightforward
 
   const { data: packages = [] } = useQuery<Package[]>({
     queryKey: ["packages"],
@@ -158,14 +191,40 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     register,
     handleSubmit,
     setValue,
-    trigger,
+    // trigger, // Removed as it's unused
     reset,
     setError,
+    watch, // Add watch to observe file inputs
     formState: { errors },
   } = useForm<UserFormInputs>({
     resolver: zodResolver(userFormSchema),
     context: { mode },
   });
+
+  // Watch file inputs to update previews
+  const watchedLogo = watch("logo");
+  const watchedLetterHead = watch("letterHead");
+
+  useEffect(() => {
+    if (watchedLogo && watchedLogo instanceof File) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(watchedLogo);
+    } else {
+      setLogoPreview(null);
+    }
+  }, [watchedLogo]);
+
+  // For letterhead (PDF), we might just show the filename
+  useEffect(() => {
+    if (watchedLetterHead && watchedLetterHead instanceof File) {
+      setLetterHeadPreview(watchedLetterHead.name); // Show filename for PDF
+    } else {
+      setLetterHeadPreview(null);
+    }
+  }, [watchedLetterHead]);
 
   useEffect(() => {
     if (mode === "edit" && id) {
@@ -190,6 +249,11 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
           });
 
           setSelectedPackage(sub?.package ?? null);
+          // Set initial previews if URLs exist
+          setLogoPreview(resp.logo ? `/uploads/${resp.logo}` : null); // Adjust path as needed
+          setLetterHeadPreview(
+            resp.letterHead ? resp.letterHead.split("/").pop() : null
+          ); // Show filename if exists
         } catch (error: unknown) {
           toast.error(
             error instanceof Error ? error.message : "Failed to fetch details"
@@ -199,8 +263,14 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     }
   }, [id, mode, reset]);
 
-  const createUserMutation = useMutation<unknown, Error, UserFormInputs>({
-    mutationFn: (data: UserFormInputs) => post("/agencies", data),
+  const createUserMutation = useMutation<unknown, Error, FormData>({
+    // Expect FormData
+    mutationFn: (formData: FormData) =>
+      post("/agencies", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }), // Use post
     onSuccess: () => {
       toast.success("Agency created successfully");
       queryClient.invalidateQueries({ queryKey: ["agencies"] });
@@ -212,8 +282,14 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     },
   });
 
-  const updateUserMutation = useMutation<unknown, Error, UserFormInputs>({
-    mutationFn: (data: UserFormInputs) => put(`/agencies/${id}`, data),
+  const updateUserMutation = useMutation<unknown, Error, FormData>({
+    // Expect FormData
+    mutationFn: (formData: FormData) =>
+      put(`/agencies/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }), // Use put
     onSuccess: () => {
       toast.success("Agency updated successfully");
       queryClient.invalidateQueries({ queryKey: ["agencies"] });
@@ -225,10 +301,66 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     },
   });
 
-  const onSubmit: SubmitHandler<UserFormInputs> = (data) => {
-    if (mode === "create") createUserMutation.mutate(data);
-    else updateUserMutation.mutate(data);
+  // Handle file input changes specifically to register them
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const name = e.target.name as keyof UserFormInputs; // 'logo' or 'letterHead'
+    if (file) {
+      setValue(name, file, { shouldValidate: true });
+    } else {
+      // Handle case where user cancels file selection if needed
+      setValue(name, undefined, { shouldValidate: true });
+    }
   };
+
+  const onSubmit: SubmitHandler<UserFormInputs> = (data) => {
+    const formData = new FormData();
+
+    // Append all regular fields
+    Object.entries(data).forEach(([key, value]) => {
+      if (
+        key !== "logo" &&
+        key !== "letterHead" &&
+        key !== "user" &&
+        key !== "subscription" &&
+        value !== undefined &&
+        value !== null
+      ) {
+        formData.append(key, String(value));
+      }
+    });
+
+    // Append files if they exist
+    if (data.logo instanceof File) {
+      formData.append("logo", data.logo);
+    }
+    if (data.letterHead instanceof File) {
+      formData.append("letterHead", data.letterHead);
+    }
+
+    // Flatten and append nested user fields
+    if (data.user) {
+      Object.entries(data.user).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== "") {
+          formData.append(`user[${k}]`, String(v));
+        }
+      });
+    }
+
+    // Flatten and append nested subscription fields
+    if (data.subscription) {
+      Object.entries(data.subscription).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== "") {
+          formData.append(`subscription[${k}]`, String(v));
+        }
+      });
+    }
+
+    // Call the appropriate mutation
+    if (mode === "create") createUserMutation.mutate(formData);
+    else updateUserMutation.mutate(formData);
+  };
+
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -352,6 +484,56 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                     </span>
                   )}
                 </div>
+              </div>
+            </div>
+            {/* Add File Inputs */}
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label htmlFor="logo" className="mb-2 block">
+                  Logo (JPG, PNG, max 2MB)
+                </Label>
+                <Input
+                  id="logo"
+                  type="file"
+                  accept={ACCEPTED_LOGO_TYPES.join(",")}
+                  // Use onChange directly, register is not needed for controlled file input this way
+                  onChange={handleFileChange}
+                  name="logo" // Important: name must match schema key
+                />
+                {logoPreview && (
+                  <img
+                    src={logoPreview}
+                    alt="Logo Preview"
+                    className="mt-2 h-20 w-auto object-contain"
+                  />
+                )}
+                {errors.logo && (
+                  <span className="text-red-500 text-sm">
+                    {errors.logo.message}
+                  </span>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="letterHead" className="mb-2 block">
+                  Letterhead (PDF, max 5MB)
+                </Label>
+                <Input
+                  id="letterHead"
+                  type="file"
+                  // accept={ACCEPTED_LETTERHEAD_TYPES.join(",")}
+                  onChange={handleFileChange}
+                  name="letterHead" // Important: name must match schema key
+                />
+                {letterHeadPreview && (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Selected: {letterHeadPreview}
+                  </p>
+                )}
+                {errors.letterHead && (
+                  <span className="text-red-500 text-sm">
+                    {errors.letterHead.message}
+                  </span>
+                )}
               </div>
             </div>
             <hr className="my-6 border-gray-300" />
@@ -568,6 +750,13 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
           </CardContent>
           <div className="justify-end mr-5 flex gap-4">
             <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/agencies")}
+            >
+              Cancel
+            </Button>
+            <Button
               type="submit"
               disabled={
                 createUserMutation.isPending || updateUserMutation.isPending
@@ -579,17 +768,10 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <LoaderCircle className="animate-spin h-4 w-4" /> Saving...
                 </>
               ) : mode === "create" ? (
-                "Create Agency"
+                "Create"
               ) : (
-                "Update Agency"
+                "Update"
               )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/agencies")}
-            >
-              Cancel
             </Button>
           </div>
         </Card>

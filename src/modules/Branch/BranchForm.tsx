@@ -240,6 +240,9 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
 
         {/* Submit and Cancel Buttons */}
         <div className="justify-end flex gap-4">
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
           <Button
             type="submit"
             disabled={createMutation.isLoading || updateMutation.isLoading}
@@ -251,13 +254,10 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
                 Saving...
               </>
             ) : mode === "create" ? (
-              "Create Branch"
+              "Create"
             ) : (
-              "Save Changes"
+              "Update"
             )}
-          </Button>
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
           </Button>
         </div>
       </form>

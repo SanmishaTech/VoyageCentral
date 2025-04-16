@@ -61,7 +61,7 @@ const CreateCountry: React.FC<CreateCountryProps> = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Country</DialogTitle>
+          <DialogTitle>Add</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid gap-2 relative">
@@ -79,9 +79,6 @@ const CreateCountry: React.FC<CreateCountryProps> = ({ isOpen, onClose }) => {
           </div>
 
           <DialogFooter>
-            <Button type="submit" className="bg-primary text-white">
-              Create Country
-            </Button>
             <Button
               type="button"
               variant="outline"
@@ -89,6 +86,9 @@ const CreateCountry: React.FC<CreateCountryProps> = ({ isOpen, onClose }) => {
               className="ml-2"
             >
               Cancel
+            </Button>
+            <Button type="submit" className="bg-primary text-white">
+              Create
             </Button>
           </DialogFooter>
         </form>

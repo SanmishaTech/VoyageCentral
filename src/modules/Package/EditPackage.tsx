@@ -190,19 +190,19 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
             </div>
             <DialogFooter>
               <Button
-                type="submit"
-                className="bg-primary text-white"
-                disabled={updatePackageMutation.isLoading}
-              >
-                Update Package
-              </Button>
-              <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 className="ml-2"
               >
                 Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-primary text-white"
+                disabled={updatePackageMutation.isLoading}
+              >
+                Update
               </Button>
             </DialogFooter>
           </form>
