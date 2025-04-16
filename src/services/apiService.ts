@@ -40,9 +40,9 @@ export const get = async (url: string, params?: any, config?: any) => {
   }
 };
 
-export const post = async (url: string, data: any) => {
+export const post = async (url: string, data: any, headers: any) => {
   try {
-    const response = await api.post(url, data);
+    const response = await api.post(url, data, headers);
     return response.data;
   } catch (error: any) {
     throw {
@@ -53,9 +53,9 @@ export const post = async (url: string, data: any) => {
   }
 };
 
-export const put = async (url: string, data: any) => {
+export const put = async (url: string, data: any, headers: any) => {
   try {
-    const response = await api.put(url, data);
+    const response = await api.put(url, data, headers);
     return response.data;
   } catch (error: any) {
     throw {
