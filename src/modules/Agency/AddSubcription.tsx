@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronsUpDown, Check } from "lucide-react";
+import { toast } from "sonner";
 import {
   Command,
   CommandInput,
@@ -78,9 +79,11 @@ const AddSubscription: React.FC<AddSubscriptionProps> = ({ agencyId }) => {
       queryClient.invalidateQueries(["subscriptions", agencyId]);
       setSelectedPackage(null);
       setOpen(false);
+      toast.success("Subscription added successfully!");
       window.location.reload(); // 👈 This will reload the whole page
     },
     onError: (error) => {
+      toast.error("Failed to add subscription");
       console.error("Failed to add subscription:", error);
     },
   });
