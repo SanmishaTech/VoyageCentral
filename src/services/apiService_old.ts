@@ -36,7 +36,6 @@ export const get = async (url: string, params?: any, config?: any) => {
     }
     throw {
       status: error.response?.status,
-      error: error.response?.data?.errors,
       message: error.response?.data?.errors?.message || "Request failed",
     };
   }
@@ -52,8 +51,6 @@ export const post = async (url: string, data: any) => {
     }
     throw {
       status: error.response?.status,
-      error: error.response?.data?.errors,
-
       message: error.response?.data?.errors?.message || "Request failed",
     };
   }
@@ -67,10 +64,10 @@ export const put = async (url: string, data: any) => {
     if (error.response?.status === 401) {
       window.location.href = "/";
     }
+
     throw {
       status: error.response?.status,
-      error: error.response?.data?.errors,
-
+      errors: error.response?.data?.errors,
       message: error.response?.data?.errors?.message || "Request failed",
     };
   }
@@ -86,8 +83,6 @@ export const patch = async (url: string, data: any) => {
     }
     throw {
       status: error.response?.status,
-      error: error.response?.data?.errors,
-
       message: error.response?.data?.errors?.message || "Request failed",
     };
   }
@@ -103,8 +98,6 @@ export const del = async (url: string) => {
     }
     throw {
       status: error.response?.status,
-      error: error.response?.data?.errors,
-
       message: error.response?.data?.errors?.message || "Request failed",
     };
   }
