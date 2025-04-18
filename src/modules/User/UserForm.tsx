@@ -21,6 +21,7 @@ import { get } from "@/services/apiService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 import { PasswordInput } from "@/components/ui/password-input";
+import Validate from "@/lib/Handlevalidation";
 
 const userFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -55,6 +56,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
     setValue,
     watch,
     control,
+    setError,
     formState: { errors },
   } = useForm<UserFormInputs>({
     resolver: zodResolver(userFormSchema),
@@ -108,6 +110,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
       onSuccess?.(); // Call onSuccess callback if provided
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {
@@ -125,6 +128,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
       onSuccess?.(); // Call onSuccess instead of navigating
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {
@@ -168,7 +172,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
             {...register("name")}
           />
           {errors.name && (
-            <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+            <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
               {errors.name.message}
             </span>
           )}
@@ -184,7 +188,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
             {...register("email")}
           />
           {errors.email && (
-            <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+            <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
               {errors.email.message}
             </span>
           )}
@@ -200,7 +204,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
               {...register("password")}
             />
             {errors.password && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
                 {errors.password.message}
               </span>
             )}
@@ -231,7 +235,7 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
               )}
             />
             {errors.role && (
-              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
                 {errors.role.message}
               </span>
             )}
@@ -250,6 +254,9 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
 
         {/* Submit and Cancel Buttons */}
         <div className="justify-end flex gap-4">
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
           <Button
             type="submit"
             disabled={
@@ -263,13 +270,10 @@ const UserForm = ({ mode, userId, onSuccess, className }: UserFormProps) => {
                 Saving...
               </>
             ) : mode === "create" ? (
-              "Create User"
+              "Create"
             ) : (
-              "Update User"
+              "Update"
             )}
-          </Button>
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
           </Button>
         </div>
       </form>

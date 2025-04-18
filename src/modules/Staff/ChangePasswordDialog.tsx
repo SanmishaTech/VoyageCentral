@@ -11,10 +11,9 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { useMutation } from "@tanstack/react-query"; // Import useMutation
 import { patch } from "@/services/apiService"; // Import the patch method
 import { toast } from "sonner"; // Import toast for notifications
-import Validate from "@/lib/Handlevalidation";
 
 interface ChangePasswordDialogProps {
-  userId: string;
+  staffId: number; // Changed from string to number to match the type in StaffList
   isOpen: boolean;
   onClose: () => void;
 }
@@ -33,7 +32,7 @@ const passwordSchema = z
   });
 
 const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
-  userId,
+  staffId,
   isOpen,
   onClose,
 }) => {
@@ -43,15 +42,20 @@ const ChangePasswordDialog: React.FC<ChangePasswordDialogProps> = ({
   // Mutation for changing the password
   const changePasswordMutation = useMutation({
     mutationFn: (password: string) =>
-      patch(`/users/${userId}/password`, { password }),
+      patch(`/staff/${staffId}/password`, { password }), // Keep using patch
     onSuccess: () => {
       toast.success("Password changed successfully!");
+      setNewPassword(""); // Clear the form
+      setConfirmPassword(""); // Clear the form
       onClose(); // Close the dialog after success
     },
-    onError: (error: Error) => {
-      toast.error(
-        error.message || "Failed to change password. Please try again."
-      );
+    onError: (error: any) => {
+      // Improve error handling to match user module
+      if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to change password. Please try again.");
+      }
     },
   });
 

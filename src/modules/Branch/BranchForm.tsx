@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import Validate from "@/lib/Handlevalidation";
+
 import { LoaderCircle } from "lucide-react"; // Import the LoaderCircle icon
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
@@ -68,6 +70,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
     setValue,
     watch,
     control,
+    setError,
     formState: { errors },
   } = useForm<FormInputs>({
     resolver: zodResolver(FormSchema),
@@ -102,6 +105,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
       onSuccess?.(); // Call onSuccess callback if provided
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {
@@ -119,6 +123,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
       onSuccess?.(); // Call onSuccess instead of navigating
     },
     onError: (error: any) => {
+      Validate(error, setError);
       if (error.message) {
         toast.error(error.message);
       } else {
@@ -158,7 +163,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
           <Input
             id="branchName"
             type="text"
-            placeholder="Enter branch name"
+            placeholder="Enter Branch Name"
             {...register("branchName")}
           />
           {errors.branchName && (
@@ -174,7 +179,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
           <Input
             id="contactName"
             type="text"
-            placeholder="Enter contact name"
+            placeholder="Enter Contact Name"
             {...register("contactName")}
           />
           {errors.contactName && (
@@ -190,7 +195,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
           <Input
             id="contactEmail"
             type="email"
-            placeholder="m@example.com"
+            placeholder="Username@example.com"
             {...register("contactEmail")}
           />
           {errors.contactEmail && (
@@ -207,7 +212,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
             id="contactMobile"
             type="text"
             maxLength={10}
-            placeholder="enter mobile number"
+            placeholder="Enter Mobile Number"
             {...register("contactMobile")}
           />
           {errors.contactMobile && (
@@ -223,7 +228,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
           <Input
             id="address"
             type="text"
-            placeholder="enter address"
+            placeholder="Enter Address"
             {...register("address")}
           />
           {errors.address && (
@@ -235,6 +240,9 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
 
         {/* Submit and Cancel Buttons */}
         <div className="justify-end flex gap-4">
+          <Button type="button" variant="outline" onClick={handleCancel}>
+            Cancel
+          </Button>
           <Button
             type="submit"
             disabled={createMutation.isLoading || updateMutation.isLoading}
@@ -246,13 +254,10 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
                 Saving...
               </>
             ) : mode === "create" ? (
-              "Create Branch"
+              "Create"
             ) : (
-              "Save Changes"
+              "Update"
             )}
-          </Button>
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
           </Button>
         </div>
       </form>

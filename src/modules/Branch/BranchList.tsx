@@ -198,7 +198,7 @@ const UserList = () => {
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add Branch
+                Add
               </Button>
             </div>
           </div>
@@ -275,7 +275,7 @@ const UserList = () => {
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>contact Mobile</span>
+                        <span>Contact Mobile</span>
                         {sortBy === "contactMobile" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
@@ -292,6 +292,7 @@ const UserList = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {/* ganesh */}
                   {branches.map((branch) => (
                     <TableRow key={branch.id}>
                       <TableCell>{branch.branchName}</TableCell>

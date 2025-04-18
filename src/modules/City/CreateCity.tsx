@@ -126,7 +126,7 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add City</DialogTitle>
+          <DialogTitle>Add</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid gap-4">
@@ -257,9 +257,6 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
           </div>
 
           <DialogFooter>
-            <Button type="submit" className="bg-primary text-white">
-              Create City
-            </Button>
             <Button
               type="button"
               variant="outline"
@@ -267,6 +264,9 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
               className="ml-2"
             >
               Cancel
+            </Button>
+            <Button type="submit" className="bg-primary text-white">
+              Create
             </Button>
           </DialogFooter>
         </form>

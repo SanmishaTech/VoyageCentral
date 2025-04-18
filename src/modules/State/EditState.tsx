@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import Validate from "@/lib/Handlevalidation";
 interface Country {
   id: number;
   countryName: string;
@@ -75,6 +75,7 @@ const EditState = ({ stateId, isOpen, onClose }: EditStateProps) => {
     formState: { errors },
     reset,
     setValue,
+    setError,
     watch,
   } = useForm<StateFormData>({
     resolver: zodResolver(stateSchema),
@@ -117,6 +118,7 @@ const EditState = ({ stateId, isOpen, onClose }: EditStateProps) => {
       onClose();
     },
     onError: (error: any) => {
+      Validate(error, setError);
       toast.error(error.response?.data?.message || "Failed to update state");
     },
   });
@@ -208,19 +210,19 @@ const EditState = ({ stateId, isOpen, onClose }: EditStateProps) => {
 
             <DialogFooter>
               <Button
-                type="submit"
-                className="bg-primary text-white"
-                disabled={updateStateMutation.isLoading}
-              >
-                Update State
-              </Button>
-              <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 className="ml-2"
               >
                 Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-primary text-white"
+                disabled={updateStateMutation.isLoading}
+              >
+                Update
               </Button>
             </DialogFooter>
           </form>

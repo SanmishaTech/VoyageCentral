@@ -1,5 +1,3 @@
-// --- In handleApiValidationErrors.ts ---
-
 import { FieldValues, UseFormSetError } from "react-hook-form";
 import { toast } from "sonner";
 import axios from "axios";

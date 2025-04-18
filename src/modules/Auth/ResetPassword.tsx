@@ -9,9 +9,17 @@ import { useNavigate, useParams } from "react-router-dom"; // Import useParams
 import { post } from "@/services/apiService";
 import { LoaderCircle } from "lucide-react"; // Import the spinner icon
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import Validate from "@/lib/Handlevalidation";
 
-interface ApiError extends Error {
+// Define expected API response structure
+interface ResetPasswordResponse {
   message: string;
+}
+
+interface ResetPasswordRequest {
+  password: string;
+  token: string;
 }
 
 const resetPasswordSchema = z
@@ -30,43 +38,48 @@ const resetPasswordSchema = z
 type ResetPasswordFormInputs = z.infer<typeof resetPasswordSchema>;
 
 const ResetPassword = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const {
     register,
+    setError,
     handleSubmit,
     formState: { errors },
   } = useForm<ResetPasswordFormInputs>({
     resolver: zodResolver(resetPasswordSchema),
   });
+
   const navigate = useNavigate();
-  const { token } = useParams(); // Extract the token from the URL path
+  const { token } = useParams();
 
-  const onSubmit: SubmitHandler<ResetPasswordFormInputs> = async (data) => {
-    setIsLoading(true);
-    try {
-      if (!token) {
-        toast.error("Invalid or missing reset token");
-        return;
-      }
-
-      const payload = {
-        password: data.password,
-        token, // Use the token from the URL
-      };
-
-      await post("/auth/reset-password", payload);
+  const resetPasswordMutation = useMutation<
+    ResetPasswordResponse,
+    unknown,
+    ResetPasswordRequest
+  >({
+    mutationFn: (data) => post("/auth/reset-password", data),
+    onSuccess: () => {
       toast.success("Password reset successful!");
       navigate("/");
-    } catch (error) {
-      const apiError = error as ApiError;
-      if (apiError.message) {
-        toast.error(apiError.message);
+    },
+    onError: (error: any) => {
+      Validate(error, setError);
+      if (error.message) {
+        toast.error(error.message);
       } else {
         toast.error("An unexpected error occurred");
       }
-    } finally {
-      setIsLoading(false);
+    },
+  });
+
+  const onSubmit: SubmitHandler<ResetPasswordFormInputs> = (data) => {
+    if (!token) {
+      toast.error("Invalid or missing reset token");
+      return;
     }
+
+    resetPasswordMutation.mutate({
+      password: data.password,
+      token,
+    });
   };
 
   return (
@@ -86,6 +99,7 @@ const ResetPassword = () => {
             placeholder="Enter new password"
             {...register("password")}
             required
+            disabled={resetPasswordMutation.isPending}
           />
           {errors.password && (
             <span className="text-red-500">{errors.password.message}</span>
@@ -99,6 +113,7 @@ const ResetPassword = () => {
             placeholder="Confirm new password"
             {...register("confirmPassword")}
             required
+            disabled={resetPasswordMutation.isPending}
           />
           {errors.confirmPassword && (
             <span className="text-red-500">
@@ -106,8 +121,12 @@ const ResetPassword = () => {
             </span>
           )}
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={resetPasswordMutation.isPending}
+        >
+          {resetPasswordMutation.isPending ? (
             <>
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
               Resetting...

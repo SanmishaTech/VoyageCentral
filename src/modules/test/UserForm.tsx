@@ -21,6 +21,7 @@ import { get } from "@/services/apiService";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 import { PasswordInput } from "@/components/ui/password-input";
+import Validate from "@/lib/Handlevalidation";
 
 interface Role {
   name: string;
@@ -114,6 +115,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
       navigate("/users");
     },
     onError: (error: Error) => {
+      Validate(error, setError);
       toast.error(error.message || "Failed to create user");
     },
   });
@@ -127,6 +129,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
       navigate("/users");
     },
     onError: (error: Error) => {
+      Validate(error, setError);
       toast.error(error.message || "Failed to update user");
     },
   });
@@ -234,6 +237,13 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
           {/* Submit and Cancel Buttons */}
           <div className="flex gap-4">
             <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/users")}
+            >
+              Cancel
+            </Button>
+            <Button
               type="submit"
               disabled={
                 createUserMutation.isPending || updateUserMutation.isPending
@@ -246,17 +256,10 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                   Saving...
                 </>
               ) : mode === "create" ? (
-                "Create User"
+                "Create"
               ) : (
                 "Save Changes"
               )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate("/users")}
-            >
-              Cancel
             </Button>
           </div>
         </form>

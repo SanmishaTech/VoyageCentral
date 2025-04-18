@@ -102,7 +102,7 @@ const CreateState: React.FC<CreateStateProps> = ({ isOpen, onClose }) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add State</DialogTitle>
+          <DialogTitle>Add</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid gap-4 space-y-4">
@@ -175,9 +175,6 @@ const CreateState: React.FC<CreateStateProps> = ({ isOpen, onClose }) => {
           </div>
 
           <DialogFooter>
-            <Button type="submit" className="bg-primary text-white">
-              Create State
-            </Button>
             <Button
               type="button"
               variant="outline"
@@ -185,6 +182,9 @@ const CreateState: React.FC<CreateStateProps> = ({ isOpen, onClose }) => {
               className="ml-2"
             >
               Cancel
+            </Button>
+            <Button type="submit" className="bg-primary text-white">
+              Create
             </Button>
           </DialogFooter>
         </form>

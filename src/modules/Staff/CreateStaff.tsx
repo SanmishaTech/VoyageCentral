@@ -1,5 +1,5 @@
 import React from "react";
-import BranchForm from "./BranchForm";
+import StaffForm from "./StaffForm";
 import {
   Dialog,
   DialogContent,
@@ -7,22 +7,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface CreateBranchDialogProps {
+interface CreateStaffDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const CreateBranch = ({ isOpen, onClose }: CreateBranchDialogProps) => {
+const CreateStaff = ({ isOpen, onClose }: CreateStaffDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create New Branch</DialogTitle>
+          <DialogTitle>Create New Staff Member</DialogTitle>
         </DialogHeader>
-        <BranchForm mode="create" onSuccess={onClose} className="mt-4" />
+        <StaffForm mode="create" onSuccess={onClose} className="mt-4" />
       </DialogContent>
     </Dialog>
   );
 };
-// test
-export default CreateBranch;
+
+export default CreateStaff;

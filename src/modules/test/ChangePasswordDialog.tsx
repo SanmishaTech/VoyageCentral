@@ -11,6 +11,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { useMutation } from "@tanstack/react-query"; // Import useMutation
 import { patch } from "@/services/apiService"; // Import the patch method
 import { toast } from "sonner"; // Import toast for notifications
+import Validate from "@/lib/Handlevalidation";
 
 interface ChangePasswordDialogProps {
   userId: string;

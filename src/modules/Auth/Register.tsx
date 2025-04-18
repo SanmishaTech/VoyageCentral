@@ -11,8 +11,11 @@ import { post } from "@/services/apiService";
 import { appName } from "@/config";
 import { LoaderCircle } from "lucide-react"; // Spinner icon
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import Validate from "@/lib/Handlevalidation";
 
-interface ApiError extends Error {
+// Define expected API response structure
+interface RegisterResponse {
   message: string;
 }
 
@@ -39,32 +42,38 @@ const registerSchema = z
 
 const Register = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<RegisterFormInputs>({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit: SubmitHandler<RegisterFormInputs> = async (data) => {
-    setIsLoading(true);
-    try {
-      await post("/auth/register", data);
+  const registerMutation = useMutation<
+    RegisterResponse,
+    unknown,
+    RegisterFormInputs
+  >({
+    mutationFn: (data) => post("/auth/register", data),
+    onSuccess: () => {
       toast.success("Registration successful! Please log in.");
       navigate("/"); // Redirect to login page
-    } catch (error) {
-      const apiError = error as ApiError;
-      if (apiError.message) {
-        toast.error(apiError.message);
+    },
+    onError: (error: any) => {
+      Validate(error, setError);
+      if (error.message) {
+        toast.error(error.message);
       } else {
         toast.error("An unexpected error occurred");
       }
-    } finally {
-      setIsLoading(false);
-    }
+    },
+  });
+
+  const onSubmit: SubmitHandler<RegisterFormInputs> = (data) => {
+    registerMutation.mutate(data);
   };
 
   return (
@@ -85,6 +94,7 @@ const Register = () => {
               placeholder="John Doe"
               {...register("name")}
               required
+              disabled={registerMutation.isPending}
             />
             {errors.name && (
               <span className="text-destructive text-xs absolute -bottom-5">
@@ -100,6 +110,7 @@ const Register = () => {
               placeholder="m@example.com"
               {...register("email")}
               required
+              disabled={registerMutation.isPending}
             />
             {errors.email && (
               <p className="text-destructive text-xs absolute -bottom-5">
@@ -109,7 +120,12 @@ const Register = () => {
           </div>
           <div className="grid gap-2 relative">
             <Label htmlFor="password">Password</Label>
-            <PasswordInput id="password" {...register("password")} required />
+            <PasswordInput
+              id="password"
+              {...register("password")}
+              required
+              disabled={registerMutation.isPending}
+            />
             {errors.password && (
               <p className="text-destructive text-xs absolute -bottom-5">
                 {errors.password.message}
@@ -122,6 +138,7 @@ const Register = () => {
               id="confirmPassword"
               {...register("confirmPassword")}
               required
+              disabled={registerMutation.isPending}
             />
             {errors.confirmPassword && (
               <p className="text-destructive text-xs absolute -bottom-5">
@@ -129,8 +146,12 @@ const Register = () => {
               </p>
             )}
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={registerMutation.isPending}
+          >
+            {registerMutation.isPending ? (
               <>
                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                 Registering...
