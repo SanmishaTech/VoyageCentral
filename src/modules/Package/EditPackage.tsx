@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Loader } from "lucide-react";
-import { handleApiValidationErrors } from "@/lib/Handlevalidation"; // Adjust path as needed
+import Validate from "@/lib/Handlevalidation"; // Adjust path as needed
 
 const packageSchema = z.object({
   packageName: z.string().min(1, "Package name is required"),
@@ -99,7 +99,7 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
       onClose();
     },
     onError: (error: any) => {
-      handleApiValidationErrors(error, setError, formFieldNames);
+      Validate(error, setError);
       toast.error(error.response?.data?.message || "Failed to update package");
     },
   });

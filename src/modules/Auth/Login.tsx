@@ -1,6 +1,6 @@
-import React, { useEffect } from "react"; // Import React if needed
+import { useEffect } from "react"; // Removed useState as it's not needed for isLoading
 import { useLocation, useNavigate } from "react-router-dom";
-import { useForm, SubmitHandler, FieldValues } from "react-hook-form"; // Import FieldValues
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,100 +12,143 @@ import { post } from "@/services/apiService";
 import { appName, allowRegistration } from "@/config";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
-// Import the new handler
-import { handleApiValidationErrors } from "./Handlevalidation"; // Adjust path as needed
+import { ZodError, ZodIssue } from "zod";
+import { handleApiValidationErrors } from "@/lib/Handlevalidation";
 
-// --- Interfaces --- (Keep or import if defined elsewhere)
-interface LoginResponse {
-  token: string;
-  accesstoken: string; // Assuming this is correct, often called refreshToken
-  user: { id: string; email: string /* other fields */ };
+//
+// 1. Define the shape of what your backend is returning
+//
+interface BackendErrorResponse {
+  errors: Array<{
+    path: Array<string | number>;
+    message: string;
+  }>;
 }
 
-// --- Zod Schema ---
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address").min(1, "Email is required"),
-  password: z.string().min(1, "Password is required"),
-  // .min(6, "Password must be at least 6 characters") // Keep client-side basic checks if desired
-});
+//
+// 2. Convert each backend error into a ZodIssue
+//
+function mapBackendErrorToIssue(err: BackendErrorResponse): ZodIssue[] {
+  console.log(err);
+  return err.error.map(({ path, message }) => ({
+    // you can choose a more specific code if you like,
+    // but "custom" is fine for server‐side messages
+    code: "custom" as const,
+    path,
+    message,
+  }));
+}
+function getZodIssuesFromBackend(err: BackendErrorResponse): ZodIssue[] {
+  return mapBackendErrorToIssue(err);
+}
+function throwAsZodError(err: BackendErrorResponse): never {
+  const issues = mapBackendErrorToIssue(err);
+  throw new ZodError(issues);
+}
+// Define expected API response structure for SUCCESS
+interface LoginResponse {
+  token: string;
+  accesstoken: string;
+  user: {
+    id: string;
+    email: string;
+    // ... other user fields
+  };
+}
+
+// Define structure for individual field validation errors from API
+interface FieldValidationError {
+  path: string[]; // Expecting path like ["email"] or ["password"]
+  message: string;
+}
+
+// Define the structure of the API error response BODY for VALIDATION errors (status 400)
+interface ApiValidationErrorResponse {
+  status: number;
+  error: FieldValidationError[];
+  message: string; // General message like "Request failed" or "Validation Error"
+}
+
+// Define a more general API error structure for other errors (e.g., 401, 500)
+// This depends on how your apiService formats errors. We assume it might throw
+// an object with a 'message' property for non-validation errors.
+interface ApiGeneralError extends Error {
+  // Can still extend Error
+  message: string;
+  status?: number; // Optional status if available
+  // Include other potential properties your apiService might add
+}
 
 type LoginFormInputs = z.infer<typeof loginSchema>;
 
-// --- Component ---
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
+
+  password: z.string().min(1, "Password is required"),
+});
+
 const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // Get setError from useForm
   const {
     register,
     handleSubmit,
-    setError, // Get setError
+    setError, // <-- Destructure setError
     formState: { errors },
-    getValues, // Still useful for getting field names
+    // getValues // Can be useful for debugging
   } = useForm<LoginFormInputs>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      // Good practice to set default values
-      email: "",
-      password: "",
-    },
   });
 
-  // Memoize field names to avoid re-calculating on every render
-  const formFieldNames = React.useMemo(
-    () => Object.keys(getValues()) as ReadonlyArray<keyof LoginFormInputs>,
-    [getValues] // Dependency array ensures it updates if form structure changes (unlikely here)
-  );
-
-  // Unauthorized toast logic (remains the same)
   useEffect(() => {
     if (location.state?.unauthorized) {
       toast.error("You are not authorized.");
-      // Use requestAnimationFrame or setTimeout with 0 to ensure state update happens after render
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         navigate(location.pathname, { replace: true, state: {} });
-      });
+      }, 0);
     }
   }, [location, navigate]);
 
   const loginMutation = useMutation<
     LoginResponse,
-    unknown, // Error type is unknown
+    unknown, // Use unknown for error type, as we'll check its structure
     LoginFormInputs
   >({
-    mutationFn: (loginData: LoginFormInputs) =>
-      post<LoginResponse>("/auth/login", loginData),
+    mutationFn: async (loginData: LoginFormInputs) => {
+      return await post("/auth/login", loginData);
+    },
     onSuccess: (data) => {
-      // ... onSuccess logic ...
+      console.log("Login successful:", data);
       localStorage.setItem("authToken", data.token);
       localStorage.setItem("refreshToken", data.accesstoken);
       localStorage.setItem("user", JSON.stringify(data.user));
-      // Redirect to the dashboard or the page they were trying to access
+      // queryClient.invalidateQueries(...) // Consider invalidating relevant queries
       navigate("/dashboard");
       toast.success("Login successful!");
     },
     onError: (error: unknown) => {
-      // Log the original error structure here for confirmation
-      console.log("Login error object passed to handler:", error);
-
-      handleApiValidationErrors<LoginFormInputs>(
-        error,
-        setError,
-        formFieldNames
-      );
-      // Remove any line like 'const Error = error?.error;' before this call
+      Validate(error, setError);
+      // console.log(error);
+      // throwAsZodError(error);
+      console.error("Login error details:", error);
     },
   });
 
   const onSubmit: SubmitHandler<LoginFormInputs> = (data) => {
+    // Optionally log data being sent: console.log("Submitting:", data);
     loginMutation.mutate(data);
   };
 
   const isLoading = loginMutation.isPending;
 
-  // --- JSX (Form remains the same) ---
   return (
+    // When submitting, RHF first runs Zod validation. If that passes, onSubmit is called.
+    // If Zod fails, its errors show up in the `errors` object immediately.
+    // If Zod passes but the server returns validation errors, our `onError` handler
+    // calls `setError`, which also updates the `errors` object.
     <form className="p-6 md:p-8" onSubmit={handleSubmit(onSubmit)}>
       <div className="flex flex-col gap-6">
         {/* Header */}
@@ -119,25 +162,22 @@ const Login = () => {
         {/* Email Field */}
         <div className="grid gap-2 relative pb-3">
           {" "}
-          {/* Increased pb if needed */}
+          {/* Added pb-3 for error spacing */}
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
             placeholder="m@example.com"
-            {...register("email")}
+            {...register("email")} // RHF validation triggers on change/blur
             required
             disabled={isLoading}
-            aria-invalid={errors.email ? "true" : "false"}
-            aria-describedby={errors.email ? "email-error" : undefined}
+            aria-invalid={errors.email ? "true" : "false"} // Accessibility
           />
+          {/* Display RHF errors (client OR server-set) */}
           {errors.email && (
-            <p
-              id="email-error"
-              className="text-destructive text-xs absolute -bottom-1.5 left-0"
-            >
+            <p className="text-destructive text-xs absolute -bottom-1 left-0">
               {" "}
-              {/* Adjusted position */}
+              {/* Adjusted positioning */}
               {errors.email.message}
             </p>
           )}
@@ -146,12 +186,12 @@ const Login = () => {
         {/* Password Field */}
         <div className="grid gap-2 relative pb-3">
           {" "}
-          {/* Increased pb if needed */}
+          {/* Added pb-3 for error spacing */}
           <div className="flex items-center">
             <Label htmlFor="password">Password</Label>
             <a
               href="/forgot-password"
-              tabIndex={isLoading ? -1 : 0}
+              tabIndex={isLoading ? -1 : 0} // Prevent tabbing when disabled
               className="ml-auto text-sm underline-offset-2 hover:underline"
             >
               Forgot your password?
@@ -159,19 +199,16 @@ const Login = () => {
           </div>
           <PasswordInput
             id="password"
-            {...register("password")}
+            {...register("password")} // RHF validation triggers on change/blur
             required
             disabled={isLoading}
-            aria-invalid={errors.password ? "true" : "false"}
-            aria-describedby={errors.password ? "password-error" : undefined}
+            aria-invalid={errors.password ? "true" : "false"} // Accessibility
           />
+          {/* Display RHF errors (client OR server-set) */}
           {errors.password && (
-            <p
-              id="password-error"
-              className="text-destructive text-xs absolute -bottom-1.5 left-0"
-            >
+            <p className="text-destructive text-xs absolute -bottom-1 left-0">
               {" "}
-              {/* Adjusted position */}
+              {/* Adjusted positioning */}
               {errors.password.message}
             </p>
           )}
