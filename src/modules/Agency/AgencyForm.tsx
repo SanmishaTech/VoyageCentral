@@ -462,7 +462,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     <>
       {/* --- Form --- */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="mx-auto mt-10 max-w-5xl">
+        <Card className="mx-auto mt-10 min-w-5xl">
           {" "}
           {/* Constrain width */}
           <CardContent className="pt-6">
@@ -1039,7 +1039,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
 
       {/* --- Display Users & Subscriptions in Edit Mode --- */}
       {mode === "edit" && agencyData && (
-        <div className="mx-auto mt-8 mb-10 space-y-6 max-w-5xl">
+        <div className="mx-auto mt-8 mb-10 space-y-6 min-w-5xl">
           {" "}
           {/* Added bottom margin */}
           {/* --- Users Table --- */}
