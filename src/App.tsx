@@ -22,6 +22,8 @@ import AgencyList from "@/modules/Agency/AgencyList";
 import CreateAgency from "@/modules/Agency/CreateAgency";
 import EditAgency from "@/modules/Agency/EditAgency";
 
+import HotelList from "@/modules/Hotel/HotelList";
+
 import BranchList from "@/modules/Branch/BranchList";
 // import CreateBranch from "@/modules/Branch/CreateBranch";
 // import EditBranch from "@/modules/Branch/EditBranch";
@@ -33,6 +35,9 @@ import Countries from "./modules/Country/CountryList";
 import Cities from "./modules/City/CityList";
 import State from "./modules/State/StateList";
 import Sector from "./modules/Sector/SectorList";
+import Accommodation from "./modules/Accommodation/AccommodationList";
+import VehicleList from "@/modules/Vehicle/VehicleList";
+import AirlineList from "@/modules/Airline/AirlineList";
 import StaffList from "./modules/Staff/StaffList";
 
 const App = () => {
@@ -166,6 +171,40 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <Sector />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/accommodations"
+              element={
+                <ProtectedRoute>
+                  <Accommodation />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/vehicles"
+              element={
+                <ProtectedRoute>
+                  <VehicleList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/airlines"
+              element={
+                <ProtectedRoute>
+                  <AirlineList />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/hotels"
+              element={
+                <ProtectedRoute>
+                  <HotelList />
                 </ProtectedRoute>
               }
             />
