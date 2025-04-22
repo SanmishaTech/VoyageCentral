@@ -1,44 +1,46 @@
-import { useEffect } from "react";
-import { appName } from "./config"; // Import appName from config
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect } from 'react';
+import { appName } from './config'; // Import appName from config
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import AuthLayout from "./layouts/AuthLayout";
-import MainLayout from "./layouts/MainLayout";
+import AuthLayout from './layouts/AuthLayout';
+import MainLayout from './layouts/MainLayout';
 
-import Login from "./modules/Auth/Login";
-import Register from "./modules/Auth/Register";
-import ForgotPassword from "./modules/Auth/ForgotPassword";
-import ResetPassword from "./modules/Auth/ResetPassword";
+import Login from './modules/Auth/Login';
+import Register from './modules/Auth/Register';
+import ForgotPassword from './modules/Auth/ForgotPassword';
+import ResetPassword from './modules/Auth/ResetPassword';
 
-import ProtectedRoute from "./components/common/protected-route"; // Correct path
+import ProtectedRoute from './components/common/protected-route'; // Correct path
 
-import Dashboard from "./modules/Dashboard/DashboardPage";
+import Dashboard from './modules/Dashboard/DashboardPage';
 
-import ProfilePage from "./modules/Profile/ProfilePage";
+import ProfilePage from './modules/Profile/ProfilePage';
 
-import UserList from "@/modules/User/UserList";
+import UserList from '@/modules/User/UserList';
 
-import AgencyList from "@/modules/Agency/AgencyList";
-import CreateAgency from "@/modules/Agency/CreateAgency";
-import EditAgency from "@/modules/Agency/EditAgency";
+import AgencyList from '@/modules/Agency/AgencyList';
+import CreateAgency from '@/modules/Agency/CreateAgency';
+import EditAgency from '@/modules/Agency/EditAgency';
 
-import HotelList from "@/modules/Hotel/HotelList";
+import HotelList from '@/modules/Hotel/HotelList';
+import CreateHotel from '@/modules/Hotel/CreateHotel';
+import EditHotel from '@/modules/Hotel/EditHotel';
 
-import BranchList from "@/modules/Branch/BranchList";
+import BranchList from '@/modules/Branch/BranchList';
 // import CreateBranch from "@/modules/Branch/CreateBranch";
 // import EditBranch from "@/modules/Branch/EditBranch";
 
-import { Toaster } from "sonner";
-import "./App.css";
-import PackageList from "./modules/Package/PackageList";
-import Countries from "./modules/Country/CountryList";
-import Cities from "./modules/City/CityList";
-import State from "./modules/State/StateList";
-import Sector from "./modules/Sector/SectorList";
-import Accommodation from "./modules/Accommodation/AccommodationList";
-import VehicleList from "@/modules/Vehicle/VehicleList";
-import AirlineList from "@/modules/Airline/AirlineList";
-import StaffList from "./modules/Staff/StaffList";
+import { Toaster } from 'sonner';
+import './App.css';
+import PackageList from './modules/Package/PackageList';
+import Countries from './modules/Country/CountryList';
+import Cities from './modules/City/CityList';
+import State from './modules/State/StateList';
+import Sector from './modules/Sector/SectorList';
+import Accommodation from './modules/Accommodation/AccommodationList';
+import VehicleList from '@/modules/Vehicle/VehicleList';
+import AirlineList from '@/modules/Airline/AirlineList';
+import StaffList from './modules/Staff/StaffList';
 
 const App = () => {
   useEffect(() => {
@@ -205,6 +207,24 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <HotelList />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/hotels/create"
+              element={
+                <ProtectedRoute>
+                  <CreateHotel />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/hotels/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditHotel />
                 </ProtectedRoute>
               }
             />
