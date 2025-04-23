@@ -51,7 +51,7 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 
-const fetchHotels = async (
+const fetchClients = async (
   page: number,
   sortBy: string,
   sortOrder: string,
@@ -59,27 +59,27 @@ const fetchHotels = async (
   recordsPerPage: number
 ) => {
   const response = await get(
-    `/hotels?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&limit=${recordsPerPage}`
+    `/clients?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&limit=${recordsPerPage}`
   );
   return response;
 };
 
-const HotelList = () => {
+const ClientList = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10); // Add recordsPerPage state
-  const [sortBy, setSortBy] = useState("hotelName"); // Default sort column
+  const [sortBy, setSortBy] = useState("clientName"); // Default sort column
   const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
   const [search, setSearch] = useState(""); // Search query
   const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
-  const [hotelToDelete, setHotelToDelete] = useState<number | null>(null); //
+  const [clientToDelete, setClientToDelete] = useState<number | null>(null); //
   //  Track the user ID to delete
   const navigate = useNavigate();
 
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [
-      "hotels",
+      "clients",
       currentPage,
       sortBy,
       sortOrder,
@@ -87,35 +87,35 @@ const HotelList = () => {
       recordsPerPage,
     ],
     queryFn: () =>
-      fetchHotels(currentPage, sortBy, sortOrder, search, recordsPerPage),
+      fetchClients(currentPage, sortBy, sortOrder, search, recordsPerPage),
   });
 
-  const hotels = data?.hotels || [];
+  const clients = data?.clients || [];
   const totalPages = data?.totalPages || 1;
-  const totalHotels = data?.totalHotels || 0;
+  const totalClients = data?.totalClients || 0;
 
   // Mutation for deleting a user
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => del(`/hotels/${id}`),
+    mutationFn: (id: number) => del(`/clients/${id}`),
     onSuccess: () => {
-      toast.success("Hotel deleted successfully");
-      queryClient.invalidateQueries(["hotels"]);
+      toast.success("Client deleted successfully");
+      queryClient.invalidateQueries(["clients"]);
     },
     onError: () => {
-      toast.error("Failed to delete hotel");
+      toast.error("Failed to delete clients");
     },
   });
 
   const confirmDelete = (id: number) => {
-    setHotelToDelete(id);
+    setClientToDelete(id);
     setShowConfirmation(true);
   };
 
   const handleDelete = () => {
-    if (hotelToDelete) {
-      deleteMutation.mutate(hotelToDelete);
+    if (clientToDelete) {
+      deleteMutation.mutate(clientToDelete);
       setShowConfirmation(false);
-      setHotelToDelete(null);
+      setClientToDelete(null);
     }
   };
 
@@ -140,7 +140,7 @@ const HotelList = () => {
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Hotel Management
+        Client Management
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>
@@ -149,7 +149,7 @@ const HotelList = () => {
             {/* Search Input */}
             <div className="flex-grow">
               <Input
-                placeholder="Search hotels..."
+                placeholder="Search clients..."
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
@@ -160,11 +160,11 @@ const HotelList = () => {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                onClick={() => navigate("/hotels/create")}
+                onClick={() => navigate("/clients/create")}
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add Hotel
+                Add Client
               </Button>
             </div>
           </div>
@@ -178,20 +178,20 @@ const HotelList = () => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load hotels.
+              Failed to load clients.
             </div>
-          ) : hotels.length > 0 ? (
+          ) : clients.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead
-                      onClick={() => handleSort("hotelName")}
+                      onClick={() => handleSort("clientName")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Hotel Name</span>
-                        {sortBy === "hotelName" && (
+                        <span>Client Name</span>
+                        {sortBy === "clientName" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -204,12 +204,12 @@ const HotelList = () => {
                     </TableHead>
 
                     <TableHead
-                      onClick={() => handleSort("contactPerson")}
+                      onClick={() => handleSort("mobile1")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Contact Person</span>
-                        {sortBy === "contactPerson" && (
+                        <span>Mobile</span>
+                        {sortBy === "mobile1" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -221,12 +221,12 @@ const HotelList = () => {
                       </div>
                     </TableHead>
                     <TableHead
-                      onClick={() => handleSort("hotelContactNo1")}
+                      onClick={() => handleSort("email")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Hotel Contact No</span>
-                        {sortBy === "hotelContactNo1" && (
+                        <span>Email</span>
+                        {sortBy === "email" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -238,12 +238,12 @@ const HotelList = () => {
                       </div>
                     </TableHead>
                     <TableHead
-                      onClick={() => handleSort("officeContactNo1")}
+                      onClick={() => handleSort("gender")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Office Contact No</span>
-                        {sortBy === "officeContactNo1" && (
+                        <span>Gender</span>
+                        {sortBy === "gender" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -258,18 +258,20 @@ const HotelList = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {hotels.map((hotel) => (
-                    <TableRow key={hotel.id}>
-                      <TableCell>{hotel.hotelName}</TableCell>
-                      <TableCell>{hotel.contactPerson}</TableCell>
-                      <TableCell>{hotel.hotelContactNo1}</TableCell>
-                      <TableCell>{hotel.officeContactNo1}</TableCell>
+                  {clients.map((client) => (
+                    <TableRow key={client.id}>
+                      <TableCell>{client.clientName}</TableCell>
+                      <TableCell>{client.mobile1}</TableCell>
+                      <TableCell>{client.email}</TableCell>
+                      <TableCell>{client.gender}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => navigate(`/hotels/${hotel.id}/edit`)}
+                            onClick={() =>
+                              navigate(`/clients/${client.id}/edit`)
+                            }
                           >
                             <Edit size={16} />
                           </Button>
@@ -277,7 +279,7 @@ const HotelList = () => {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => confirmDelete(hotel.id)}
+                            onClick={() => confirmDelete(client.id)}
                           >
                             <Trash2 size={16} />
                           </Button>
@@ -290,7 +292,7 @@ const HotelList = () => {
               <CustomPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                totalRecords={totalHotels}
+                totalRecords={totalClients}
                 recordsPerPage={recordsPerPage}
                 onPageChange={setCurrentPage} // Pass setCurrentPage directly
                 onRecordsPerPageChange={(newRecordsPerPage) => {
@@ -300,7 +302,7 @@ const HotelList = () => {
               />
             </div>
           ) : (
-            <div className="text-center">No Hotels Found.</div>
+            <div className="text-center">No Clients Found.</div>
           )}
         </CardContent>
       </Card>
@@ -308,10 +310,10 @@ const HotelList = () => {
       <ConfirmDialog
         isOpen={showConfirmation}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this Hotel? This action cannot be undone."
+        description="Are you sure you want to delete this Client? This action cannot be undone."
         onCancel={() => {
           setShowConfirmation(false);
-          setHotelToDelete(null);
+          setClientToDelete(null);
         }}
         onConfirm={handleDelete}
       />
@@ -319,4 +321,4 @@ const HotelList = () => {
   );
 };
 
-export default HotelList;
+export default ClientList;
