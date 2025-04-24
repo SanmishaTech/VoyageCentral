@@ -91,15 +91,24 @@ const FormSchema = z.object({
 
   email1: z
     .string()
-    .email("Primary email must be a valid email address.")
+    .refine((val) => val === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: "Primary email must be a valid email address..",
+    })
     .optional(),
+
   email2: z
     .string()
-    .email("Secondary email must be a valid email address.")
+    .refine((val) => val === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: "Secondary email must be a valid email address..",
+    })
     .optional(),
 
-  website: z.string().url("Website must be a valid URL.").optional(),
-
+  website: z
+    .string()
+    .refine((val) => val === "" || z.string().url().safeParse(val).success, {
+      message: "Website must be a valid URL.",
+    })
+    .optional(),
   panNumber: z
     .string()
     .refine((val) => val === "" || /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(val), {
@@ -295,7 +304,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
         setValue("officeCountry", String(editHotelData.officeCountryId) || "");
         setValue("officeState", String(editHotelData.officeStateId) || "");
         setValue("officeCity", String(editHotelData.officeCityId) || "");
-      }, 1000); // 1-second delay
+      }, 300); // 1-second delay
     }
   }, [editHotelData, reset]);
 
@@ -338,15 +347,15 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
-  if (
-    mode === "edit" &&
-    !hotelCities?.length &&
-    !hotelStates?.length &&
-    !officeCities?.length &&
-    !officeStates?.length
-  ) {
-    return <></>;
-  }
+  // if (
+  //   mode === "edit" &&
+  //   !hotelCities?.length &&
+  //   !hotelStates?.length &&
+  //   !officeCities?.length &&
+  //   !officeStates?.length
+  // ) {
+  //   return <></>;
+  // }
   return (
     <>
       {/* JSX Code for HotelForm.tsx */}
@@ -357,7 +366,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
             <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
               Hotel Details
             </CardTitle>
-            <div className="grid gap-4 mt-5">
+            <div className="grid gap-4 mt-4">
               {/* Hotel Name */}
               <div>
                 <Label
@@ -715,7 +724,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
 
             {/* Contact Details */}
             <div>
-              <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-4">
+              <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mt-5 mb-4">
                 Contact Details
               </h3>
               <div className="space-y-4">
@@ -723,7 +732,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="contactPerson"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Contact Person
                   </Label>
@@ -743,7 +752,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <div>
                     <Label
                       htmlFor="hotelContactNo1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Hotel Contact No 1
                     </Label>
@@ -761,7 +770,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <div>
                     <Label
                       htmlFor="hotelContactNo2"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Hotel Contact No 2
                     </Label>
@@ -779,7 +788,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <div>
                     <Label
                       htmlFor="officeContactNo1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Office Contact No 1
                     </Label>
@@ -797,7 +806,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <div>
                     <Label
                       htmlFor="officeContactNo2"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Office Contact No 2
                     </Label>
@@ -818,7 +827,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <div>
                     <Label
                       htmlFor="email1"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Email 1
                     </Label>
@@ -836,7 +845,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <div>
                     <Label
                       htmlFor="email2"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Email 2
                     </Label>
@@ -857,7 +866,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <div>
                     <Label
                       htmlFor="website"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Website
                     </Label>
@@ -875,7 +884,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <div>
                     <Label
                       htmlFor="panNumber"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       PAN Number
                     </Label>
@@ -896,14 +905,14 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
             {/* Bank Details */}
             {/* Bank Details 1 */}
             <div>
-              <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-4">
+              <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mt-5 mb-4">
                 Bank Details 1
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label
                     htmlFor="bankName1"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Bank Name
                   </Label>
@@ -921,7 +930,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="bankAccountNumber1"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Bank Account Number
                   </Label>
@@ -939,7 +948,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="branch1"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Branch
                   </Label>
@@ -957,7 +966,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="beneficiaryName1"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Beneficiary Name
                   </Label>
@@ -975,7 +984,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="ifsc_code1"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     IFSC Code
                   </Label>
@@ -993,7 +1002,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="swiftCode1"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     SWIFT Code
                   </Label>
@@ -1013,14 +1022,14 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
 
             {/* Bank Details 2 */}
             <div>
-              <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-4">
+              <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mt-5 mb-4">
                 Bank Details 2
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label
                     htmlFor="bankName2"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Bank Name
                   </Label>
@@ -1038,7 +1047,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="bankAccountNumber2"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Bank Account Number
                   </Label>
@@ -1056,7 +1065,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="branch2"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Branch
                   </Label>
@@ -1074,7 +1083,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="beneficiaryName2"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Beneficiary Name
                   </Label>
@@ -1092,7 +1101,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="ifsc_code2"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     IFSC Code
                   </Label>
@@ -1110,7 +1119,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <div>
                   <Label
                     htmlFor="swiftCode2"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     SWIFT Code
                   </Label>

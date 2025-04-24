@@ -261,9 +261,9 @@ const HotelList = () => {
                   {hotels.map((hotel) => (
                     <TableRow key={hotel.id}>
                       <TableCell>{hotel.hotelName}</TableCell>
-                      <TableCell>{hotel.contactPerson}</TableCell>
-                      <TableCell>{hotel.hotelContactNo1}</TableCell>
-                      <TableCell>{hotel.officeContactNo1}</TableCell>
+                      <TableCell>{hotel.contactPerson || "N/A"}</TableCell>
+                      <TableCell>{hotel.hotelContactNo1 || "N/A"}</TableCell>
+                      <TableCell>{hotel.officeContactNo1 || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button

@@ -5,6 +5,7 @@ import {
   Controller,
   useFieldArray,
 } from "react-hook-form";
+import { genderOptions, foodTypeOptions } from "@/config/data";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -227,7 +228,7 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { data: indianStates, isLoading: isIndianStatesLoading } = useQuery({
     queryKey: ["states", 1],
     queryFn: async () => {
-      const response = await get(`/states/by-country/1`);
+      const response = await get(`/states/india`);
       return response; // API returns the sector object directly
     },
   });
@@ -245,12 +246,31 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
   useEffect(() => {
     if (editClientData) {
       setStateId(String(editClientData.stateId) || "");
+
+      // ✅ Map familyFriends once
+      const familyFriendsData =
+        editClientData.familyFriends?.map((friend) => ({
+          friendId: String(friend.id) || "",
+          name: friend.name || "",
+          gender: friend.gender || "",
+          relation: friend.relation || "",
+          aadharNo: friend.aadharNo || "",
+          dateOfBirth: friend.dateOfBirth
+            ? new Date(friend.dateOfBirth).toISOString().split("T")[0]
+            : "",
+          anniversaryDate: friend.anniversaryDate
+            ? new Date(friend.anniversaryDate).toISOString().split("T")[0]
+            : "",
+          foodType: friend.foodType || "",
+          mobile: friend.mobile || "",
+          email: friend.email || "",
+        })) || [];
+
+      // ✅ Reset full form including field array
       reset({
         clientName: editClientData.clientName || "",
-        gender: editClientData.gender || "",
+        // gender: editClientData.gender,
         email: editClientData.email || "",
-        // dateOfBirth: editClientData.dateOfBirth || "",
-        // marriageDate: editClientData.marriageDate || "",
         dateOfBirth: editClientData.dateOfBirth
           ? new Date(editClientData.dateOfBirth).toISOString().split("T")[0]
           : "",
@@ -267,37 +287,17 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
         passportNo: editClientData.passportNo || "",
         panNo: editClientData.panNo || "",
         aadharNo: editClientData.aadharNo || "",
+        familyFriends: familyFriendsData, // ✅ include this
       });
-      setValue("gender", editClientData.gender || "");
 
+      // Set dependent dropdowns after reset (optional delay)
       setTimeout(() => {
         setValue("stateId", String(editClientData.stateId) || "");
         setValue("cityId", String(editClientData.cityId) || "");
-      }, 1000); // 1-second delay
-
-      const familyFriendsData = editClientData.familyFriends.map((friend) => ({
-        friendId: String(friend.id) || "",
-        name: friend.name || "",
-        gender: friend.gender || "",
-        relation: friend.relation || "",
-        aadharNo: friend.aadharNo || "",
-        dateOfBirth: friend.dateOfBirth
-          ? new Date(friend.dateOfBirth).toISOString().split("T")[0]
-          : "",
-        anniversaryDate: friend.anniversaryDate
-          ? new Date(friend.anniversaryDate).toISOString().split("T")[0]
-          : "",
-        foodType: friend.foodType || "",
-        mobile: friend.mobile || "",
-        email: friend.email || "",
-      }));
-
-      // reset({ familyFriends: [] }); // This is not necessary if you're only appending
-
-      // Add the new family friends to the form
-      familyFriendsData.forEach((friend) => append(friend));
+        setValue("gender", editClientData.gender);
+      }, 300); // shorter delay works fine too
     }
-  }, [editClientData, reset]);
+  }, [editClientData, reset, setValue]);
 
   // Mutation for creating a user
   const createMutation = useMutation({
@@ -388,9 +388,11 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {genderOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -792,9 +794,14 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                             <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
+                            {genderOptions.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <div className="mt-2">
@@ -814,11 +821,14 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                               <SelectValue placeholder="Select foodType" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Veg">Veg</SelectItem>
-                              <SelectItem value="Non-Veg">Non-veg</SelectItem>
-                              <SelectItem value="Hindu-NonVeg">
-                                Hindu-NonVeg
-                              </SelectItem>
+                              {foodTypeOptions.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -892,6 +902,7 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                           </p>
                         )}
                       </TableCell>
+                      {/* friend id */}
                       <Input
                         type="hidden"
                         {...register(`familyFriends.${index}.friendId`)}
@@ -901,6 +912,8 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                           {errors.familyFriends[index]?.friendId?.message}
                         </p>
                       )}
+                      {/* friend id */}
+
                       <TableCell>
                         <Button
                           type="button"
