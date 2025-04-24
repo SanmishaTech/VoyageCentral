@@ -98,12 +98,12 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
   const { data: statesData } = useQuery<StateResponse>({
     queryKey: ["states", selectedCountryId],
     queryFn: () =>
-      selectedCountryId ? get(`/states?countryId=${selectedCountryId}`) : null,
+      selectedCountryId ? get(`/states/by-country/${selectedCountryId}`) : null,
     enabled: !!selectedCountryId,
   });
 
   // Replace the filteredStates memo with direct states access
-  const states = statesData?.states ?? [];
+  const states = statesData ?? [];
 
   const createCityMutation = useMutation({
     mutationFn: (newCity: CityFormData) => post("/cities", newCity),

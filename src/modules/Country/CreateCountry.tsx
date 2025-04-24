@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Validate from "@/lib/Handlevalidation";
 
 const countriesSchema = z.object({
   countryName: z.string().min(1, "Country name is required"),
@@ -33,6 +34,7 @@ const CreateCountry: React.FC<CreateCountryProps> = ({ isOpen, onClose }) => {
     handleSubmit,
     formState: { errors },
     reset,
+    setError,
   } = useForm<CountryFormData>({
     resolver: zodResolver(countriesSchema),
     defaultValues: {
@@ -48,7 +50,8 @@ const CreateCountry: React.FC<CreateCountryProps> = ({ isOpen, onClose }) => {
       reset();
       onClose();
     },
-    onError: () => {
+    onError: (error: any) => {
+      Validate(error, setError);
       toast.error("Failed to create countries");
     },
   });

@@ -261,9 +261,9 @@ const ClientList = () => {
                   {clients.map((client) => (
                     <TableRow key={client.id}>
                       <TableCell>{client.clientName}</TableCell>
-                      <TableCell>{client.mobile1}</TableCell>
-                      <TableCell>{client.email}</TableCell>
-                      <TableCell>{client.gender}</TableCell>
+                      <TableCell>{client.mobile1 || "N/A"}</TableCell>
+                      <TableCell>{client.email || "N/A"}</TableCell>
+                      <TableCell>{client.gender || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
