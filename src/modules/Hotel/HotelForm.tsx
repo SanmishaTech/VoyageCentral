@@ -115,7 +115,7 @@ const FormSchema = z.object({
       message: "Invalid PAN number format. Example: ABCDE1234F",
     }),
 
-  bankName1: z.string().max(100, "Bank name is too long.").optional(),
+  bank1Id: z.string().max(100, "Bank name is too long.").optional(),
   bankAccountNumber1: z
     .string()
     .max(30, "Bank account number is too long.")
@@ -141,7 +141,7 @@ const FormSchema = z.object({
         message: "Invalid SWIFT code format. Example: SBININBBXXX or SBININBB",
       }
     ),
-  bankName2: z.string().max(100, "Bank name is too long.").optional(),
+  bank2Id: z.string().max(100, "Bank name is too long.").optional(),
   bankAccountNumber2: z
     .string()
     .max(30, "Bank account number is too long.")
@@ -200,6 +200,15 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
       return response; // API returns the sector object directly
     },
     enabled: !!id && mode === "edit",
+  });
+
+  // banks
+  const { data: banks, isLoading: isBanksLoading } = useQuery({
+    queryKey: ["banks"],
+    queryFn: async () => {
+      const response = await get(`/banks/all`);
+      return response;
+    },
   });
 
   // countries
@@ -263,16 +272,12 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
         hotelAddressLine1: editHotelData.hotelAddressLine1 || "",
         hotelAddressLine2: editHotelData.hotelAddressLine2 || "",
         hotelAddressLine3: editHotelData.hotelAddressLine3 || "",
-        // hotelCountry: String(editHotelData.hotelCountryId) || "",
-        // hotelState: String(editHotelData.hotelStateId) || "",
-        // hotelCity: String(editHotelData.hotelCityId) || "",
+
         hotelPincode: editHotelData.hotelPincode || "",
         officeAddressLine1: editHotelData.officeAddressLine1 || "",
         officeAddressLine2: editHotelData.officeAddressLine2 || "",
         officeAddressLine3: editHotelData.officeAddressLine3 || "",
-        // officeCountry: String(editHotelData.officeCountryId) || "",
-        // officeState: String(editHotelData.officeStateId) || "",
-        // officeCity: String(editHotelData.officeCityId) || "",
+
         officePincode: editHotelData.officePincode || "",
         contactPerson: editHotelData.contactPerson || "",
         hotelContactNo1: editHotelData.hotelContactNo1 || "",
@@ -283,13 +288,11 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
         email2: editHotelData.email2 || "",
         website: editHotelData.website || "",
         panNumber: editHotelData.panNumber || "",
-        bankName1: editHotelData.bankName1 || "",
         bankAccountNumber1: editHotelData.bankAccountNumber1 || "",
         branch1: editHotelData.branch1 || "",
         beneficiaryName1: editHotelData.beneficiaryName1 || "",
         ifsc_code1: editHotelData.ifsc_code1 || "",
         swiftCode1: editHotelData.swiftCode1 || "",
-        bankName2: editHotelData.bankName2 || "",
         bankAccountNumber2: editHotelData.bankAccountNumber2 || "",
         branch2: editHotelData.branch2 || "",
         beneficiaryName2: editHotelData.beneficiaryName2 || "",
@@ -298,6 +301,8 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
       });
 
       setTimeout(() => {
+        setValue("bank1Id", String(editHotelData.bank1Id) || "");
+        setValue("bank2Id", String(editHotelData.bank2Id) || "");
         setValue("hotelCountry", String(editHotelData.hotelCountryId) || "");
         setValue("hotelState", String(editHotelData.hotelStateId) || "");
         setValue("hotelCity", String(editHotelData.hotelCityId) || "");
@@ -911,21 +916,28 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label
-                    htmlFor="bankName1"
+                    htmlFor="bank1Id"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Bank Name
                   </Label>
-                  <Input
-                    id="bankName1"
-                    {...register("bankName1")}
-                    placeholder="Enter bank name"
-                  />
-                  {errors.bankName1 && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.bankName1.message}
-                    </p>
-                  )}
+                  <Select
+                    onValueChange={(value) => {
+                      setValue("bank1Id", value);
+                    }}
+                    value={watch("bank1Id")}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a bank" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {banks?.map((bank) => (
+                        <SelectItem key={bank.id} value={String(bank.id)}>
+                          {bank.bankName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label
@@ -1026,7 +1038,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 Bank Details 2
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
+                {/* <div>
                   <Label
                     htmlFor="bankName2"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -1043,6 +1055,31 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       {errors.bankName2.message}
                     </p>
                   )}
+                </div> */}
+                <div>
+                  <Label
+                    htmlFor="bank2Id"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Bank Name
+                  </Label>
+                  <Select
+                    onValueChange={(value) => {
+                      setValue("bank2Id", value);
+                    }}
+                    value={watch("bank2Id")}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a bank" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {banks?.map((bank) => (
+                        <SelectItem key={bank.id} value={String(bank.id)}>
+                          {bank.bankName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label
