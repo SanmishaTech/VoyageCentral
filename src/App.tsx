@@ -44,6 +44,8 @@ import Sector from "./modules/Sector/SectorList";
 import Accommodation from "./modules/Accommodation/AccommodationList";
 import VehicleList from "@/modules/Vehicle/VehicleList";
 import AirlineList from "@/modules/Airline/AirlineList";
+import BankList from "@/modules/Bank/BankList";
+import FairList from "@/modules/Fair/FairList";
 import StaffList from "./modules/Staff/StaffList";
 
 const App = () => {
@@ -202,6 +204,22 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <AirlineList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/banks"
+              element={
+                <ProtectedRoute>
+                  <BankList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/fairs"
+              element={
+                <ProtectedRoute>
+                  <FairList />
                 </ProtectedRoute>
               }
             />

@@ -91,6 +91,8 @@ const initialData = {
             { title: "Airline", url: "/airlines" },
             { title: "Hotels", url: "/hotels" },
             { title: "Clients", url: "/clients" },
+            { title: "Banks", url: "/banks" },
+            { title: "Fairs", url: "/fairs" },
           ],
         },
       ],
