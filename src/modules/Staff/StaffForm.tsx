@@ -87,34 +87,32 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
       return response.data;
     },
     enabled: mode === "edit" && !!staffId,
+    refetchOnMount: true,
   });
 
   // Initialize form after data is available
   const form = useForm<StaffFormInputs>({
     resolver: zodResolver(staffFormSchema),
-    defaultValues:
-      mode === "edit" && staffData
-        ? {
-            name: staffData.name || "",
-            email: staffData.email || "",
-            communicationEmail: staffData.communicationEmail || "",
-            mobile1: staffData.mobile1 || "",
-            mobile2: staffData.mobile2 || "",
-            role: staffData.role?.toLowerCase() || "",
-            active: staffData.active ?? true,
-            branchId: staffData.branchId,
-          }
-        : {
-            name: "",
-            email: "",
-            communicationEmail: "",
-            mobile1: "",
-            mobile2: "",
-            role: "",
-            active: true,
-            branchId: undefined,
-          },
   });
+
+  useEffect(() => {
+    if (staffData) {
+      form.reset({
+        name: staffData.name || "",
+        email: staffData.email || "",
+        communicationEmail: staffData.communicationEmail || "",
+        mobile1: staffData.mobile1 || "",
+        mobile2: staffData.mobile2 || "",
+        role: staffData.role?.toLowerCase() || "",
+        active: staffData.active ?? true,
+        branchId: staffData.branchId,
+      });
+
+      // setTimeout(() => {
+      //   form.setValue("role", staffData.role?.toLowerCase() || "");
+      // }, 300);
+    }
+  }, [staffId, staffData]);
 
   // Remove the roles query since we're using predefined roles
 
@@ -293,7 +291,8 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
               control={form.control}
               render={({ field }) => (
                 <Select
-                  value={field.value || ""}
+                  key={field.value} // <-- forces re-render
+                  value={field.value ?? ""}
                   onValueChange={field.onChange}
                 >
                   <SelectTrigger>
@@ -309,6 +308,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
                 </Select>
               )}
             />
+
             {form.formState.errors.role && (
               <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
                 {form.formState.errors.role.message}
