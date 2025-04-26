@@ -298,18 +298,27 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
         beneficiaryName2: editHotelData.beneficiaryName2 || "",
         ifsc_code2: editHotelData.ifsc_code2 || "",
         swiftCode2: editHotelData.swiftCode2 || "",
+        bank1Id: editHotelData.bank1Id ? String(editHotelData.bank1Id) : "",
+        bank2Id: editHotelData.bank2Id ? String(editHotelData.bank2Id) : "",
+        officeCountry: editHotelData.officeCountryId
+          ? String(editHotelData.officeCountryId)
+          : "",
+        hotelCountry: editHotelData.hotelCountryId
+          ? String(editHotelData.hotelCountryId)
+          : "",
+        hotelState: editHotelData.hotelStateId
+          ? String(editHotelData.hotelStateId)
+          : "",
+        officeState: editHotelData.officeStateId
+          ? String(editHotelData.officeStateId)
+          : "",
+        hotelCity: editHotelData.hotelCityId
+          ? String(editHotelData.hotelCityId)
+          : "",
+        officeCity: editHotelData.officeCityId
+          ? String(editHotelData.officeCityId)
+          : "",
       });
-
-      setTimeout(() => {
-        setValue("bank1Id", String(editHotelData.bank1Id) || "");
-        setValue("bank2Id", String(editHotelData.bank2Id) || "");
-        setValue("hotelCountry", String(editHotelData.hotelCountryId) || "");
-        setValue("hotelState", String(editHotelData.hotelStateId) || "");
-        setValue("hotelCity", String(editHotelData.hotelCityId) || "");
-        setValue("officeCountry", String(editHotelData.officeCountryId) || "");
-        setValue("officeState", String(editHotelData.officeStateId) || "");
-        setValue("officeCity", String(editHotelData.officeCityId) || "");
-      }, 300); // 1-second delay
     }
   }, [editHotelData, reset]);
 
@@ -460,30 +469,37 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       >
                         Country
                       </Label>
-                      <Select
-                        onValueChange={(value) => {
-                          setValue("hotelCountry", value);
-                          setValue("hotelState", "");
-                          setValue("hotelCity", "");
-                          setHotelCountryId(value);
-                        }}
-                        value={watch("hotelCountry")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a country" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countries?.length > 0 &&
-                            countries?.map((country) => (
-                              <SelectItem
-                                key={country.id}
-                                value={String(country.id)}
-                              >
-                                {country.countryName}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                      <Controller
+                        name="hotelCountry"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            key={field.value || ""}
+                            onValueChange={(value) => {
+                              setValue("hotelCountry", value);
+                              setValue("hotelState", "");
+                              setValue("hotelCity", "");
+                              setHotelCountryId(value);
+                            }}
+                            value={watch("hotelCountry") || ""}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select a country" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {countries?.length > 0 &&
+                                countries?.map((country) => (
+                                  <SelectItem
+                                    key={country.id}
+                                    value={String(country.id)}
+                                  >
+                                    {country.countryName}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     </div>
                     <div>
                       <Label
@@ -492,27 +508,37 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       >
                         State
                       </Label>
-                      <Select
-                        onValueChange={(value) => {
-                          setValue("hotelState", value);
+                      <Controller
+                        name="hotelState"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            key={field.value || ""}
+                            onValueChange={(value) => {
+                              setValue("hotelState", value);
 
-                          setHotelStateId(value);
+                              setHotelStateId(value);
 
-                          setValue("hotelCity", "");
-                        }}
-                        value={watch("hotelState")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a state" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {hotelStates?.map((state) => (
-                            <SelectItem key={state.id} value={String(state.id)}>
-                              {state.stateName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                              setValue("hotelCity", "");
+                            }}
+                            value={watch("hotelState")}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select a state" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {hotelStates?.map((state) => (
+                                <SelectItem
+                                  key={state.id}
+                                  value={String(state.id)}
+                                >
+                                  {state.stateName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     </div>
                     <div>
                       <Label
@@ -521,21 +547,33 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       >
                         City
                       </Label>
-                      <Select
-                        onValueChange={(value) => setValue("hotelCity", value)}
-                        value={watch("hotelCity")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a city" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {hotelCities?.map((city) => (
-                            <SelectItem key={city.id} value={String(city.id)}>
-                              {city.cityName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Controller
+                        name="hotelCity"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            key={field.value}
+                            onValueChange={(value) =>
+                              setValue("hotelCity", value)
+                            }
+                            value={watch("hotelCity")}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select a city" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {hotelCities?.map((city) => (
+                                <SelectItem
+                                  key={city.id}
+                                  value={String(city.id)}
+                                >
+                                  {city.cityName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     </div>
                     <div>
                       <Label
@@ -625,32 +663,38 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       >
                         Country
                       </Label>
-                      <Select
-                        onValueChange={(value) => {
-                          setValue("officeCountry", value);
+                      <Controller
+                        name="officeCountry"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            key={field.value}
+                            onValueChange={(value) => {
+                              setValue("officeCountry", value);
+                              setOfficeCountryId(value);
 
-                          setOfficeCountryId(value);
-
-                          setValue("officeState", "");
-                          setValue("officeCity", "");
-                        }}
-                        value={watch("officeCountry")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a country" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countries?.length > 0 &&
-                            countries?.map((country) => (
-                              <SelectItem
-                                key={country.id}
-                                value={String(country.id)}
-                              >
-                                {country.countryName}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                              setValue("officeState", "");
+                              setValue("officeCity", "");
+                            }}
+                            value={watch("officeCountry")}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select a country" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {countries?.length > 0 &&
+                                countries?.map((country) => (
+                                  <SelectItem
+                                    key={country.id}
+                                    value={String(country.id)}
+                                  >
+                                    {country.countryName}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     </div>
                     <div>
                       <Label
@@ -659,27 +703,37 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       >
                         State
                       </Label>
-                      <Select
-                        onValueChange={(value) => {
-                          setValue("officeState", value);
+                      <Controller
+                        name="officeState"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            key={field.value}
+                            onValueChange={(value) => {
+                              setValue("officeState", value);
 
-                          setOfficeStateId(value);
+                              setOfficeStateId(value);
 
-                          setValue("officeCity", "");
-                        }}
-                        value={watch("officeState")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a state" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {officeStates?.map((state) => (
-                            <SelectItem key={state.id} value={String(state.id)}>
-                              {state.stateName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                              setValue("officeCity", "");
+                            }}
+                            value={watch("officeState")}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select a state" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {officeStates?.map((state) => (
+                                <SelectItem
+                                  key={state.id}
+                                  value={String(state.id)}
+                                >
+                                  {state.stateName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     </div>
                     <div>
                       <Label
@@ -688,21 +742,33 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       >
                         City
                       </Label>
-                      <Select
-                        onValueChange={(value) => setValue("officeCity", value)}
-                        value={watch("officeCity")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a city" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {officeCities?.map((city) => (
-                            <SelectItem key={city.id} value={String(city.id)}>
-                              {city.cityName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Controller
+                        name="officeCity"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            key={field.value}
+                            onValueChange={(value) =>
+                              setValue("officeCity", value)
+                            }
+                            value={watch("officeCity")}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select a city" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {officeCities?.map((city) => (
+                                <SelectItem
+                                  key={city.id}
+                                  value={String(city.id)}
+                                >
+                                  {city.cityName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     </div>
                     <div>
                       <Label
@@ -921,23 +987,30 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                   >
                     Bank Name
                   </Label>
-                  <Select
-                    onValueChange={(value) => {
-                      setValue("bank1Id", value);
-                    }}
-                    value={watch("bank1Id")}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a bank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {banks?.map((bank) => (
-                        <SelectItem key={bank.id} value={String(bank.id)}>
-                          {bank.bankName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="bank1Id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        key={field.value}
+                        onValueChange={(value) => {
+                          setValue("bank1Id", value);
+                        }}
+                        value={watch("bank1Id")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a bank" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {banks?.map((bank) => (
+                            <SelectItem key={bank.id} value={String(bank.id)}>
+                              {bank.bankName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
                 <div>
                   <Label
@@ -1038,24 +1111,6 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 Bank Details 2
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* <div>
-                  <Label
-                    htmlFor="bankName2"
-                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Bank Name
-                  </Label>
-                  <Input
-                    id="bankName2"
-                    {...register("bankName2")}
-                    placeholder="Enter bank name"
-                  />
-                  {errors.bankName2 && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.bankName2.message}
-                    </p>
-                  )}
-                </div> */}
                 <div>
                   <Label
                     htmlFor="bank2Id"
@@ -1063,23 +1118,30 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                   >
                     Bank Name
                   </Label>
-                  <Select
-                    onValueChange={(value) => {
-                      setValue("bank2Id", value);
-                    }}
-                    value={watch("bank2Id")}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a bank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {banks?.map((bank) => (
-                        <SelectItem key={bank.id} value={String(bank.id)}>
-                          {bank.bankName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="bank2Id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        key={field.value}
+                        onValueChange={(value) => {
+                          setValue("bank2Id", value);
+                        }}
+                        value={watch("bank2Id")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a bank" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {banks?.map((bank) => (
+                            <SelectItem key={bank.id} value={String(bank.id)}>
+                              {bank.bankName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
                 <div>
                   <Label

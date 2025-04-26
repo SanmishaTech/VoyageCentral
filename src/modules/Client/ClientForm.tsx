@@ -192,7 +192,7 @@ type FormInputs = z.infer<typeof FormSchema>;
 
 const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id } = useParams<{ id: string }>();
-  const [stateId, setStateId] = useState<string | null>(null);
+  const [stateId, setStateId] = useState<string | null>("");
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -237,6 +237,9 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { data: cities, isLoading: isCitiesLoading } = useQuery({
     queryKey: ["cities", stateId],
     queryFn: async () => {
+      if (stateId === "null" || stateId === null || stateId === undefined) {
+        return [];
+      }
       const response = await get(`/cities/by-state/${stateId}`);
       return response; // API returns the sector object directly
     },
@@ -269,7 +272,7 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
       // ✅ Reset full form including field array
       reset({
         clientName: editClientData.clientName || "",
-        // gender: editClientData.gender,
+        gender: editClientData.gender || "",
         email: editClientData.email || "",
         dateOfBirth: editClientData.dateOfBirth
           ? new Date(editClientData.dateOfBirth).toISOString().split("T")[0]
@@ -287,15 +290,10 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
         passportNo: editClientData.passportNo || "",
         panNo: editClientData.panNo || "",
         aadharNo: editClientData.aadharNo || "",
+        stateId: editClientData.stateId ? String(editClientData.stateId) : "",
+        cityId: editClientData.cityId ? String(editClientData.cityId) : "",
         familyFriends: familyFriendsData, // ✅ include this
       });
-
-      // Set dependent dropdowns after reset (optional delay)
-      setTimeout(() => {
-        setValue("stateId", String(editClientData.stateId) || "");
-        setValue("cityId", String(editClientData.cityId) || "");
-        setValue("gender", editClientData.gender);
-      }, 300); // shorter delay works fine too
     }
   }, [editClientData, reset, setValue]);
 
@@ -338,9 +336,6 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
-  if (mode === "edit" && !indianStates?.length) {
-    return <></>;
-  }
   return (
     <>
       {/* JSX Code for HotelForm.tsx */}
@@ -380,21 +375,28 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                 >
                   Gender
                 </Label>
-                <Select
-                  onValueChange={(value) => setValue("gender", value)}
-                  value={watch("gender")}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {genderOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="gender"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      key={field.value}
+                      onValueChange={(value) => setValue("gender", value)}
+                      value={watch("gender")}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {genderOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               {/* Date of Birth */}
@@ -511,25 +513,32 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                 >
                   State
                 </Label>
-                <Select
-                  onValueChange={(value) => {
-                    setValue("stateId", value);
-                    setStateId(value);
-                    setValue("cityId", ""); // Reset city when state changes
-                  }}
-                  value={watch("stateId")}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {indianStates?.map((state) => (
-                      <SelectItem key={state.id} value={String(state.id)}>
-                        {state.stateName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="stateId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      key={field.value}
+                      onValueChange={(value) => {
+                        setValue("stateId", value);
+                        setStateId(value);
+                        setValue("cityId", ""); // Reset city when state changes
+                      }}
+                      value={watch("stateId")}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {indianStates?.map((state) => (
+                          <SelectItem key={state.id} value={String(state.id)}>
+                            {state.stateName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               {/* City */}
@@ -540,21 +549,28 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                 >
                   City
                 </Label>
-                <Select
-                  onValueChange={(value) => setValue("cityId", value)}
-                  value={watch("cityId")}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cities?.map((city) => (
-                      <SelectItem key={city.id} value={String(city.id)}>
-                        {city.cityName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="cityId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      key={field.value}
+                      onValueChange={(value) => setValue("cityId", value)}
+                      value={watch("cityId")}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a city" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities?.map((city) => (
+                          <SelectItem key={city.id} value={String(city.id)}>
+                            {city.cityName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
               {/* Pincode */}
