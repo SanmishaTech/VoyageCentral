@@ -95,6 +95,13 @@ const initialData = {
             { title: "Fairs", url: "/fairs" },
           ],
         },
+        {
+          title: "Tours",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: false,
+          items: [{ title: "Tours", url: "/tours" }],
+        },
       ],
     },
   },
