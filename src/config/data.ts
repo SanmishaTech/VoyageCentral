@@ -10,3 +10,18 @@ export const foodTypeOptions = [
   { label: "Non Veg", value: "Non Veg" },
   { label: "Hindu Non Veg", value: "Hindu Non Veg" },
 ];
+
+export const tourTypeOptions = [
+  { label: "Tailormade Tour", value: "Tailormade Tour" },
+  { label: "Honeymoon Tour", value: "Honeymoon Tour" },
+];
+
+export const destinationOptions = [
+  { label: "Domestic", value: "Domestic" },
+  { label: "International", value: "International" },
+];
+
+export const statusOptions = [
+  { label: "Open", value: "Open" },
+  { label: "Close", value: "Close" },
+];

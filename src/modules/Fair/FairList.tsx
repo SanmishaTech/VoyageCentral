@@ -1,16 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatter.js";
+import React, { useState } from "react";
 import { Button, Input } from "@/components/ui";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
-import MultipleSelector, {
-  Option,
-} from "@/components/common/multiple-selector"; // Import MultipleSelector from common folder
+// Import MultipleSelector from common folder
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -22,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { get, del, patch } from "@/services/apiService";
+import { get, del } from "@/services/apiService";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import CustomPagination from "@/components/common/custom-pagination";
@@ -32,25 +22,10 @@ import {
   ChevronDown,
   Edit,
   Trash2,
-  Filter,
-  Download,
-  ShieldEllipsis,
-  Search,
   PlusCircle,
-  MoreHorizontal,
-  CheckCircle,
-  XCircle,
 } from "lucide-react";
 import ConfirmDialog from "@/components/common/confirm-dialog";
-import { saveAs } from "file-saver";
-import { Badge } from "@/components/ui/badge"; // Ensure Badge is imported
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuGroup,
-} from "@/components/ui/dropdown-menu";
+
 import CreateFair from "./CreateFair"; // Import CreateUser component
 import EditFair from "./EditFair"; // Add this import
 
@@ -161,7 +136,7 @@ const FairList = () => {
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
-                icon={<Search className="h-4 w-4" />}
+                // icon={<Search className="h-4 w-4" />}
               />
             </div>
 

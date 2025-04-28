@@ -31,8 +31,10 @@ import CreateClient from "@/modules/Client/CreateClient";
 import EditClient from "@/modules/Client/EditClient";
 
 import BranchList from "@/modules/Branch/BranchList";
-// import CreateBranch from "@/modules/Branch/CreateBranch";
-// import EditBranch from "@/modules/Branch/EditBranch";
+
+import TourList from "@/modules/Tour/TourList";
+import CreateTour from "@/modules/Tour/CreateTour";
+import EditTour from "@/modules/Tour/EditTour";
 
 import { Toaster } from "sonner";
 import "./App.css";
@@ -272,6 +274,31 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <EditClient />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tours"
+              element={
+                <ProtectedRoute>
+                  <TourList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tours/create"
+              element={
+                <ProtectedRoute>
+                  <CreateTour />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/tours/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditTour />
                 </ProtectedRoute>
               }
             />
