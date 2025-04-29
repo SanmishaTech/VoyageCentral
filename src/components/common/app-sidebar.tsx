@@ -100,7 +100,10 @@ const initialData = {
           url: "#",
           icon: SquareTerminal,
           isActive: false,
-          items: [{ title: "Tours", url: "/tours" }],
+          items: [
+            { title: "Tours", url: "/tours" },
+            { title: "Tour Enquiries", url: "/tourEnquiries" },
+          ],
         },
       ],
     },

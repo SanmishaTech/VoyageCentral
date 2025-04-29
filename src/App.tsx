@@ -30,6 +30,10 @@ import ClientList from "@/modules/Client/ClientList";
 import CreateClient from "@/modules/Client/CreateClient";
 import EditClient from "@/modules/Client/EditClient";
 
+import TourEnquiryList from "@/modules/TourEnquiry/TourEnquiryList";
+import CreateTourEnquiry from "@/modules/TourEnquiry/CreateTourEnquiry";
+import EditTourEnquiry from "@/modules/TourEnquiry/EditTourEnquiry";
+
 import BranchList from "@/modules/Branch/BranchList";
 
 import TourList from "@/modules/Tour/TourList";
@@ -299,6 +303,31 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <EditTour />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tourEnquiries"
+              element={
+                <ProtectedRoute>
+                  <TourEnquiryList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tourEnquiries/create"
+              element={
+                <ProtectedRoute>
+                  <CreateTourEnquiry />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/tourEnquiries/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditTourEnquiry />
                 </ProtectedRoute>
               }
             />
