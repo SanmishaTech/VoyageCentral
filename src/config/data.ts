@@ -27,12 +27,15 @@ export const statusOptions = [
 ];
 
 export const budgetFieldOptions = [
+  { label: "---", value: "none" },
   { label: "Budget", value: "Budget" },
   { label: "Deluxe", value: "Deluxe" },
   { label: "Premium", value: "Premium" },
 ];
 
 export const noOfAdultsOptions = [
+  { label: "---", value: "none" },
+  { label: "0", value: "0" },
   { label: "1", value: "1" },
   { label: "2", value: "2" },
   { label: "3", value: "3" },
@@ -56,6 +59,8 @@ export const noOfAdultsOptions = [
 ];
 
 export const noOfChildrens5To11Options = [
+  { label: "---", value: "none" },
+  { label: "0", value: "0" },
   { label: "1", value: "1" },
   { label: "2", value: "2" },
   { label: "3", value: "3" },
@@ -79,6 +84,8 @@ export const noOfChildrens5To11Options = [
 ];
 
 export const noOfChildrensBelow5Options = [
+  { label: "---", value: "none" },
+  { label: "0", value: "0" },
   { label: "1", value: "1" },
   { label: "2", value: "2" },
   { label: "3", value: "3" },

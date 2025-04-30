@@ -407,7 +407,7 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
     <>
       {/* JSX Code for HotelForm.tsx */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="mx-auto mt-10 min-w-5xl">
+        <Card className=" mt-10 w-full">
           <CardContent className="pt-6">
             {/* Client Details */}
             <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
@@ -416,11 +416,11 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
 
             {/* start code */}
             {/* start code */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5 ">
+              <div className="">
                 <Label
                   htmlFor="bookingNumber"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  className=" mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   Booking Number
                 </Label>
@@ -429,7 +429,7 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
                   {...register("bookingNumber")}
                   placeholder="Booking number"
                   readOnly
-                  className="bg-gray-100 text-gray-500 cursor-not-allowed"
+                  className=" bg-gray-100 text-gray-500 cursor-not-allowed"
 
                   // disabled
                 />
@@ -441,10 +441,10 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
               </div>
 
               {/* Booking Date */}
-              <div>
+              <div className="">
                 <Label
                   htmlFor="bookingDate"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  className=" mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   Booking Date <span className="text-red-500">*</span>
                 </Label>
@@ -1056,38 +1056,6 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
                       </TableCell>
 
                       <TableCell className="w-36 px-2">
-                        {/* <Controller
-                          name={`tourBookingDetails.${index}.cityId`}
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              key={field.value}
-                              onValueChange={(value) => {
-                                setValue(
-                                  `tourBookingDetails.${index}.cityId`,
-                                  value
-                                );
-                              }}
-                              value={watch(
-                                `tourBookingDetails.${index}.cityId`
-                              )}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select a city" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {cities?.map((city) => (
-                                  <SelectItem
-                                    key={city.id}
-                                    value={String(city.id)}
-                                  >
-                                    {city.cityName}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        /> */}
                         <Controller
                           name={`tourBookingDetails.${index}.cityId`}
                           control={control}
@@ -1134,24 +1102,10 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
                                           <CommandItem
                                             key={city.id}
                                             // value={String(city.id)}
-                                            value={city.cityName.toLowerCase()} // 👈 Use client name for filtering
+                                            value={city.cityName.toLowerCase()}
                                             onSelect={(currentValue) => {
-                                              // if (city.id === "none") {
-                                              //   setValue(
-                                              //     `tourBookingDetails.${index}.cityId`,
-                                              //     ""
-                                              //   ); // Clear the value
-                                              // } else {
-                                              //   console.log(city);
-                                              //   setValue(
-                                              //     `tourBookingDetails.${index}.cityId`,
-                                              //     city.id
-                                              //   );
-                                              // }
                                               field.onChange(city.id);
-                                              closeCityPopover(index); // ✅ Close this row's popover
-                                              // setOpenCityId(false);
-                                              // Close popover after selection
+                                              closeCityPopover(index);
                                             }}
                                           >
                                             {city.cityName}

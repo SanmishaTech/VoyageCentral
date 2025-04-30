@@ -58,10 +58,14 @@ const fetchTourEnquiries = async (
   sortBy: string,
   sortOrder: string,
   search: string,
+  fromBookingDate: string,
+  toBookingDate: string,
+  tourTitle: string,
+  clientName: String,
   recordsPerPage: number
 ) => {
   const response = await get(
-    `/tour-enquiries?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&limit=${recordsPerPage}`
+    `/tour-enquiries?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&fromBookingDate=${fromBookingDate}&toBookingDate=${toBookingDate}&tourTitle=${tourTitle}&clientName=${clientName}&limit=${recordsPerPage}`
   );
   return response;
 };
@@ -77,6 +81,11 @@ const TourEnquiryList = () => {
   const [tourEnquiryToDelete, setTourEnquiryToDelete] = useState<number | null>(
     null
   ); //
+  const [fromBookingDate, setFromBookingDate] = useState("");
+  const [toBookingDate, setToBookingDate] = useState("");
+  const [tourTitle, setTourTitle] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   //  Track the user ID to delete
   const navigate = useNavigate();
 
@@ -88,6 +97,10 @@ const TourEnquiryList = () => {
       sortBy,
       sortOrder,
       search,
+      fromBookingDate,
+      toBookingDate,
+      tourTitle,
+      clientName,
       recordsPerPage,
     ],
     queryFn: () =>
@@ -96,6 +109,10 @@ const TourEnquiryList = () => {
         sortBy,
         sortOrder,
         search,
+        fromBookingDate,
+        toBookingDate,
+        tourTitle,
+        clientName,
         recordsPerPage
       ),
   });
@@ -147,6 +164,31 @@ const TourEnquiryList = () => {
     setCurrentPage(1); // Reset to the first page
   };
 
+  // Handle filter changes
+  const handleFromBookingDateChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFromBookingDate(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleToBookingDateChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setToBookingDate(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleTourTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTourTitle(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleClientNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setClientName(e.target.value);
+    setCurrentPage(1);
+  };
+
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
@@ -163,12 +205,18 @@ const TourEnquiryList = () => {
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
-                icon={<Search className="h-4 w-4" />}
               />
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant={showFilters ? "default" : "outline"}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+              </Button>
               <Button
                 onClick={() => navigate("/tourEnquiries/create")}
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
@@ -178,6 +226,84 @@ const TourEnquiryList = () => {
               </Button>
             </div>
           </div>
+
+          {/* Collapsible Filters Section */}
+          {showFilters && (
+            <Card className="p-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {/* From Booking Date */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    From Booking Date
+                  </label>
+                  <Input
+                    type="date"
+                    value={fromBookingDate}
+                    onChange={handleFromBookingDateChange}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* To Booking Date */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    To Booking Date
+                  </label>
+                  <Input
+                    type="date"
+                    value={toBookingDate}
+                    onChange={handleToBookingDateChange}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Tour Title */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Tour Title
+                  </label>
+                  <Input
+                    type="text"
+                    value={tourTitle}
+                    onChange={handleTourTitleChange}
+                    placeholder="Enter tour title"
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Client Name */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">
+                    Client Name
+                  </label>
+                  <Input
+                    type="text"
+                    value={clientName}
+                    onChange={handleClientNameChange}
+                    placeholder="Enter client name"
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              {/* Clear Filters Button */}
+              <div className="flex justify-end mt-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setSearch("");
+                    setToBookingDate("");
+                    setFromBookingDate("");
+                    setTourTitle("");
+                    setClientName("");
+                    setCurrentPage(1);
+                    setShowFilters(false); // Optionally hide the filters panel after clearing
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </Card>
+          )}
 
           <Separator className="mb-4" />
 
@@ -317,9 +443,13 @@ const TourEnquiryList = () => {
                           ? dayjs(tour.journeyDate).format("DD/MM/YYYY")
                           : "N/A"}
                       </TableCell>
-                      <TableCell>{tour.client.clientName || "N/A"}</TableCell>
-                      <TableCell>{tour.branch.branchName || "N/A"}</TableCell>
-                      <TableCell>{tour.tour.tourTitle || "N/A"}</TableCell>
+                      <TableCell>{tour?.client.clientName || "N/A"}</TableCell>
+                      <TableCell>
+                        {(tour?.branch && tour?.branch.branchName) || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {(tour?.tour && tour?.tour.tourTitle) || "N/A"}
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
