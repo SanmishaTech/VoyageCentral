@@ -296,9 +296,9 @@ const UserList = () => {
                   {branches.map((branch) => (
                     <TableRow key={branch.id}>
                       <TableCell>{branch.branchName}</TableCell>
-                      <TableCell>{branch.contactName}</TableCell>
-                      <TableCell>{branch.contactEmail}</TableCell>
-                      <TableCell>{branch.contactMobile}</TableCell>
+                      <TableCell>{branch.contactName || "N/A"}</TableCell>
+                      <TableCell>{branch.contactEmail || "N/A"}</TableCell>
+                      <TableCell>{branch.contactMobile || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button

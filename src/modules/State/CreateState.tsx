@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Validate from "@/lib/Handlevalidation";
 
 interface Country {
   id: number;
@@ -71,6 +72,7 @@ const CreateState: React.FC<CreateStateProps> = ({ isOpen, onClose }) => {
     handleSubmit,
     formState: { errors },
     reset,
+    setError,
     setValue,
     watch,
   } = useForm<StateFormData>({
@@ -89,8 +91,9 @@ const CreateState: React.FC<CreateStateProps> = ({ isOpen, onClose }) => {
       reset();
       onClose();
     },
-    onError: () => {
+    onError: (error) => {
       toast.error("Failed to create states");
+      Validate(error, setError);
     },
   });
 

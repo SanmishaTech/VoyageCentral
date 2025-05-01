@@ -118,7 +118,10 @@ const FormSchema = z.object({
   bank1Id: z.string().max(100, "Bank name is too long.").optional(),
   bankAccountNumber1: z
     .string()
-    .max(30, "Bank account number is too long.")
+    .refine((val) => val === "" || /^[0-9]{8,18}$/.test(val), {
+      message:
+        "Invalid bank account number format. Must be between 8 and 18 digits.",
+    })
     .optional(),
   branch1: z.string().max(100, "Branch name is too long.").optional(),
   beneficiaryName1: z
@@ -144,7 +147,10 @@ const FormSchema = z.object({
   bank2Id: z.string().max(100, "Bank name is too long.").optional(),
   bankAccountNumber2: z
     .string()
-    .max(30, "Bank account number is too long.")
+    .refine((val) => val === "" || /^[0-9]{8,18}$/.test(val), {
+      message:
+        "Invalid bank account number format. Must be between 8 and 18 digits.",
+    })
     .optional(),
   branch2: z.string().max(100, "Branch name is too long.").optional(),
   beneficiaryName2: z
