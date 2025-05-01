@@ -33,19 +33,41 @@ const FormSchema = z.object({
     }),
   contactName: z
     .string()
-    .min(1, "Contact Name cannot be left blank.") // Ensuring minimum length of 2
     .max(100, "Contact Name must not exceed 100 characters.")
-    .refine((val) => /^[A-Za-z\s\u0900-\u097F]+$/.test(val), {
-      message: "Contact Name can only contain letters.",
-    }),
-  contactMobile: z.string().refine((val) => /^[0-9]{10}$/.test(val), {
-    message: "Mobile number must contain exact 10 digits.",
-  }),
-  contactEmail: z.string().email("email field is required"),
+    .regex(
+      /^[A-Za-z\s\u0900-\u097F]*$/,
+      "Contact Name can only contain letters."
+    )
+    .optional(),
+
+  contactMobile: z
+    .string()
+    .max(20, "Mobile number must not exceed 20 characters.") // Allow space for country code and mobile number
+    .refine(
+      (val) =>
+        val === "" ||
+        /^[+]?[0-9]{1,4}[-\s]?[0-9]{6,15}$/.test(val) ||
+        /^[6-9]\d{9}$/.test(val),
+      {
+        message:
+          "Mobile number must be a valid number (with or without country code).",
+      }
+    )
+    .optional(),
+  contactEmail: z
+    .string()
+    .refine(
+      (val) =>
+        val === "" || val === null || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+      {
+        message: "Email must be a valid email address.",
+      }
+    )
+    .optional(),
   address: z
     .string()
-    .min(1, "Address field is required")
-    .max(100, "Address field should not exceed 100 characters"),
+    .max(100, "Address field should not exceed 100 characters")
+    .optional(),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
@@ -159,7 +181,9 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
         {/* Name Field */}
         <div className="grid gap-2 relative">
-          <Label htmlFor="branchName">Branch Name</Label>
+          <Label htmlFor="branchName">
+            Branch Name<span className="text-red-500">*</span>
+          </Label>
           <Input
             id="branchName"
             type="text"

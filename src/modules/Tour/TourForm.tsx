@@ -16,9 +16,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea"; // adjust path if needed
+import { cn } from "@/lib/utils";
 
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectTrigger,
@@ -29,6 +34,14 @@ import {
 import { Switch } from "@/components/ui/switch";
 import Validate from "@/lib/Handlevalidation";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   Table,
   TableBody,
   TableCell,
@@ -36,7 +49,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LoaderCircle, Trash2, PlusCircle } from "lucide-react"; // Import the LoaderCircle icon
+import {
+  LoaderCircle,
+  Trash2,
+  PlusCircle,
+  Check,
+  ChevronsUpDown,
+} from "lucide-react"; // Import the LoaderCircle icon
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { get } from "@/services/apiService";
@@ -69,11 +88,19 @@ const attachmentSchema = fileSchema
 
 const ItinerarySchema = z.object({
   itineraryId: z.string().optional(),
-  day: z.coerce
-    .number()
-    .int("Day must be an integer.")
-    .min(1, "Day field is required.")
-    .max(1000, "Day cannot be more than 1000."),
+  day: z
+    .string()
+    .refine((val) => !isNaN(Number(val)), {
+      message: "Day must be a valid number.",
+    })
+    .transform((val) => Number(val))
+    .pipe(
+      z
+        .number()
+        .int("Day must be an integer.")
+        .min(1, "Day field is required.")
+        .max(1000, "Day cannot be more than 1000.")
+    ),
   description: z
     .string()
     .min(1, "Description is required.")
@@ -115,6 +142,15 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
   const [logoPreview, setAttachmentPreview] = useState<string | null>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const defaultValues: z.infer<typeof FormSchema> = {
+    tourTitle: "",
+    tourType: "",
+    destination: "",
+    status: "",
+    notes: "",
+    sectorId: "", // Optional, so can be empty
+    itineraries: [], // Optional array
+  };
 
   const {
     register,
@@ -127,6 +163,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     formState: { errors },
   } = useForm<FormInputs>({
     resolver: zodResolver(FormSchema),
+    defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
   });
 
   const watchedAttachment = watch("attachment" as any); // Use 'as any' if type inference struggles
@@ -154,6 +191,11 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     },
   });
 
+  const cityOptions = [
+    { id: "none", cityName: "---" }, // The 'unselect' option
+    ...(cities ?? []),
+  ];
+
   const { data: editTourData, isLoading: editTourLoading } = useQuery({
     queryKey: ["editTour", id],
     queryFn: async () => {
@@ -171,7 +213,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
       const itinerariesData =
         editTourData.itineraries?.map((itinerary) => ({
           itineraryId: itinerary.id ? String(itinerary.id) : "",
-          day: itinerary.day || "",
+          day: String(itinerary.day) || "",
           description: itinerary.description || "",
           cityId: itinerary.cityId ? String(itinerary.cityId) : "",
         })) || [];
@@ -269,6 +311,39 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
   //   }
   // };
 
+  const toggleCityPopover = (index) => {
+    setOpenCityIds((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  const closeCityPopover = (index) => {
+    setOpenCityIds((prev) => ({
+      ...prev,
+      [index]: false,
+    }));
+  };
+
+  const handleRemoveAndRecalculateDays = (index: number) => {
+    console.log("Before remove:", fields); // Log the current state of fields
+
+    // Remove the selected record
+    remove(index);
+
+    // Recalculate days for the remaining records
+    const updatedFields = [...fields].filter((_, idx) => idx !== index); // Create a new array without the removed record
+    updatedFields.forEach((field, idx) => {
+      setValue(`itineraries.${idx}.day`, String(idx + 1)); // Always update day
+
+      if (field.cityId) {
+        setValue(`itineraries.${idx}.cityId`, field.cityId); // Set cityId only if it exists
+      }
+    });
+
+    console.log("After remove and recalculate:", updatedFields);
+  };
+
   // start
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     const formData = new FormData();
@@ -306,7 +381,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     <>
       {/* JSX Code for HotelForm.tsx */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="mx-auto mt-10 min-w-5xl">
+        <Card className="mx-auto mt-10 max-w-5xl">
           <CardContent className="pt-6">
             {/* Client Details */}
             <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
@@ -334,7 +409,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
               </div>
 
               {/* tourType */}
-              <div>
+              <div className="col-span-2 lg:col-span-1">
                 <Label
                   htmlFor="tourType"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -371,7 +446,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
               </div>
 
               {/* destination */}
-              <div>
+              <div className="col-span-2 lg:col-span-1">
                 <Label
                   htmlFor="destination"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -408,7 +483,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
               </div>
 
               {/* status */}
-              <div>
+              <div className="col-span-2 lg:col-span-1">
                 <Label
                   htmlFor="status"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -445,7 +520,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
               </div>
 
               {/* Sector */}
-              <div>
+              <div className="col-span-2 lg:col-span-1">
                 <Label
                   htmlFor="sectorId"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -477,7 +552,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                   )}
                 />
               </div>
-              <div className="col-span-3">
+              <div className="col-span-2 lg:col-span-3">
                 <Label
                   htmlFor="notes"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -498,7 +573,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
               </div>
 
               {/* Logo Input & Preview */}
-              <div>
+              <div className="col-span-2 lg:col-span-1">
                 <Label
                   htmlFor="attachment"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -563,8 +638,10 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Day</TableHead>
-                    <TableHead>Description</TableHead>
+                    <TableHead className="w-22 px-1">Day</TableHead>
+                    <TableHead className="w-[400px] px-1">
+                      Description
+                    </TableHead>
                     <TableHead>Night halt</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -572,10 +649,11 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
-                      <TableCell>
+                      <TableCell className="w-20 px-1">
                         <Input
                           {...register(`itineraries.${index}.day`)}
-                          placeholder="Enter Day"
+                          placeholder="day"
+                          className="w-20 m-0"
                         />
                         {errors.itineraries?.[index]?.day && (
                           <p className="text-red-500 text-xs mt-1">
@@ -583,10 +661,12 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                           </p>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <Input
+                      <TableCell className="w-[600px] px-1">
+                        <Textarea
                           {...register(`itineraries.${index}.description`)}
                           placeholder="Enter description"
+                          className="w-[400px] lg:w-full"
+                          rows={4}
                         />
                         {errors.itineraries?.[index]?.description && (
                           <p className="text-red-500 text-xs mt-1">
@@ -601,16 +681,22 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                           render={({ field }) => (
                             <Select
                               key={field.value}
-                              onValueChange={(value) => {
-                                setValue(`itineraries.${index}.cityId`, value);
-                              }}
+                              // onValueChange={(value) => {
+                              //   setValue(`itineraries.${index}.cityId`, value);
+                              // }}
+                              onValueChange={(value) =>
+                                setValue(
+                                  `itineraries.${index}.cityId`,
+                                  value === "none" ? "" : value
+                                )
+                              }
                               value={watch(`itineraries.${index}.cityId`)}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select a city" />
                               </SelectTrigger>
                               <SelectContent>
-                                {cities?.map((city) => (
+                                {cityOptions?.map((city) => (
                                   <SelectItem
                                     key={city.id}
                                     value={String(city.id)}
@@ -622,6 +708,11 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                             </Select>
                           )}
                         />
+                        {errors.itineraries?.[index]?.cityId && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.itineraries[index]?.cityId?.message}
+                          </p>
+                        )}
                       </TableCell>
 
                       {/* friend id */}
@@ -640,7 +731,8 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                         <Button
                           type="button"
                           variant="destructive"
-                          onClick={() => remove(index)}
+                          // onClick={() => remove(index)}
+                          onClick={() => handleRemoveAndRecalculateDays(index)}
                         >
                           <Trash2 size={16} />
                         </Button>
@@ -653,14 +745,26 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                 type="button"
                 variant="outline"
                 className="mt-4"
-                onClick={() =>
+                // onClick={() =>
+                //   append({
+                //     itineraryId: "",
+                //     day: "",
+                //     description: "",
+                //     cityId: "",
+                //   })
+                // }
+                onClick={() => {
+                  const lastDay =
+                    fields.length > 0
+                      ? Number(fields[fields.length - 1].day)
+                      : 0;
                   append({
                     itineraryId: "",
-                    day: "",
+                    day: String(lastDay + 1), // Increment day based on the last entry
                     description: "",
                     cityId: "",
-                  })
-                }
+                  });
+                }}
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
                 Add Itinerary

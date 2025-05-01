@@ -93,8 +93,12 @@ const TourList = () => {
       toast.success("Tour deleted successfully");
       queryClient.invalidateQueries(["tours"]);
     },
-    onError: () => {
-      toast.error("Failed to delete tours");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete tours");
+      }
     },
   });
 

@@ -55,9 +55,9 @@ const FamilyFriendSchema = z.object({
   aadharNo: z
     .string()
     .max(12, "Aadhar number must be 12 digits.")
-    .refine((val) => val === "" || /^[1-9]{1}[0-9]{11}$/.test(val), {
+    .refine((val) => val === "" || /^[2-9]{1}[0-9]{11}$/.test(val), {
       message:
-        "Aadhar number must be exactly 12 digits and cannot start with 0.",
+        "Aadhar number must be exactly 12 digits and cannot start with 0 or 1.",
     })
     .optional(),
   dateOfBirth: z.string().optional(),
@@ -117,12 +117,7 @@ const FormSchema = z.object({
   address2: z.string().max(255, "Address line 2 too long").optional(),
   stateId: z.string().optional(),
   cityId: z.string().optional(),
-  pincode: z
-    .string()
-    .refine((val) => val === "" || /^[1-9][0-9]{5}$/.test(val), {
-      message: "Pincode must be a valid 6-digit number.",
-    })
-    .optional(),
+  pincode: z.string().optional(),
   mobile1: z
     .string()
     .max(20, "Mobile number must not exceed 20 characters.") // Allow space for country code and mobile number
@@ -162,15 +157,7 @@ const FormSchema = z.object({
       { message: "Invalid GSTIN format." }
     )
     .optional(),
-  passportNo: z
-    .string()
-    .refine(
-      (val) => val === "" || /^[A-PR-WY][1-9]\d\s?\d{4}[1-9]$/.test(val),
-      {
-        message: "Invalid passport number.",
-      }
-    )
-    .optional(),
+  passportNo: z.string().optional(),
   panNo: z
     .string()
     .refine((val) => val === "" || /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(val), {
@@ -180,9 +167,9 @@ const FormSchema = z.object({
   aadharNo: z
     .string()
     .max(12, "Aadhar number must be 12 digits.")
-    .refine((val) => val === "" || /^[1-9]{1}[0-9]{11}$/.test(val), {
+    .refine((val) => val === "" || /^[2-9]{1}[0-9]{11}$/.test(val), {
       message:
-        "Aadhar number must be exactly 12 digits and cannot start with 0.",
+        "Aadhar number must be exactly 12 digits and cannot start with 0 or 1.",
     })
     .optional(),
   familyFriends: z.array(FamilyFriendSchema).optional(),

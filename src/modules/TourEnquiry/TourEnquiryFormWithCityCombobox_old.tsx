@@ -87,7 +87,7 @@ const TourEnquiryDetailsForm = z.object({
     .string()
     .min(1, "Date is required.")
     .max(100, "Date must not exceed 100 characters."),
-  cityId: z.string().optional(),
+  cityId: z.coerce.string().optional(),
 });
 
 const FormSchema = z.object({
@@ -147,6 +147,7 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id } = useParams<{ id: string }>();
   const [openTourId, setOpenTourId] = useState<boolean>(false);
   const [openClientId, setOpenClientId] = useState<boolean>(false);
+  const [openCityIds, setOpenCityIds] = useState({});
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -268,7 +269,7 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
           tourBookingDetailId: tourBooking.id ? String(tourBooking.id) : "",
           day: String(tourBooking.day) || "",
           description: tourBooking.description || "",
-          cityId: tourBooking.cityId ? String(tourBooking.cityId) : "",
+          cityId: tourBooking.cityId ? tourBooking.cityId : "",
           date: tourBooking.date
             ? new Date(tourBooking.date).toISOString().split("T")[0]
             : "",
@@ -382,12 +383,26 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
               .split("T")[0]
           : "", // Increment the date for each itinerary
         description: itinerary.description || "", // Use the description from the itinerary
-        cityId: itinerary.cityId ? String(itinerary.cityId) : "", // Convert cityId to string
+        cityId: itinerary.cityId ? itinerary.cityId : "", // Convert cityId to string
       }));
 
       // Append the mapped itineraries to the tourBookingDetails field
       append(mappedItineraries);
     }
+  };
+
+  const toggleCityPopover = (index) => {
+    setOpenCityIds((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  const closeCityPopover = (index) => {
+    setOpenCityIds((prev) => ({
+      ...prev,
+      [index]: false,
+    }));
   };
 
   const handleRemoveAndRecalculateDays = (index: number) => {
@@ -435,6 +450,11 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
               .split("T")[0]
           : startDate; // Fallback to startDate if previousDate is not available
         setValue(`tourBookingDetails.${idx}.date`, newDate);
+      }
+
+      // Ensure cityId remains intact
+      if (field.cityId) {
+        setValue(`tourBookingDetails.${idx}.cityId`, field.cityId);
       }
     });
 
@@ -1111,35 +1131,84 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
                           name={`tourBookingDetails.${index}.cityId`}
                           control={control}
                           render={({ field }) => (
-                            <Select
-                              key={field.value}
-                              // onValueChange={(value) => {
-                              //   setValue(`itineraries.${index}.cityId`, value);
-                              // }}
-                              onValueChange={(value) =>
-                                setValue(
-                                  `tourBookingDetails.${index}.cityId`,
-                                  value === "none" ? "" : value
-                                )
+                            <Popover
+                              open={openCityIds[index] || false}
+                              onOpenChange={(open) =>
+                                setOpenCityIds((prev) => ({
+                                  ...prev,
+                                  [index]: open,
+                                }))
                               }
-                              value={watch(
-                                `tourBookingDetails.${index}.cityId`
-                              )}
                             >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select a city" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {cityOptions?.map((city) => (
-                                  <SelectItem
-                                    key={city.id}
-                                    value={String(city.id)}
-                                  >
-                                    {city.cityName}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={
+                                    openCityIds[index] ? "true" : "false"
+                                  }
+                                  className=" w-[170px] lg:w-full justify-between mt-1"
+                                  onClick={() => toggleCityPopover(index)}
+                                >
+                                  {field.value
+                                    ? cityOptions &&
+                                      cityOptions.find(
+                                        (city) => city.id === field.value
+                                      )?.cityName
+                                    : "Select City"}
+                                  <ChevronsUpDown className="opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[325px] p-0">
+                                <Command>
+                                  <CommandInput
+                                    placeholder="Search city..."
+                                    className="h-9"
+                                  />
+                                  <CommandList>
+                                    <CommandEmpty>No city found.</CommandEmpty>
+                                    <CommandGroup>
+                                      {cityOptions &&
+                                        cityOptions.map((city) => (
+                                          <CommandItem
+                                            key={city.id}
+                                            // value={String(city.id)}
+                                            value={city.cityName.toLowerCase()} // 👈 Use client name for filtering
+                                            onSelect={(currentValue) => {
+                                              // if (city.id === "none") {
+                                              //   setValue(
+                                              //     `tourBookingDetails.${index}.cityId`,
+                                              //     ""
+                                              //   ); // Clear the value
+                                              // } else {
+                                              //   console.log(city);
+                                              //   setValue(
+                                              //     `tourBookingDetails.${index}.cityId`,
+                                              //     city.id
+                                              //   );
+                                              // }
+                                              field.onChange(city.id);
+                                              closeCityPopover(index); // ✅ Close this row's popover
+                                              // setOpenCityId(false);
+                                              // Close popover after selection
+                                            }}
+                                          >
+                                            {city.cityName}
+                                            <Check
+                                              className={cn(
+                                                "ml-auto",
+                                                city.id === field.value
+                                                  ? "opacity-100"
+                                                  : "opacity-0"
+                                              )}
+                                            />
+                                          </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
                           )}
                         />
                         {errors.tourBookingDetails?.[index]?.cityId && (
