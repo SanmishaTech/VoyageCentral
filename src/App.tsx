@@ -30,9 +30,10 @@ import ClientList from "@/modules/Client/ClientList";
 import CreateClient from "@/modules/Client/CreateClient";
 import EditClient from "@/modules/Client/EditClient";
 
-import TourEnquiryList from "@/modules/TourEnquiry/TourEnquiryList";
-import CreateTourEnquiry from "@/modules/TourEnquiry/CreateTourEnquiry";
-import EditTourEnquiry from "@/modules/TourEnquiry/EditTourEnquiry";
+import BookingList from "@/modules/Booking/BookingList";
+import CreateBooking from "@/modules/Booking/CreateBooking";
+import EditBooking from "@/modules/Booking/EditBooking";
+import AddFollowUp from "@/modules/Booking/AddFollowUp";
 
 import BranchList from "@/modules/Branch/BranchList";
 
@@ -307,27 +308,35 @@ const App = () => {
               }
             />
             <Route
-              path="/tourEnquiries"
+              path="/bookings"
               element={
                 <ProtectedRoute>
-                  <TourEnquiryList />
+                  <BookingList />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/tourEnquiries/create"
+              path="/bookings/create"
               element={
                 <ProtectedRoute>
-                  <CreateTourEnquiry />
+                  <CreateBooking />
                 </ProtectedRoute>
               }
             />
 
             <Route
-              path="/tourEnquiries/:id/edit"
+              path="/bookings/:id/edit"
               element={
                 <ProtectedRoute>
-                  <EditTourEnquiry />
+                  <EditBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id/followUp"
+              element={
+                <ProtectedRoute>
+                  <AddFollowUp />
                 </ProtectedRoute>
               }
             />

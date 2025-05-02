@@ -64,8 +64,8 @@ import { post, put } from "@/services/apiService";
 import { set } from "date-fns";
 import AddClient from "./AddClient";
 
-const TourEnquiryDetailsForm = z.object({
-  tourBookingDetailId: z.string().optional(),
+const BookingFormSchema = z.object({
+  bookingDetailId: z.string().optional(),
   day: z
     .string()
     .refine((val) => !isNaN(Number(val)), {
@@ -130,7 +130,7 @@ const FormSchema = z.object({
   isHotel: z.coerce.number().min(0, " required"),
   isVehicle: z.coerce.number().min(0, " required"),
   isPackage: z.coerce.number().min(0, " required"),
-  bookingDetails: z
+  bookingDetail: z
     .string()
     .max(100, "Booking details must not exceed 100 characters.")
     .optional(),
@@ -138,12 +138,12 @@ const FormSchema = z.object({
     .string()
     .max(100, "Enquiry status must not exceed 100 characters.")
     .optional(),
-  tourBookingDetails: z.array(TourEnquiryDetailsForm).optional(),
+  bookingDetails: z.array(BookingFormSchema).optional(),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
 
-const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
+const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id } = useParams<{ id: string }>();
   const [openTourId, setOpenTourId] = useState<boolean>(false);
   const [openClientId, setOpenClientId] = useState<boolean>(false);
@@ -170,9 +170,9 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
     isHotel: 0,
     isVehicle: 0,
     isPackage: 0,
-    bookingDetails: "",
+    bookingDetail: "",
     enquiryStatus: "",
-    tourBookingDetails: [], // Empty array for booking details
+    bookingDetails: [], // Empty array for booking details
   };
 
   const {
@@ -191,18 +191,17 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "tourBookingDetails", // Name of the array in the form schema
+    name: "bookingDetails", // Name of the array in the form schema
   });
 
-  const { data: editTourEnquiryData, isLoading: editTourEnquiryLoading } =
-    useQuery({
-      queryKey: ["editTourEnquiry", id],
-      queryFn: async () => {
-        const response = await get(`/tour-enquiries/${id}`);
-        return response; // API returns the sector object directly
-      },
-      enabled: !!id && mode === "edit",
-    });
+  const { data: editBookingData, isLoading: editBookingLoading } = useQuery({
+    queryKey: ["editBooking", id],
+    queryFn: async () => {
+      const response = await get(`/bookings/${id}`);
+      return response; // API returns the sector object directly
+    },
+    enabled: !!id && mode === "edit",
+  });
 
   // clients
   const { data: clients, isLoading: isClientsLoading } = useQuery({
@@ -261,11 +260,11 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
       const today = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
       setValue("bookingDate", today);
     }
-    if (editTourEnquiryData) {
+    if (editBookingData) {
       // ✅ Map familyFriends once
       const tourBookingDetailsData =
-        editTourEnquiryData.tourBookingDetails?.map((tourBooking) => ({
-          tourBookingDetailId: tourBooking.id ? String(tourBooking.id) : "",
+        editBookingData.bookingDetails?.map((tourBooking) => ({
+          bookingDetailId: tourBooking.id ? String(tourBooking.id) : "",
           day: String(tourBooking.day) || "",
           description: tourBooking.description || "",
           cityId: tourBooking.cityId ? String(tourBooking.cityId) : "",
@@ -276,86 +275,76 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
 
       // ✅ Reset full form including field array
       reset({
-        bookingDate: editTourEnquiryData.bookingDate
-          ? new Date(editTourEnquiryData.bookingDate)
-              .toISOString()
-              .split("T")[0]
+        bookingDate: editBookingData.bookingDate
+          ? new Date(editBookingData.bookingDate).toISOString().split("T")[0]
           : "",
-        departureDate: editTourEnquiryData.departureDate
-          ? new Date(editTourEnquiryData.departureDate)
-              .toISOString()
-              .split("T")[0]
+        departureDate: editBookingData.departureDate
+          ? new Date(editBookingData.departureDate).toISOString().split("T")[0]
           : "",
-        journeyDate: editTourEnquiryData.journeyDate
-          ? new Date(editTourEnquiryData.journeyDate)
-              .toISOString()
-              .split("T")[0]
+        journeyDate: editBookingData.journeyDate
+          ? new Date(editBookingData.journeyDate).toISOString().split("T")[0]
           : "",
-        bookingNumber: editTourEnquiryData.bookingNumber || "",
-        bookingDetails: editTourEnquiryData.bookingDetails || "",
-        budgetField: editTourEnquiryData.budgetField
-          ? editTourEnquiryData.budgetField
+        bookingNumber: editBookingData.bookingNumber || "",
+        bookingDetail: editBookingData.bookingDetail || "",
+        budgetField: editBookingData.budgetField
+          ? editBookingData.budgetField
           : "",
-        clientId: editTourEnquiryData.clientId
-          ? editTourEnquiryData.clientId
-          : "",
+        clientId: editBookingData.clientId ? editBookingData.clientId : "",
         numberOfAdults:
-          editTourEnquiryData.numberOfAdults !== null &&
-          editTourEnquiryData.numberOfAdults !== undefined
-            ? String(editTourEnquiryData.numberOfAdults)
+          editBookingData.numberOfAdults !== null &&
+          editBookingData.numberOfAdults !== undefined
+            ? String(editBookingData.numberOfAdults)
             : "",
         numberOfChildren5To11:
-          editTourEnquiryData.numberOfChildren5To11 !== null &&
-          editTourEnquiryData.numberOfChildren5To11 !== undefined
-            ? String(editTourEnquiryData.numberOfChildren5To11)
+          editBookingData.numberOfChildren5To11 !== null &&
+          editBookingData.numberOfChildren5To11 !== undefined
+            ? String(editBookingData.numberOfChildren5To11)
             : "",
         numberOfChildrenUnder5:
-          editTourEnquiryData.numberOfChildrenUnder5 !== null &&
-          editTourEnquiryData.numberOfChildrenUnder5 !== undefined
-            ? String(editTourEnquiryData.numberOfChildrenUnder5)
+          editBookingData.numberOfChildrenUnder5 !== null &&
+          editBookingData.numberOfChildrenUnder5 !== undefined
+            ? String(editBookingData.numberOfChildrenUnder5)
             : "",
-        branchId: editTourEnquiryData.branchId
-          ? String(editTourEnquiryData.branchId)
+        branchId: editBookingData.branchId
+          ? String(editBookingData.branchId)
           : "",
-        tourId: editTourEnquiryData.tourId ? editTourEnquiryData.tourId : "",
-        isJourney: Number(editTourEnquiryData.isJourney),
-        isHotel: Number(editTourEnquiryData.isHotel),
-        isVehicle: Number(editTourEnquiryData.isVehicle),
-        isPackage: Number(editTourEnquiryData.isPackage),
-        enquiryStatus: editTourEnquiryData.enquiryStatus || "",
-        tourBookingDetails: tourBookingDetailsData, // ✅ include this
+        tourId: editBookingData.tourId ? editBookingData.tourId : "",
+        isJourney: Number(editBookingData.isJourney),
+        isHotel: Number(editBookingData.isHotel),
+        isVehicle: Number(editBookingData.isVehicle),
+        isPackage: Number(editBookingData.isPackage),
+        enquiryStatus: editBookingData.enquiryStatus || "",
+        bookingDetails: tourBookingDetailsData, // ✅ include this
       });
     }
-  }, [editTourEnquiryData, reset, setValue]);
+  }, [editBookingData, reset, setValue]);
 
   // Mutation for creating a user
   const createMutation = useMutation({
-    mutationFn: (data: FormInputs) => post("/tour-enquiries", data),
+    mutationFn: (data: FormInputs) => post("/bookings", data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["tourEnquiries"]); // Refetch the users list
-      toast.success("Tour Enquiry created successfully");
-      navigate("/tourEnquiries"); // Navigate to the hotels page after successful creation
+      queryClient.invalidateQueries(["bookings"]); // Refetch the users list
+      toast.success("Booking created successfully");
+      navigate("/bookings"); // Navigate to the hotels page after successful creation
     },
     onError: (error: any) => {
       Validate(error, setError);
-      toast.error(error.response?.data?.message || "Failed to create Enquiry");
+      toast.error(error.response?.data?.message || "Failed to create Booking");
     },
   });
 
   // Mutation for updating a user
   const updateMutation = useMutation({
-    mutationFn: (data: FormInputs) => put(`/tour-enquiries/${id}`, data),
+    mutationFn: (data: FormInputs) => put(`/bookings/${id}`, data),
     onSuccess: () => {
-      toast.success("Tour Enquiry updated successfully");
-      queryClient.invalidateQueries(["tourEnquiry"]);
-      navigate("/tourEnquiries"); // Navigate to the hotels page after successful update
+      toast.success("Booking updated successfully");
+      queryClient.invalidateQueries(["bookings"]);
+      navigate("/bookings"); // Navigate to the hotels page after successful update
     },
     onError: (error: any) => {
       console.log(error);
       Validate(error, setError);
-      toast.error(
-        error.response?.data?.message || "Failed to update Tour Enquiry"
-      );
+      toast.error(error.response?.data?.message || "Failed to update Booking");
     },
   });
 
@@ -417,15 +406,15 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
     // Recalculate days and dates for the remaining records
     const updatedFields = [...fields].filter((_, idx) => idx !== index); // Create a new array without the removed record
     updatedFields.forEach((field, idx) => {
-      setValue(`tourBookingDetails.${idx}.day`, String(idx + 1)); // Always update day
+      setValue(`bookingDetails.${idx}.day`, String(idx + 1)); // Always update day
 
       // Update the date field
       if (idx === 0) {
         // For the first record, use the journeyDate or the start of the current month
-        setValue(`tourBookingDetails.${idx}.date`, startDate);
+        setValue(`bookingDetails.${idx}.date`, startDate);
       } else {
         // For subsequent records, increment the date by one day from the previous record
-        const previousDate = watch(`tourBookingDetails.${idx - 1}.date`);
+        const previousDate = watch(`bookingDetails.${idx - 1}.date`);
         const newDate = previousDate
           ? new Date(
               new Date(previousDate + "T00:00:00Z").getTime() +
@@ -434,7 +423,7 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
               .toISOString()
               .split("T")[0]
           : startDate; // Fallback to startDate if previousDate is not available
-        setValue(`tourBookingDetails.${idx}.date`, newDate);
+        setValue(`bookingDetails.${idx}.date`, newDate);
       }
     });
 
@@ -454,12 +443,13 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
   return (
     <>
       {/* JSX Code for HotelForm.tsx */}
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card className="mx-auto mt-10">
           <CardContent className="pt-6">
             {/* Client Details */}
             <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-              Tour Enquiry
+              Tour Booking
             </CardTitle>
 
             {/* start code */}
@@ -958,20 +948,20 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
                 {/* Booking Details */}
                 <div className="col-span-2">
                   <Label
-                    htmlFor="bookingDetails"
+                    htmlFor="bookingDetail"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Booking Details
                   </Label>
                   <Textarea
-                    id="bookingDetails"
-                    {...register("bookingDetails")}
+                    id="bookingDetail"
+                    {...register("bookingDetail")}
                     placeholder="Enter booking details"
                     rows={4} // Optional: control height
                   />
-                  {errors.bookingDetails && (
+                  {errors.bookingDetail && (
                     <p className="text-red-500 text-xs mt-1">
-                      {errors.bookingDetails.message}
+                      {errors.bookingDetail.message}
                     </p>
                   )}
                 </div>
@@ -1062,53 +1052,48 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <TableRow key={field.id}>
                       <TableCell className="w-20 px-1">
                         <Input
-                          {...register(`tourBookingDetails.${index}.day`)}
+                          {...register(`bookingDetails.${index}.day`)}
                           type="text"
                           placeholder="day"
                           className="w-20 m-0"
                         />
-                        {errors.tourBookingDetails?.[index]?.day && (
+                        {errors.bookingDetails?.[index]?.day && (
                           <p className="text-red-500 text-xs mt-1">
-                            {errors.tourBookingDetails[index]?.day?.message}
+                            {errors.bookingDetails[index]?.day?.message}
                           </p>
                         )}
                       </TableCell>
 
                       <TableCell className="w-36 px-1">
                         <Input
-                          {...register(`tourBookingDetails.${index}.date`)}
+                          {...register(`bookingDetails.${index}.date`)}
                           type="date"
                           className="w-full"
                         />
-                        {errors.tourBookingDetails?.[index]?.date && (
+                        {errors.bookingDetails?.[index]?.date && (
                           <p className="text-red-500 text-xs mt-1">
-                            {errors.tourBookingDetails[index]?.date?.message}
+                            {errors.bookingDetails[index]?.date?.message}
                           </p>
                         )}
                       </TableCell>
 
                       <TableCell className="w-[600px] px-1">
                         <Textarea
-                          {...register(
-                            `tourBookingDetails.${index}.description`
-                          )}
+                          {...register(`bookingDetails.${index}.description`)}
                           className="w-[400px] lg:w-full"
                           placeholder="description"
                           rows={4}
                         />
-                        {errors.tourBookingDetails?.[index]?.description && (
+                        {errors.bookingDetails?.[index]?.description && (
                           <p className="text-red-500 text-xs mt-1">
-                            {
-                              errors.tourBookingDetails[index]?.description
-                                ?.message
-                            }
+                            {errors.bookingDetails[index]?.description?.message}
                           </p>
                         )}
                       </TableCell>
 
                       <TableCell className="w-36 px-1">
                         <Controller
-                          name={`tourBookingDetails.${index}.cityId`}
+                          name={`bookingDetails.${index}.cityId`}
                           control={control}
                           render={({ field }) => (
                             <Select
@@ -1118,13 +1103,11 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
                               // }}
                               onValueChange={(value) =>
                                 setValue(
-                                  `tourBookingDetails.${index}.cityId`,
+                                  `bookingDetails.${index}.cityId`,
                                   value === "none" ? "" : value
                                 )
                               }
-                              value={watch(
-                                `tourBookingDetails.${index}.cityId`
-                              )}
+                              value={watch(`bookingDetails.${index}.cityId`)}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select a city" />
@@ -1142,25 +1125,22 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
                             </Select>
                           )}
                         />
-                        {errors.tourBookingDetails?.[index]?.cityId && (
+                        {errors.bookingDetails?.[index]?.cityId && (
                           <p className="text-red-500 text-xs mt-1">
-                            {errors.tourBookingDetails[index]?.cityId?.message}
+                            {errors.bookingDetails[index]?.cityId?.message}
                           </p>
                         )}
                       </TableCell>
 
                       <Input
                         type="hidden"
-                        {...register(
-                          `tourBookingDetails.${index}.tourBookingDetailId`
-                        )}
+                        {...register(`bookingDetails.${index}.bookingDetailId`)}
                       />
-                      {errors.tourBookingDetails?.[index]
-                        ?.tourBookingDetailId && (
+                      {errors.bookingDetails?.[index]?.bookingDetailId && (
                         <p className="text-red-500 text-xs mt-1">
                           {
-                            errors.tourBookingDetails[index]
-                              ?.tourBookingDetailId?.message
+                            errors.bookingDetails[index]?.bookingDetailId
+                              ?.message
                           }
                         </p>
                       )}
@@ -1228,7 +1208,7 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
                         .split("T")[0];
 
                   append({
-                    tourBookingDetailId: "",
+                    bookingDetailId: "",
                     day: String(lastDay + 1), // Increment day based on the last entry
                     date: newDate, // Add the calculated date
                     description: "",
@@ -1248,7 +1228,7 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/tourEnquiries")}
+              onClick={() => navigate("/bookings")}
             >
               Cancel
             </Button>
@@ -1256,7 +1236,7 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
               {isLoading ? (
                 <LoaderCircle className="animate-spin h-4 w-4" />
               ) : mode === "create" ? (
-                "Create Tour Enquiry"
+                "Create Booking"
               ) : (
                 "Save Changes"
               )}
@@ -1268,4 +1248,4 @@ const TourEnquiryForm = ({ mode }: { mode: "create" | "edit" }) => {
   );
 };
 
-export default TourEnquiryForm;
+export default BookingForm;

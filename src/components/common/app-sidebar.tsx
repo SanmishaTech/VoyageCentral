@@ -102,7 +102,7 @@ const initialData = {
           isActive: false,
           items: [
             { title: "Tours", url: "/tours" },
-            { title: "Tour Enquiries", url: "/tourEnquiries" },
+            { title: "Bookings", url: "/bookings" },
           ],
         },
       ],

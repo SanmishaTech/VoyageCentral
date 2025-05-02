@@ -53,7 +53,7 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 
-const fetchTourEnquiries = async (
+const fetchBookings = async (
   page: number,
   sortBy: string,
   sortOrder: string,
@@ -65,12 +65,12 @@ const fetchTourEnquiries = async (
   recordsPerPage: number
 ) => {
   const response = await get(
-    `/tour-enquiries?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&fromBookingDate=${fromBookingDate}&toBookingDate=${toBookingDate}&tourTitle=${tourTitle}&clientName=${clientName}&limit=${recordsPerPage}`
+    `/bookings?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&fromBookingDate=${fromBookingDate}&toBookingDate=${toBookingDate}&tourTitle=${tourTitle}&clientName=${clientName}&limit=${recordsPerPage}`
   );
   return response;
 };
 
-const TourEnquiryList = () => {
+const BookingList = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10); // Add recordsPerPage state
@@ -78,9 +78,7 @@ const TourEnquiryList = () => {
   const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
   const [search, setSearch] = useState(""); // Search query
   const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
-  const [tourEnquiryToDelete, setTourEnquiryToDelete] = useState<number | null>(
-    null
-  ); //
+  const [bookingToDelete, setBookingToDelete] = useState<number | null>(null); //
   const [fromBookingDate, setFromBookingDate] = useState("");
   const [toBookingDate, setToBookingDate] = useState("");
   const [tourTitle, setTourTitle] = useState("");
@@ -92,7 +90,7 @@ const TourEnquiryList = () => {
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [
-      "tourEnquiries",
+      "bookings",
       currentPage,
       sortBy,
       sortOrder,
@@ -104,7 +102,7 @@ const TourEnquiryList = () => {
       recordsPerPage,
     ],
     queryFn: () =>
-      fetchTourEnquiries(
+      fetchBookings(
         currentPage,
         sortBy,
         sortOrder,
@@ -117,32 +115,32 @@ const TourEnquiryList = () => {
       ),
   });
 
-  const tourEnquiries = data?.tourEnquiries || [];
+  const bookings = data?.bookings || [];
   const totalPages = data?.totalPages || 1;
-  const totalTourEnquiries = data?.totalTourEnquiries || 0;
+  const totalBookings = data?.totalBookings || 0;
 
   // Mutation for deleting a user
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => del(`/tour-enquiries/${id}`),
+    mutationFn: (id: number) => del(`/bookings/${id}`),
     onSuccess: () => {
-      toast.success("Tour Enquiry deleted successfully");
-      queryClient.invalidateQueries(["tourEnquiries"]);
+      toast.success("Booking deleted successfully");
+      queryClient.invalidateQueries(["bookings"]);
     },
     onError: () => {
-      toast.error("Failed to delete Tour Enquiry");
+      toast.error("Failed to delete Booking");
     },
   });
 
   const confirmDelete = (id: number) => {
-    setTourEnquiryToDelete(id);
+    setBookingToDelete(id);
     setShowConfirmation(true);
   };
 
   const handleDelete = () => {
-    if (tourEnquiryToDelete) {
-      deleteMutation.mutate(tourEnquiryToDelete);
+    if (bookingToDelete) {
+      deleteMutation.mutate(bookingToDelete);
       setShowConfirmation(false);
-      setTourEnquiryToDelete(null);
+      setBookingToDelete(null);
     }
   };
 
@@ -192,7 +190,7 @@ const TourEnquiryList = () => {
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Tour Enquiry Management
+        Booking Management
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>
@@ -201,7 +199,7 @@ const TourEnquiryList = () => {
             {/* Search Input */}
             <div className="flex-grow">
               <Input
-                placeholder="Search tour enquiries..."
+                placeholder="Search bookings..."
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
@@ -218,11 +216,11 @@ const TourEnquiryList = () => {
                 Filters
               </Button>
               <Button
-                onClick={() => navigate("/tourEnquiries/create")}
+                onClick={() => navigate("/bookings/create")}
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add Tour Enquiry
+                Add Booking
               </Button>
             </div>
           </div>
@@ -314,9 +312,9 @@ const TourEnquiryList = () => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load tour enquiry.
+              Failed to load booking.
             </div>
-          ) : tourEnquiries.length > 0 ? (
+          ) : bookings.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -391,6 +389,23 @@ const TourEnquiryList = () => {
                       </div>
                     </TableHead>
                     <TableHead
+                      onClick={() => handleSort("followUpDate")}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <span>Follow-Up Date</span>
+                        {sortBy === "followUpDate" && (
+                          <span className="ml-1">
+                            {sortOrder === "asc" ? (
+                              <ChevronUp size={16} />
+                            ) : (
+                              <ChevronDown size={16} />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead
                       onClick={() => handleSort("branchName")}
                       className="cursor-pointer"
                     >
@@ -424,39 +439,57 @@ const TourEnquiryList = () => {
                         )}
                       </div>
                     </TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {tourEnquiries.map((tour) => (
-                    <TableRow key={tour.id}>
-                      <TableCell>{tour.bookingNumber}</TableCell>
+                  {bookings.map((booking) => (
+                    <TableRow key={booking.id}>
+                      <TableCell>{booking.bookingNumber}</TableCell>
                       <TableCell>
                         {" "}
-                        {tour.bookingDate
-                          ? dayjs(tour.bookingDate).format("DD/MM/YYYY")
+                        {booking.bookingDate
+                          ? dayjs(booking.bookingDate).format("DD/MM/YYYY")
                           : "N/A"}
                       </TableCell>
                       <TableCell>
                         {" "}
-                        {tour.journeyDate
-                          ? dayjs(tour.journeyDate).format("DD/MM/YYYY")
+                        {booking.journeyDate
+                          ? dayjs(booking.journeyDate).format("DD/MM/YYYY")
                           : "N/A"}
                       </TableCell>
-                      <TableCell>{tour?.client.clientName || "N/A"}</TableCell>
                       <TableCell>
-                        {(tour?.branch && tour?.branch.branchName) || "N/A"}
+                        {booking?.client.clientName || "N/A"}
                       </TableCell>
                       <TableCell>
-                        {(tour?.tour && tour?.tour.tourTitle) || "N/A"}
+                        {" "}
+                        {booking.followUpDate
+                          ? dayjs(booking.followUpDate).format("DD/MM/YYYY")
+                          : "N/A"}
                       </TableCell>
                       <TableCell>
+                        {(booking?.branch && booking?.branch.branchName) ||
+                          "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {(booking?.tour && booking?.tour.tourTitle) || "N/A"}
+                      </TableCell>
+                      <TableCell className="flex justify-end">
                         <div className="flex gap-2">
+                          <Button
+                            // variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              navigate(`/bookings/${booking.id}/followUp`)
+                            }
+                          >
+                            Follow Up
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                              navigate(`/tourEnquiries/${tour.id}/edit`)
+                              navigate(`/bookings/${booking.id}/edit`)
                             }
                           >
                             <Edit size={16} />
@@ -465,7 +498,7 @@ const TourEnquiryList = () => {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => confirmDelete(tour.id)}
+                            onClick={() => confirmDelete(booking.id)}
                           >
                             <Trash2 size={16} />
                           </Button>
@@ -478,7 +511,7 @@ const TourEnquiryList = () => {
               <CustomPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                totalRecords={totalTourEnquiries}
+                totalRecords={totalBookings}
                 recordsPerPage={recordsPerPage}
                 onPageChange={setCurrentPage} // Pass setCurrentPage directly
                 onRecordsPerPageChange={(newRecordsPerPage) => {
@@ -488,7 +521,7 @@ const TourEnquiryList = () => {
               />
             </div>
           ) : (
-            <div className="text-center">No Tour Enquiries Found.</div>
+            <div className="text-center">No Bookings Found.</div>
           )}
         </CardContent>
       </Card>
@@ -496,10 +529,10 @@ const TourEnquiryList = () => {
       <ConfirmDialog
         isOpen={showConfirmation}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this Tour Enquiry? This action cannot be undone."
+        description="Are you sure you want to delete this Booking? This action cannot be undone."
         onCancel={() => {
           setShowConfirmation(false);
-          setTourEnquiryToDelete(null);
+          setBookingToDelete(null);
         }}
         onConfirm={handleDelete}
       />
@@ -507,4 +540,4 @@ const TourEnquiryList = () => {
   );
 };
 
-export default TourEnquiryList;
+export default BookingList;
