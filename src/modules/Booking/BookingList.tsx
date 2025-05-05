@@ -502,6 +502,15 @@ const BookingList = () => {
                           >
                             <Trash2 size={16} />
                           </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              navigate(`/bookings/${booking.id}/details`)
+                            }
+                          >
+                            <Edit size={16} />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

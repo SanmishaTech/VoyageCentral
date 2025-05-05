@@ -34,6 +34,7 @@ import BookingList from "@/modules/Booking/BookingList";
 import CreateBooking from "@/modules/Booking/CreateBooking";
 import EditBooking from "@/modules/Booking/EditBooking";
 import AddFollowUp from "@/modules/Booking/AddFollowUp";
+import BookingDetails from "@/modules/Booking/BookingDetails";
 
 import BranchList from "@/modules/Branch/BranchList";
 
@@ -337,6 +338,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <AddFollowUp />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id/details"
+              element={
+                <ProtectedRoute>
+                  <BookingDetails />
                 </ProtectedRoute>
               }
             />
