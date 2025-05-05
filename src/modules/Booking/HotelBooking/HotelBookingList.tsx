@@ -11,6 +11,8 @@ import MultipleSelector, {
   Option,
 } from "@/components/common/multiple-selector"; // Import MultipleSelector from common folder
 import { Card, CardContent } from "@/components/ui/card";
+import dayjs from "dayjs";
+
 import {
   Table,
   TableBody,
@@ -51,50 +53,50 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 
-const JourneyBookingList = ({ bookingId }) => {
+const HotelBookingList = ({ bookingId }) => {
   const queryClient = useQueryClient();
   const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
-  const [journeyBookingToDelete, setJourneyBookingToDelete] = useState<
+  const [hotelBookingToDelete, setHotelBookingToDelete] = useState<
     number | null
   >(null); //
   //  Track the user ID to delete
   const navigate = useNavigate();
 
   const fetchJourneyBookings = async () => {
-    const response = await get(`/journey-bookings/booking/${bookingId}`);
+    const response = await get(`/hotel-bookings/booking/${bookingId}`);
     return response;
   };
 
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["journey-bookings"],
+    queryKey: ["hotel-bookings"],
     queryFn: () => fetchJourneyBookings(),
   });
 
-  const journeyBookings = data?.journeyBookings || [];
+  const hotelBookings = data?.hotelBookings || [];
 
   // Mutation for deleting a user
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => del(`/journey-bookings/${id}`),
+    mutationFn: (id: number) => del(`/hotel-bookings/${id}`),
     onSuccess: () => {
       toast.success("Journey Booking deleted successfully");
-      queryClient.invalidateQueries(["journey-bookings"]);
+      queryClient.invalidateQueries(["hotel-bookings"]);
     },
     onError: () => {
-      toast.error("Failed to delete Journey Booking");
+      toast.error("Failed to delete Hotel Booking");
     },
   });
 
   const confirmDelete = (id: number) => {
-    setJourneyBookingToDelete(id);
+    setHotelBookingToDelete(id);
     setShowConfirmation(true);
   };
 
   const handleDelete = () => {
-    if (journeyBookingToDelete) {
-      deleteMutation.mutate(journeyBookingToDelete);
+    if (hotelBookingToDelete) {
+      deleteMutation.mutate(hotelBookingToDelete);
       setShowConfirmation(false);
-      setJourneyBookingToDelete(null);
+      setHotelBookingToDelete(null);
     }
   };
 
@@ -104,12 +106,12 @@ const JourneyBookingList = ({ bookingId }) => {
         <div className="mb-1 w-full flex flex-wrap justify-end items-center gap-2">
           <Button
             onClick={() =>
-              navigate(`/bookings/${bookingId}/journeyBooking/create`)
+              navigate(`/bookings/${bookingId}/hotelBooking/create`)
             }
             className="bg-primary text-xs hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
           >
             <PlusCircle className="mr-2 h-5 w-5" />
-            Add Journey Booking
+            Add Hotel Booking
           </Button>
         </div>
 
@@ -121,44 +123,54 @@ const JourneyBookingList = ({ bookingId }) => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load journey booking details.
+              Failed to load hotel booking details.
             </div>
-          ) : journeyBookings.length > 0 ? (
+          ) : hotelBookings.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>Mode</span>
+                        <span>Hotel</span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer">
+                      <div className="flex items-center">
+                        <span>City</span>
                       </div>
                     </TableHead>
 
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>From Place</span>
+                        <span>Check In - Check Out</span>
                       </div>
                     </TableHead>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>To Place</span>
+                        <span>Accommodation</span>
                       </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer">
-                      <div className="flex items-center">
-                        <span>PNR No.</span>
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {journeyBookings.map((journey) => (
-                    <TableRow key={journey.id}>
-                      <TableCell>{journey.mode}</TableCell>
-                      <TableCell>{journey.fromPlace || "N/A"}</TableCell>
-                      <TableCell>{journey.toPlace || "N/A"}</TableCell>
-                      <TableCell>{journey.pnrNumber || "N/A"}</TableCell>
+                  {hotelBookings.map((hotel) => (
+                    <TableRow key={hotel.id}>
+                      <TableCell>{hotel?.hotel?.hotelName}</TableCell>
+                      <TableCell>{hotel?.city?.cityName || "N/A"}</TableCell>
+                      <TableCell>
+                        {" "}
+                        {hotel.checkInDate
+                          ? dayjs(hotel.checkInDate).format("DD/MM/YYYY")
+                          : "N/A"}
+                        -
+                        {hotel.checkOutDate
+                          ? dayjs(hotel.checkOutDate).format("DD/MM/YYYY")
+                          : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {hotel?.accommodation?.accommodationName || "N/A"}
+                      </TableCell>
                       <TableCell className="">
                         <div className="flex justify-end gap-2">
                           <Button
@@ -166,7 +178,7 @@ const JourneyBookingList = ({ bookingId }) => {
                             size="sm"
                             onClick={() =>
                               navigate(
-                                `/bookings/${bookingId}/journeyBooking/${journey.id}/edit`
+                                `/bookings/${bookingId}/hotelBooking/${hotel.id}/edit`
                               )
                             }
                           >
@@ -176,7 +188,7 @@ const JourneyBookingList = ({ bookingId }) => {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => confirmDelete(journey.id)}
+                            onClick={() => confirmDelete(hotel.id)}
                           >
                             <Trash2 size={16} />
                           </Button>
@@ -188,7 +200,7 @@ const JourneyBookingList = ({ bookingId }) => {
               </Table>
             </div>
           ) : (
-            <div className="text-center">No Journey booking Found.</div>
+            <div className="text-center">No Hotel booking Found.</div>
           )}
         </div>
       </div>
@@ -196,10 +208,10 @@ const JourneyBookingList = ({ bookingId }) => {
       <ConfirmDialog
         isOpen={showConfirmation}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this journey booking? This action cannot be undone."
+        description="Are you sure you want to delete this hotel booking? This action cannot be undone."
         onCancel={() => {
           setShowConfirmation(false);
-          setJourneyBookingToDelete(null);
+          setHotelBookingToDelete(null);
         }}
         onConfirm={handleDelete}
       />
@@ -207,4 +219,4 @@ const JourneyBookingList = ({ bookingId }) => {
   );
 };
 
-export default JourneyBookingList;
+export default HotelBookingList;

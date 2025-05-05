@@ -509,7 +509,7 @@ const BookingList = () => {
                               navigate(`/bookings/${booking.id}/details`)
                             }
                           >
-                            <Edit size={16} />
+                            Booking
                           </Button>
                         </div>
                       </TableCell>

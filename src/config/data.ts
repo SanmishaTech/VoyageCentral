@@ -107,3 +107,24 @@ export const noOfChildrensBelow5Options = [
   { label: "19", value: "19" },
   { label: "20", value: "20" },
 ];
+
+export const modeOptions = [
+  { label: "Train", value: "Train" },
+  { label: "Bus", value: "Bus" },
+  { label: "Flight", value: "Flight" },
+];
+
+export const trainClassOptions = [
+  { label: "SL-Sleeper Class", value: "SL-Sleeper Class" },
+  { label: "1A-First Class AC", value: "1A-First Class AC" },
+  { label: "2A-AC 2 tier", value: "2A-AC 2 tier" },
+  { label: "3A-AC 3 tier", value: "3A-AC 3 tier" },
+  { label: "CC-AC Chair Car", value: "CC-AC Chair Car" },
+];
+
+export const flightClassOptions = [
+  { label: "Economy Class", value: "Economy Class" },
+  { label: "Premium Economy Class", value: "Premium Economy Class" },
+  { label: "Business Class", value: "Business Class" },
+  { label: "First Class", value: "First Class" },
+];
