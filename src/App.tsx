@@ -35,6 +35,10 @@ import CreateBooking from "@/modules/Booking/CreateBooking";
 import EditBooking from "@/modules/Booking/EditBooking";
 import AddFollowUp from "@/modules/Booking/AddFollowUp";
 import BookingDetails from "@/modules/Booking/BookingDetails";
+import CreateJourneyBooking from "@/modules/Booking/JourneyBooking/CreateJourneyBooking";
+import UpdateJourneyBooking from "@/modules/Booking/JourneyBooking/EditJourneyBooking";
+import CreateHotelBooking from "@/modules/Booking/HotelBooking/CreateHotelBooking";
+import UpdateHotelBooking from "@/modules/Booking/HotelBooking/EditHotelBooking";
 
 import BranchList from "@/modules/Branch/BranchList";
 
@@ -349,6 +353,41 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/bookings/:id/journeyBooking/create"
+              element={
+                <ProtectedRoute>
+                  <CreateJourneyBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id/journeyBooking/:journeyBookingId/edit"
+              element={
+                <ProtectedRoute>
+                  <UpdateJourneyBooking />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* hotel booking satrt */}
+            <Route
+              path="/bookings/:id/hotelBooking/create"
+              element={
+                <ProtectedRoute>
+                  <CreateHotelBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id/hotelBooking/:hotelBookingId/edit"
+              element={
+                <ProtectedRoute>
+                  <UpdateHotelBooking />
+                </ProtectedRoute>
+              }
+            />
+            {/* hotel booking end */}
           </Route>
         </Routes>
       </Router>

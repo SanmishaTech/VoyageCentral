@@ -72,6 +72,7 @@ import {
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import JourneyBookingList from "./JourneyBooking/JourneyBookingList";
+import HotelBookingList from "./HotelBooking/HotelBookingList";
 const BookingDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -187,66 +188,18 @@ const BookingDetails = () => {
             {/* --- Tabs Start --- */}
             <div className="w-full">
               <Tabs defaultValue="account" className="w-full">
-                <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto mb-4">
-                  <TabsTrigger value="account">Account</TabsTrigger>
-                  <TabsTrigger value="password">Password</TabsTrigger>
+                <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-4">
                   <TabsTrigger value="JourneyBooking">
                     Journey Booking
                   </TabsTrigger>
+                  <TabsTrigger value="HotelBooking">Hotel Booking</TabsTrigger>
                 </TabsList>
-
-                <TabsContent value="account">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm">Account</CardTitle>
-                      <CardDescription className="text-xs">
-                        Make changes to your account here. Click save when
-                        you're done.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="space-y-1">
-                        <Label htmlFor="name">Name</Label>
-                        <Input id="name" defaultValue="Pedro Duarte" />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="username">Username</Label>
-                        <Input id="username" defaultValue="@peduarte" />
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button>Save changes</Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="password">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm">Password</CardTitle>
-                      <CardDescription className="text-xs">
-                        Change your password here. After saving, you'll be
-                        logged out.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="space-y-1">
-                        <Label htmlFor="current">Current password</Label>
-                        <Input id="current" type="password" />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="new">New password</Label>
-                        <Input id="new" type="password" />
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button>Save password</Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
 
                 <TabsContent value="JourneyBooking">
                   <JourneyBookingList bookingId={id} />
+                </TabsContent>
+                <TabsContent value="HotelBooking">
+                  <HotelBookingList bookingId={id} />
                 </TabsContent>
               </Tabs>
             </div>
