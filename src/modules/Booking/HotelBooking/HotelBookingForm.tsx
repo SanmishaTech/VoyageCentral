@@ -4,6 +4,7 @@ import {
   SubmitHandler,
   Controller,
   useFieldArray,
+  useWatch,
 } from "react-hook-form";
 import dayjs from "dayjs";
 
@@ -58,91 +59,143 @@ import {
   foodTypeOptions,
   flightClassOptions,
   trainClassOptions,
+  planOptions,
+  roomOptions,
+  tariffPackageOptions,
+  bedOptions,
 } from "@/config/data";
 const FormSchema = z.object({
-  mode: z
+  hrvNumber: z.string().optional(),
+  partyComingFrom: z
+
     .string()
-    .min(1, "Mode field is required.")
-    .max(100, "Mode field must not exceed 100 characters."),
-  fromPlace: z
+    .min(1, "Party coming from must be at least 1 characters.")
+    .max(100, "Party coming from must not exceed 100 characters."),
+  checkInDate: z.string().min(1, "Check-in date is required."),
+  checkOutDate: z.string().min(1, "Check-out date is required."),
+
+  nights: z.coerce
+    .number()
+    .int("Nights must be an integer.")
+    .min(0, "Nights field is required."),
+
+  cityId: z.coerce.string().min(1, "City field is required"),
+
+  hotelId: z.coerce.string().min(1, "hotel field is required"),
+
+  plan: z
     .string()
-    .min(1, "From place field is required.")
-    .max(100, "From place field must not exceed 100 characters."),
-  toPlace: z
+    .min(1, "Plan field is required.")
+    .max(100, "Plan must not exceed 100 characters."),
+
+  rooms: z.string().min(1, "Rooms field is required"),
+
+  accommodationId: z.coerce
     .string()
-    .min(1, "From place field is required.")
-    .max(100, "From place field must not exceed 100 characters."),
-  journeyBookingDate: z.string().min(1, "Booking Date field is required"),
-  fromDepartureDate: z.string().min(1, "Booking Date field is required"),
-  toArrivalDate: z.string().min(1, "Booking Date field is required"),
-  foodType: z.string().optional(),
+    .min(1, "Accommodation Type field is required"),
+
+  tariffPackage: z
+    .string()
+    .max(100, "Tariff package must not exceed 100 characters.")
+    .optional(),
+
+  accommodationNote: z
+    .string()
+    .max(180, "Accommodation note must not exceed 180 characters.")
+    .optional(),
+
+  extraBed: z.coerce.number().min(0),
+
+  beds: z.string().max(22, "Beds must not exceed 22 characters.").optional(),
+
+  extraBedCost: z.coerce
+    .number({
+      invalid_type_error: "Extra bed cost must be a number.",
+    })
+    .nonnegative("Extra bed cost cannot be negative.")
+    .optional()
+    .nullable(),
+
+  hotelBookingDate: z.string().min(1, "Hotel booking date is required."),
+
+  bookingConfirmedBy: z
+    .string()
+    .min(1, "Confirmed by field is required.")
+    .max(100, "Confirmed by must not exceed 100 characters.")
+    .optional(),
+
+  confirmationNumber: z
+    .string()
+    .min(1, "Confirmation number field is required.")
+    .max(100, "Confirmation number must not exceed 100 characters.")
+    .optional(),
+
+  billingInstructions: z
+    .string()
+    .max(100, "Billing instructions must not exceed 100 characters.")
+    .optional(),
+
+  specialRequirement: z
+    .string()
+    .max(100, "Special requirement must not exceed 100 characters.")
+    .optional(),
+
+  notes: z
+    .string()
+    .max(100, "Notes must not exceed 100 characters.")
+    .optional(),
+
   billDescription: z
     .string()
-    .max(180, "Bill Description field must not exceed 100 characters.")
+    .max(100, "Bill description must not exceed 100 characters.")
     .optional(),
-  busName: z
-    .string()
-    .max(180, "Bus Name field must not exceed 100 characters.")
-    .optional(),
-  trainName: z
-    .string()
-    .max(180, "Train Name field must not exceed 100 characters.")
-    .optional(),
-  trainNumber: z
-    .string()
-    .max(180, "Train Number field must not exceed 100 characters.")
-    .optional(),
-  flightNumber: z
-    .string()
-    .max(180, "Train Number field must not exceed 100 characters.")
-    .optional(),
-  trainClass: z
-    .string()
-    .max(180, "Class field must not exceed 100 characters.")
-    .optional(),
-  airlineClass: z
-    .string()
-    .max(180, "Class field must not exceed 100 characters.")
-    .optional(),
-  flightClass: z
-    .string()
-    .max(180, "Class field must not exceed 100 characters.")
-    .optional(),
-  pnrNumber: z
-    .string()
-    .max(180, "PNR No. field must not exceed 100 characters.")
-    .optional(),
-  airlineId: z.coerce.number().nullable().optional(),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
 
 const defaultValues: FormInputs = {
-  mode: "",
-  fromPlace: "",
-  toPlace: "",
-  journeyBookingDate: new Date().toISOString().split("T")[0], // Default to today
-  fromDepartureDate: "",
-  toArrivalDate: "",
-  foodType: "",
+  hrvNumber: "",
+  partyComingFrom: "",
+  checkInDate: "", // Defaults to today (YYYY-MM-DD)
+  checkOutDate: "", // Defaults to today
+
+  nights: 0,
+
+  cityId: "",
+  hotelId: "",
+
+  plan: "",
+  rooms: "",
+
+  accommodationId: "",
+
+  tariffPackage: "",
+  accommodationNote: "",
+
+  extraBed: 0,
+  beds: "",
+
+  extraBedCost: null,
+
+  hotelBookingDate: new Date().toISOString().split("T")[0], // Defaults to today
+
+  bookingConfirmedBy: "",
+  confirmationNumber: "",
+  billingInstructions: "",
+  specialRequirement: "",
+  notes: "",
   billDescription: "",
-  busName: "",
-  trainName: "",
-  trainNumber: "",
-  flightNumber: "",
-  trainClass: "",
-  flightClass: "",
-  airlineClass: "",
-  pnrNumber: "",
-  airlineId: null,
 };
 
-const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
-  const { id, journeyBookingId } = useParams<{
+const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
+  const { id, hotelBookingId } = useParams<{
     id: string;
-    journeyBookingId: string;
+    hotelBookingId: string;
   }>();
-  const [openAirlineId, setOpenAirlineId] = useState<boolean>(false);
+  const [openCityId, setOpenCityId] = useState<boolean>(false);
+  const [openAccommodationId, setOpenAccommodationId] =
+    useState<boolean>(false);
+  const [openHotelId, setOpenHotelId] = useState<boolean>(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -160,25 +213,53 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
   });
 
-  // airlines
-  const { data: airlines, isLoading: isAirlineLoading } = useQuery({
-    queryKey: ["airlines"],
+  // cities
+  const { data: cities, isLoading: isCityLoading } = useQuery({
+    queryKey: ["cities"],
     queryFn: async () => {
-      const response = await get(`/airlines/all`);
+      const response = await get(`/cities/all`);
       return response; // API returns the sector object directly
     },
   });
 
-  const airlineOptions = [
-    { id: "none", clientName: "---" }, // The 'unselect' option
-    ...(airlines ?? []),
+  const cityOptions = [
+    { id: "none", cityName: "---" }, // The 'unselect' option
+    ...(cities ?? []),
   ];
 
-  const { data: editJourneyBookingData, isLoading: editJourneyBookingLoading } =
+  // hotels
+  const { data: hotels, isLoading: isHotelLoading } = useQuery({
+    queryKey: ["hotels"],
+    queryFn: async () => {
+      const response = await get(`/hotels/all`);
+      return response; // API returns the sector object directly
+    },
+  });
+
+  const hotelOptions = [
+    { id: "none", hotelName: "---" }, // The 'unselect' option
+    ...(hotels ?? []),
+  ];
+
+  // accommodations
+  const { data: accommodations, isLoading: isAccommodationLoading } = useQuery({
+    queryKey: ["accommodations"],
+    queryFn: async () => {
+      const response = await get(`/accommodations/all`);
+      return response; // API returns the sector object directly
+    },
+  });
+
+  const accommodationOptions = [
+    { id: "none", accommodationName: "---" }, // The 'unselect' option
+    ...(accommodations ?? []),
+  ];
+
+  const { data: editHotelBookingData, isLoading: editHotelBookingLoading } =
     useQuery({
-      queryKey: ["editJourneyBooking", journeyBookingId],
+      queryKey: ["editHotelBooking", hotelBookingId],
       queryFn: async () => {
-        const response = await get(`/journey-bookings/${journeyBookingId}`);
+        const response = await get(`/hotel-bookings/${hotelBookingId}`);
         return response; // API returns the sector object directly
       },
     });
@@ -192,63 +273,98 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   });
 
   useEffect(() => {
-    if (editJourneyBookingData) {
+    if (editHotelBookingData) {
       reset({
-        mode: editJourneyBookingData.mode || "",
-        fromPlace: editJourneyBookingData.fromPlace || "",
-        toPlace: editJourneyBookingData.toPlace || "",
-        journeyBookingDate: editJourneyBookingData.journeyBookingDate
-          ? new Date(editJourneyBookingData.journeyBookingDate)
+        hrvNumber: editHotelBookingData.hrvNumber || "",
+        partyComingFrom: editHotelBookingData.partyComingFrom
+          ? editHotelBookingData.partyComingFrom
+          : "",
+        checkInDate: editHotelBookingData.checkInDate
+          ? new Date(editHotelBookingData.checkInDate)
               .toISOString()
               .split("T")[0]
           : "",
-        fromDepartureDate: editJourneyBookingData.fromDepartureDate
-          ? new Date(editJourneyBookingData.fromDepartureDate)
+        checkOutDate: editHotelBookingData.checkOutDate
+          ? new Date(editHotelBookingData.checkOutDate)
               .toISOString()
               .split("T")[0]
           : "",
-        toArrivalDate: editJourneyBookingData.toArrivalDate
-          ? new Date(editJourneyBookingData.toArrivalDate)
-              .toISOString()
-              .split("T")[0]
-          : "",
-        foodType: editJourneyBookingData.foodType || "",
-        trainNumber: editJourneyBookingData.trainNumber || "",
-        trainName: editJourneyBookingData.trainName || "",
-        busName: editJourneyBookingData.busName || "",
-        pnrNumber: editJourneyBookingData.pnrNumber || "",
-        trainClass:
-          editJourneyBookingData.mode === "Train"
-            ? editJourneyBookingData.class
-            : "",
-        flightClass:
-          editJourneyBookingData.mode === "Flight"
-            ? editJourneyBookingData.class
-            : "",
-        flightNumber: editJourneyBookingData.flightNumber || "",
 
-        billDescription: editJourneyBookingData.billDescription || "",
-        airlineId: editJourneyBookingData.airlineId
-          ? editJourneyBookingData.airlineId
+        nights: editHotelBookingData.nights ? editHotelBookingData.nights : 0,
+
+        cityId: editHotelBookingData.cityId
+          ? editHotelBookingData.cityId
+          : null,
+        hotelId: editHotelBookingData.hotelId
+          ? editHotelBookingData.hotelId
+          : null,
+
+        plan: editHotelBookingData.plan ? editHotelBookingData.plan : "",
+        rooms: String(editHotelBookingData.rooms) || "",
+
+        accommodationId: editHotelBookingData.accommodationId
+          ? editHotelBookingData.accommodationId
+          : null,
+
+        tariffPackage: editHotelBookingData.tariffPackage
+          ? editHotelBookingData.tariffPackage
+          : "",
+        accommodationNote: editHotelBookingData.accommodationNote
+          ? editHotelBookingData.accommodationNote
+          : "",
+
+        extraBed:
+          editHotelBookingData.extraBed !== undefined
+            ? editHotelBookingData.extraBed
+            : 0,
+        beds:
+          editHotelBookingData.beds !== null
+            ? String(editHotelBookingData.beds)
+            : "",
+
+        extraBedCost:
+          editHotelBookingData.extraBedCost !== undefined
+            ? editHotelBookingData.extraBedCost
+            : null,
+
+        hotelBookingDate: editHotelBookingData.hotelBookingDate
+          ? new Date(editHotelBookingData.hotelBookingDate)
+              .toISOString()
+              .split("T")[0]
+          : new Date().toISOString().split("T")[0], // Default to today
+
+        bookingConfirmedBy: editHotelBookingData.bookingConfirmedBy
+          ? editHotelBookingData.bookingConfirmedBy
+          : "",
+        confirmationNumber: editHotelBookingData.confirmationNumber
+          ? editHotelBookingData.confirmationNumber
+          : "",
+        billingInstructions: editHotelBookingData.billingInstructions
+          ? editHotelBookingData.billingInstructions
+          : "",
+        specialRequirement: editHotelBookingData.specialRequirement
+          ? editHotelBookingData.specialRequirement
+          : "",
+        notes: editHotelBookingData.notes ? editHotelBookingData.notes : "",
+        billDescription: editHotelBookingData.billDescription
+          ? editHotelBookingData.billDescription
           : "",
       });
     }
-  }, [editJourneyBookingData, reset, setValue]);
-
-  const modeValue = watch("mode");
+  }, [editHotelBookingData, reset]);
 
   // Mutation for creating a user
   const createMutation = useMutation({
-    mutationFn: (data: FormInputs) => post(`/journey-bookings/${id}`, data),
+    mutationFn: (data: FormInputs) => post(`/hotel-bookings/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["journey-bookings"]); // Refetch the users list
-      toast.success("Journey Booking added successfully");
+      queryClient.invalidateQueries(["hotel-bookings"]); // Refetch the users list
+      toast.success("Hotel Booking added successfully");
       navigate(`/bookings/${id}/details`);
     },
     onError: (error: any) => {
       Validate(error, setError);
       toast.error(
-        error.response?.data?.message || "Failed to create journey booking"
+        error.response?.data?.message || "Failed to create Hotel booking"
       );
     },
   });
@@ -256,86 +372,43 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   // Mutation for updating a user
   const updateMutation = useMutation({
     mutationFn: (data: FormInputs) =>
-      put(`/journey-bookings/${journeyBookingId}`, data),
+      put(`/hotel-bookings/${hotelBookingId}`, data),
     onSuccess: () => {
-      toast.success("Journey Booking updated successfully");
-      queryClient.invalidateQueries(["journey-bookings"]);
+      toast.success("Hotel Booking updated successfully");
+      queryClient.invalidateQueries(["hotel-bookings"]);
       navigate(`/bookings/${id}/details`);
     },
     onError: (error: any) => {
       Validate(error, setError);
       console.log("this is error", error);
       toast.error(
-        error.response?.data?.message || "Failed to update journey booking"
+        error.response?.data?.message || "Failed to update hotel booking"
       );
     },
   });
+  // const checkInDate = useWatch({ control, name: "checkInDate" });
+  // const checkOutDate = useWatch({ control, name: "checkOutDate" });
+  const checkInDate = watch("checkInDate");
+  const checkOutDate = watch("checkOutDate");
+  const extraBedChecked = watch("extraBed");
 
-  // // Handle form submission
-  // const onSubmit: SubmitHandler<FormInputs> = (data) => {
-  //   console.log("this is data ", data);
-  //   if (data.mode === "Train") {
-  //     data.busName = "";
-  //     data.flightClass = "";
-  //     data.airlineId = null;
-  //     data.flightNumber = "";
-  //   }
-  //   if (data.mode === "Flight") {
-  //     data.busName = "";
-  //     data.trainName = "";
-  //     data.trainNumber = "";
-  //     data.trainClass = "";
-  //   }
-  //   if (data.mode === "Bus") {
-  //     data.trainName = "";
-  //     data.trainNumber = "";
-  //     data.pnrNumber = "";
-  //     data.trainClass = "";
-  //     data.flightClass = "";
-  //     data.airlineId = null;
-  //     data.flightNumber = "";
-  //   }
-
-  //   if (mode === "create") {
-  //     createMutation.mutate(data); // Trigger create mutation
-  //   } else {
-  //     updateMutation.mutate(data); // Trigger update mutation
-  //   }
-  // };
+  useEffect(() => {
+    if (checkInDate && checkOutDate) {
+      const nights = dayjs(checkOutDate).diff(dayjs(checkInDate), "day");
+      if (nights >= 0) {
+        setValue("nights", nights);
+      }
+    }
+  }, [checkInDate, checkOutDate, setValue]);
 
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     let cleanedData = { ...data };
 
-    if (cleanedData.mode === "Train") {
+    if (cleanedData.extraBed === 0) {
       cleanedData = {
         ...cleanedData,
-        busName: "",
-        flightClass: "",
-        airlineId: null,
-        flightNumber: "",
-      };
-    }
-
-    if (cleanedData.mode === "Flight") {
-      cleanedData = {
-        ...cleanedData,
-        busName: "",
-        trainName: "",
-        trainNumber: "",
-        trainClass: "",
-      };
-    }
-
-    if (cleanedData.mode === "Bus") {
-      cleanedData = {
-        ...cleanedData,
-        trainName: "",
-        trainNumber: "",
-        pnrNumber: "",
-        trainClass: "",
-        flightClass: "",
-        airlineId: null,
-        flightNumber: "",
+        extraBedCost: null,
+        beds: "",
       };
     }
 
@@ -358,131 +431,373 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       ))} */}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="mx-auto mt-10 max-w-5xl">
-          <CardContent className="pt-6">
-            {/* start */}
-
-            {/* Heading */}
-            <CardTitle className=" font-semibold text-gray-800 dark:text-gray-200 mb-4">
-              Client Details
-            </CardTitle>
-
-            <div className="w-full mx-auto space-y-6">
-              {/* Client Name */}
-              <div>
-                <p className="text-sm text-gray-800 font-medium">
-                  Client Name:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.client?.clientName || "-"}
-                  </span>
-                </p>
-              </div>
-
-              {/* Adults & Children Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <p className="text-sm text-gray-800 font-medium">
-                  No. of Adults:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.numberOfAdults ?? "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Children (5–11 yrs):{" "}
-                  <span className="font-normal">
-                    {editBookingData?.numberOfChildren5To11 ?? "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Children (under 5 yrs):{" "}
-                  <span className="font-normal">
-                    {editBookingData?.numberOfChildrenUnder5 ?? "-"}
-                  </span>
-                </p>
-              </div>
-
-              {/* Booking Info Heading */}
-              <CardTitle className=" font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Client Booking Details
-              </CardTitle>
-
-              {/* Booking Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <p className="text-sm text-gray-800 font-medium">
-                  Booking No:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.bookingNumber || "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Booking Date:{" "}
-                  <span className="font-normal">
-                    {new Date(
-                      editBookingData?.bookingDate
-                    ).toLocaleDateString() || "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Journey Date:{" "}
-                  <span className="font-normal">
-                    {new Date(
-                      editBookingData?.journeyDate
-                    ).toLocaleDateString() || "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Branch:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.branchId ?? "-"}
-                  </span>
-                </p>
-              </div>
-
-              {/* Tour and Booking Detail */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <p className="text-sm text-gray-800 font-medium">
-                  Tour Name:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.tour?.tourTitle ?? "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Booking Detail:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.bookingDetail || "-"}
-                  </span>
-                </p>
+        <Card className="mx-auto mt-10 ">
+          <CardContent className="pt-6 space-y-8">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Client Details
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Client Name:</span>{" "}
+                  {editBookingData?.client?.clientName || "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">No. of Adults:</span>{" "}
+                  {editBookingData?.numberOfAdults ?? "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Children (5–11 yrs):</span>{" "}
+                  {editBookingData?.numberOfChildren5To11 ?? "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Children (under 5 yrs):</span>{" "}
+                  {editBookingData?.numberOfChildrenUnder5 ?? "N/A"}
+                </div>
               </div>
             </div>
-            {/* end */}
 
-            {/* Client Details */}
-            <CardTitle className="text-lg mt-5 font-semibold text-gray-800 dark:text-gray-200">
-              Journey Booking
+            {/* Booking Details */}
+            <div>
+              <h2 className="text-lg  font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Client Booking Details
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Booking No:</span>{" "}
+                  {editBookingData?.bookingNumber || "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Booking Date:</span>{" "}
+                  {editBookingData?.bookingDate
+                    ? dayjs(editBookingData.bookingDate).format(
+                        "DD/MM/YYYY hh:mm A"
+                      )
+                    : "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Journey Date:</span>{" "}
+                  {editBookingData?.journeyDate
+                    ? dayjs(editBookingData.journeyDate).format("DD/MM/YYYY")
+                    : "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Branch:</span>{" "}
+                  {editBookingData?.branchId ?? "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Tour Name:</span>{" "}
+                  {editBookingData?.tour?.tourTitle ?? "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Booking Detail:</span>{" "}
+                  {editBookingData?.bookingDetail || "N/A"}
+                </div>
+              </div>
+            </div>
+
+            <CardTitle className="font-semibold mt-5 text-gray-800 dark:text-gray-200 mb-4">
+              Hotel Booking
             </CardTitle>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
-              <div className="col-span-2 md:col-span-1">
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              {/* HRV number */}
+              <div>
                 <Label
-                  htmlFor="mode"
+                  htmlFor="hrvNumber"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Mode <span className="text-red-500">*</span>
+                  HRV
+                </Label>
+                <Input
+                  id="hrvNumber"
+                  {...register("hrvNumber")}
+                  readOnly
+                  className="bg-gray-200"
+                  placeholder="hrv"
+                />
+                {errors.hrvNumber && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.hrvNumber.message}
+                  </p>
+                )}
+              </div>
+              {/* Party Coming From */}
+              <div>
+                <Label
+                  htmlFor="partyComingFrom"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Party Coming From <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="partyComingFrom"
+                  {...register("partyComingFrom")}
+                  placeholder="Party Coming From"
+                />
+                {errors.partyComingFrom && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.partyComingFrom.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Check-in Date */}
+              <div>
+                <Label
+                  htmlFor="checkInDate"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Check-in Date <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="checkInDate"
+                  type="date"
+                  {...register("checkInDate")}
+                />
+                {errors.checkInDate && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.checkInDate.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Check-out Date */}
+              <div>
+                <Label
+                  htmlFor="checkOutDate"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Check-out Date <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="checkOutDate"
+                  type="date"
+                  {...register("checkOutDate")}
+                />
+                {errors.checkOutDate && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.checkOutDate.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Nights */}
+              <div>
+                <Label
+                  htmlFor="nights"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Nights
+                </Label>
+                <Input
+                  id="nights"
+                  readOnly
+                  className="bg-gray-200"
+                  type="number"
+                  {...register("nights")}
+                />
+                {errors.nights && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.nights.message}
+                  </p>
+                )}
+              </div>
+
+              {/* City ID */}
+              <div>
+                <Label
+                  htmlFor="cityId"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  City <span className="text-red-500">*</span>
                 </Label>
                 <Controller
-                  name="mode"
+                  name="cityId"
+                  control={control}
+                  render={({ field }) => (
+                    <Popover open={openCityId} onOpenChange={setOpenCityId}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openCityId ? "true" : "false"} // This should depend on the popover state
+                          className=" w-[300px] justify-between mt-1"
+                          onClick={() => setOpenCityId((prev) => !prev)} // Toggle popover on button click
+                        >
+                          {field.value
+                            ? cityOptions &&
+                              cityOptions.find(
+                                (city) => city.id === field.value
+                              )?.cityName
+                            : "Select city"}
+                          <ChevronsUpDown className="opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[325px] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search city..."
+                            className="h-9"
+                          />
+                          <CommandList>
+                            <CommandEmpty>No city found.</CommandEmpty>
+                            <CommandGroup>
+                              {cityOptions &&
+                                cityOptions.map((city) => (
+                                  <CommandItem
+                                    key={city.id}
+                                    // value={String(city.id)}
+                                    value={
+                                      city?.cityName
+                                        ? city.cityName.toLowerCase()
+                                        : ""
+                                    } // 👈 Use city name for filtering
+                                    onSelect={(currentValue) => {
+                                      if (city.id === "none") {
+                                        setValue("cityId", ""); // Clear the value
+                                      } else {
+                                        setValue("cityId", city.id);
+                                      }
+                                      // handleTourSelectChange(airline);
+                                      setOpenCityId(false);
+                                      // Close popover after selection
+                                    }}
+                                  >
+                                    {city.cityName}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        city.id === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                />
+                {errors.cityId && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.cityId.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Hotel ID */}
+              <div>
+                <Label
+                  htmlFor="hotelId"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Hotel <span className="text-red-500">*</span>
+                </Label>
+                <Controller
+                  name="hotelId"
+                  control={control}
+                  render={({ field }) => (
+                    <Popover open={openHotelId} onOpenChange={setOpenHotelId}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openHotelId ? "true" : "false"} // This should depend on the popover state
+                          className=" w-[300px] justify-between mt-1"
+                          onClick={() => setOpenHotelId((prev) => !prev)} // Toggle popover on button click
+                        >
+                          {field.value
+                            ? hotelOptions &&
+                              hotelOptions.find(
+                                (hotel) => hotel.id === field.value
+                              )?.hotelName
+                            : "Select hotel"}
+                          <ChevronsUpDown className="opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[325px] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search hotel..."
+                            className="h-9"
+                          />
+                          <CommandList>
+                            <CommandEmpty>No hotel found.</CommandEmpty>
+                            <CommandGroup>
+                              {hotelOptions &&
+                                hotelOptions.map((hotel) => (
+                                  <CommandItem
+                                    key={hotel.id}
+                                    // value={String(hotel.id)}
+                                    value={
+                                      hotel?.hotelName
+                                        ? hotel.hotelName.toLowerCase()
+                                        : ""
+                                    } // 👈 Use hotel name for filtering
+                                    onSelect={(currentValue) => {
+                                      if (hotel.id === "none") {
+                                        setValue("hotelId", ""); // Clear the value
+                                      } else {
+                                        setValue("hotelId", hotel.id);
+                                      }
+                                      // handleTourSelectChange(airline);
+                                      setOpenHotelId(false);
+                                      // Close popover after selection
+                                    }}
+                                  >
+                                    {hotel.hotelName}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        hotel.id === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                />
+                {errors.hotelId && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.hotelId.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Plan */}
+              <div>
+                <Label
+                  htmlFor="plan"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Plan <span className="text-red-500">*</span>
+                </Label>
+                <Controller
+                  name="plan"
                   control={control}
                   render={({ field }) => (
                     <Select
                       key={field.value}
                       onValueChange={(value) =>
-                        setValue("mode", value === "none" ? "" : value)
+                        setValue("plan", value === "none" ? "" : value)
                       }
-                      value={watch("mode")}
+                      value={watch("plan")}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
-                        {modeOptions.map((option) => (
+                        {planOptions.map((option) => (
                           <SelectItem
                             key={option.value}
                             value={String(option.value)}
@@ -494,133 +809,37 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     </Select>
                   )}
                 />
-                {errors.mode && (
+                {errors.plan && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.mode.message}
+                    {errors.plan.message}
                   </p>
                 )}
               </div>
 
-              <div className="col-span-2 md:col-span-1">
+              {/* Rooms */}
+              <div>
                 <Label
-                  htmlFor="fromPlace"
+                  htmlFor="rooms"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  From Place
-                </Label>
-                <Input
-                  id="fromPlace"
-                  {...register("fromPlace")}
-                  placeholder="from place"
-                />
-                {errors.fromPlace && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.fromPlace.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="col-span-2 md:col-span-1">
-                <Label
-                  htmlFor="toPlace"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  To Place
-                </Label>
-                <Input
-                  id="toPlace"
-                  {...register("toPlace")}
-                  placeholder="from place"
-                />
-                {errors.toPlace && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.toPlace.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="col-span-2 md:col-span-1">
-                <Label
-                  htmlFor="journeyBookingDate"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Booking Date
-                </Label>
-                <Input
-                  id="journeyBookingDate"
-                  type="date"
-                  {...register("journeyBookingDate")}
-                />
-                {errors.journeyBookingDate && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.journeyBookingDate.message}
-                  </p>
-                )}
-              </div>
-
-              {/* fromDepartureDate */}
-              <div className="col-span-2 md:col-span-1">
-                <Label
-                  htmlFor="fromDepartureDate"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  From Departure Date
-                </Label>
-                <Input
-                  id="fromDepartureDate"
-                  type="date"
-                  {...register("fromDepartureDate")}
-                />
-                {errors.fromDepartureDate && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.fromDepartureDate.message}
-                  </p>
-                )}
-              </div>
-
-              {/* toArrivalDate */}
-              <div className="col-span-2 md:col-span-1">
-                <Label
-                  htmlFor="toArrivalDate"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  To Arrival Date
-                </Label>
-                <Input
-                  id="toArrivalDate"
-                  type="date"
-                  {...register("toArrivalDate")}
-                />
-                {errors.toArrivalDate && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.toArrivalDate.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="col-span-2 md:col-span-1">
-                <Label
-                  htmlFor="foodType"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Food Type
+                  Rooms <span className="text-red-500">*</span>
                 </Label>
                 <Controller
-                  name="foodType"
+                  name="rooms"
                   control={control}
                   render={({ field }) => (
                     <Select
                       key={field.value}
                       onValueChange={(value) =>
-                        setValue("foodType", value === "none" ? "" : value)
+                        setValue("rooms", value === "none" ? "" : value)
                       }
-                      value={watch("foodType")}
+                      value={watch("rooms")}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
-                        {foodTypeOptions.map((option) => (
+                        {roomOptions.map((option) => (
                           <SelectItem
                             key={option.value}
                             value={String(option.value)}
@@ -632,104 +851,212 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     </Select>
                   )}
                 />
-                {errors.foodType && (
+                {errors.rooms && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.foodType.message}
+                    {errors.rooms.message}
                   </p>
                 )}
               </div>
 
-              {modeValue === "Bus" ? (
+              {/* Accommodation ID */}
+              <div>
+                <Label
+                  htmlFor="accommodationId"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Type Of Accommodation <span className="text-red-500">*</span>
+                </Label>
+                <Controller
+                  name="accommodationId"
+                  control={control}
+                  render={({ field }) => (
+                    <Popover
+                      open={openAccommodationId}
+                      onOpenChange={setOpenAccommodationId}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openAccommodationId ? "true" : "false"} // This should depend on the popover state
+                          className=" w-[300px] justify-between mt-1"
+                          onClick={() =>
+                            setOpenAccommodationId((prev) => !prev)
+                          } // Toggle popover on button click
+                        >
+                          {field.value
+                            ? accommodationOptions &&
+                              accommodationOptions.find(
+                                (accommodation) =>
+                                  accommodation.id === field.value
+                              )?.accommodationName
+                            : "Select accommodation"}
+                          <ChevronsUpDown className="opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[325px] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search accommodation..."
+                            className="h-9"
+                          />
+                          <CommandList>
+                            <CommandEmpty>No accommodation found.</CommandEmpty>
+                            <CommandGroup>
+                              {accommodationOptions &&
+                                accommodationOptions.map((accommodation) => (
+                                  <CommandItem
+                                    key={accommodation.id}
+                                    // value={String(accommodation.id)}
+                                    value={
+                                      accommodation?.accommodationName
+                                        ? accommodation.accommodationName.toLowerCase()
+                                        : ""
+                                    } // 👈 Use accommodation name for filtering
+                                    onSelect={(currentValue) => {
+                                      if (accommodation.id === "none") {
+                                        setValue("accommodationId", ""); // Clear the value
+                                      } else {
+                                        setValue(
+                                          "accommodationId",
+                                          accommodation.id
+                                        );
+                                      }
+                                      // handleTourSelectChange(airline);
+                                      setOpenAccommodationId(false);
+                                      // Close popover after selection
+                                    }}
+                                  >
+                                    {accommodation.accommodationName}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        accommodation.id === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                />
+                {errors.accommodationId && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.accommodationId.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Tariff Package */}
+              <div>
+                <Label
+                  htmlFor="tariffPackage"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Tariff Package
+                </Label>
+                <Controller
+                  name="tariffPackage"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      key={field.value}
+                      onValueChange={(value) =>
+                        setValue("tariffPackage", value === "none" ? "" : value)
+                      }
+                      value={watch("tariffPackage")}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tariffPackageOptions.map((option) => (
+                          <SelectItem
+                            key={option.value}
+                            value={String(option.value)}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.tariffPackage && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.tariffPackage.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Accommodation Note */}
+              <div>
+                <Label
+                  htmlFor="accommodationNote"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Accommodation Note
+                </Label>
+                <Input
+                  id="accommodationNote"
+                  {...register("accommodationNote")}
+                  placeholder="Accommodation Note"
+                />
+                {errors.accommodationNote && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.accommodationNote.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Extra Bed */}
+
+              <div className="flex mt-6 ml-20 items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="extraBed"
+                  {...register("extraBed")}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <Label
+                  htmlFor="extraBed"
+                  className=" block text-xs font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Extra Bed
+                </Label>
+              </div>
+
+              {extraBedChecked ? (
                 <>
-                  <div className="col-span-2 md:col-span-1">
+                  {/* Beds */}
+                  <div>
                     <Label
-                      htmlFor="busName"
+                      htmlFor="beds"
                       className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
-                      Bus Name
-                    </Label>
-                    <Input
-                      id="busName"
-                      {...register("busName")}
-                      placeholder="from place"
-                    />
-                    {errors.busName && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.busName.message}
-                      </p>
-                    )}
-                  </div>
-                </>
-              ) : (
-                ""
-              )}
-
-              {modeValue === "Train" ? (
-                <>
-                  <div className="col-span-2 md:col-span-1">
-                    <Label
-                      htmlFor="trainNumber"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Train Number
-                    </Label>
-                    <Input
-                      id="trainNumber"
-                      {...register("trainNumber")}
-                      placeholder="train number"
-                    />
-                    {errors.trainNumber && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.trainNumber.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="col-span-2 md:col-span-1">
-                    <Label
-                      htmlFor="trainName"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Train Name
-                    </Label>
-                    <Input
-                      id="trainName"
-                      {...register("trainName")}
-                      placeholder="train name"
-                    />
-                    {errors.trainName && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.trainName.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="col-span-2 md:col-span-1">
-                    <Label
-                      htmlFor="trainClass"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Class
+                      Beds
                     </Label>
                     <Controller
-                      name="trainClass"
+                      name="beds"
                       control={control}
                       render={({ field }) => (
                         <Select
                           key={field.value}
                           onValueChange={(value) =>
-                            setValue(
-                              "trainClass",
-                              value === "none" ? "" : value
-                            )
+                            setValue("beds", value === "none" ? "" : value)
                           }
-                          value={watch("trainClass")}
+                          value={field.value}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
-                            {trainClassOptions.map((option) => (
+                            {bedOptions.map((option) => (
                               <SelectItem
                                 key={option.value}
                                 value={String(option.value)}
@@ -741,212 +1068,160 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                         </Select>
                       )}
                     />
-                    {errors.trainClass && (
+                    {errors.beds && (
                       <p className="text-red-500 text-xs mt-1">
-                        {errors.trainClass.message}
+                        {errors.beds.message}
                       </p>
                     )}
                   </div>
 
-                  <div className="col-span-2 md:col-span-1">
+                  {/* Extra Bed Cost */}
+                  <div>
                     <Label
-                      htmlFor="pnrNumber"
+                      htmlFor="extraBedCost"
                       className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
-                      PNR Number
+                      Extra Bed Cost
                     </Label>
                     <Input
-                      id="pnrNumber"
-                      {...register("pnrNumber")}
-                      placeholder="pnr Number"
+                      id="extraBedCost"
+                      type="number"
+                      placeholder="Enter cost"
+                      {...register("extraBedCost")}
                     />
-                    {errors.pnrNumber && (
+                    {errors.extraBedCost && (
                       <p className="text-red-500 text-xs mt-1">
-                        {errors.pnrNumber.message}
+                        {errors.extraBedCost.message}
                       </p>
                     )}
                   </div>
                 </>
-              ) : (
-                ""
-              )}
+              ) : null}
 
-              {modeValue === "Flight" ? (
-                <>
-                  <div className="col-span-2 md:col-span-1">
-                    <Label
-                      htmlFor="flightNumber"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Flight Number
-                    </Label>
-                    <Input
-                      id="flightNumber"
-                      {...register("flightNumber")}
-                      placeholder="train number"
-                    />
-                    {errors.flightNumber && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.flightNumber.message}
-                      </p>
-                    )}
-                  </div>
+              {/* Hotel Booking Date */}
+              <div>
+                <Label
+                  htmlFor="hotelBookingDate"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Hotel Booking Date
+                </Label>
+                <Input
+                  id="hotelBookingDate"
+                  type="date"
+                  {...register("hotelBookingDate")}
+                />
+                {errors.hotelBookingDate && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.hotelBookingDate.message}
+                  </p>
+                )}
+              </div>
 
-                  <div className="col-span-2 md:col-span-1">
-                    <Label
-                      htmlFor="airlineId"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Flight Name
-                    </Label>
-                    <Controller
-                      name="airlineId"
-                      control={control}
-                      render={({ field }) => (
-                        <Popover
-                          open={openAirlineId}
-                          onOpenChange={setOpenAirlineId}
-                        >
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={openAirlineId ? "true" : "false"} // This should depend on the popover state
-                              className=" w-[275px] justify-between mt-1"
-                              onClick={() => setOpenAirlineId((prev) => !prev)} // Toggle popover on button click
-                            >
-                              {field.value
-                                ? airlineOptions &&
-                                  airlineOptions.find(
-                                    (airline) => airline.id === field.value
-                                  )?.airlineName
-                                : "Select airline"}
-                              <ChevronsUpDown className="opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[325px] p-0">
-                            <Command>
-                              <CommandInput
-                                placeholder="Search airline..."
-                                className="h-9"
-                              />
-                              <CommandList>
-                                <CommandEmpty>No airline found.</CommandEmpty>
-                                <CommandGroup>
-                                  {airlineOptions &&
-                                    airlineOptions.map((airline) => (
-                                      <CommandItem
-                                        key={airline.id}
-                                        // value={String(airline.id)}
-                                        value={
-                                          airline?.airlineName
-                                            ? airline.airlineName.toLowerCase()
-                                            : ""
-                                        } // 👈 Use airline name for filtering
-                                        onSelect={(currentValue) => {
-                                          if (airline.id === "none") {
-                                            setValue("airlineId", ""); // Clear the value
-                                          } else {
-                                            setValue("airlineId", airline.id);
-                                          }
-                                          // handleTourSelectChange(airline);
-                                          setOpenAirlineId(false);
-                                          // Close popover after selection
-                                        }}
-                                      >
-                                        {airline.airlineName}
-                                        <Check
-                                          className={cn(
-                                            "ml-auto",
-                                            airline.id === field.value
-                                              ? "opacity-100"
-                                              : "opacity-0"
-                                          )}
-                                        />
-                                      </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                      )}
-                    />
-                    {errors.airlineId && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.airlineId.message}
-                      </p>
-                    )}
-                  </div>
+              {/* Booking Confirmed By */}
+              <div>
+                <Label
+                  htmlFor="bookingConfirmedBy"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Booking Confirmed By <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="bookingConfirmedBy"
+                  {...register("bookingConfirmedBy")}
+                  placeholder="Booking Confirmed By"
+                />
+                {errors.bookingConfirmedBy && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.bookingConfirmedBy.message}
+                  </p>
+                )}
+              </div>
 
-                  <div className="col-span-2 md:col-span-1">
-                    <Label
-                      htmlFor="flightClass"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Class
-                    </Label>
-                    <Controller
-                      name="flightClass"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          key={field.value}
-                          onValueChange={(value) =>
-                            setValue(
-                              "flightClass",
-                              value === "none" ? "" : value
-                            )
-                          }
-                          value={watch("flightClass")}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {flightClassOptions.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={String(option.value)}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    {errors.flightClass && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.flightClass.message}
-                      </p>
-                    )}
-                  </div>
+              {/* Confirmation Number */}
+              <div>
+                <Label
+                  htmlFor="confirmationNumber"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Confirmation Number <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="confirmationNumber"
+                  {...register("confirmationNumber")}
+                  placeholder="Confirmation Number"
+                />
+                {errors.confirmationNumber && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.confirmationNumber.message}
+                  </p>
+                )}
+              </div>
 
-                  <div className="col-span-2 md:col-span-1">
-                    <Label
-                      htmlFor="pnrNumber"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      PNR Number
-                    </Label>
-                    <Input
-                      id="pnrNumber"
-                      {...register("pnrNumber")}
-                      placeholder="pnr Number"
-                    />
-                    {errors.pnrNumber && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.pnrNumber.message}
-                      </p>
-                    )}
-                  </div>
-                </>
-              ) : (
-                ""
-              )}
+              {/* Billing Instructions */}
+              <div>
+                <Label
+                  htmlFor="billingInstructions"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Billing Instructions
+                </Label>
+                <Input
+                  id="billingInstructions"
+                  {...register("billingInstructions")}
+                  placeholder="Billing Instructions"
+                />
+                {errors.billingInstructions && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.billingInstructions.message}
+                  </p>
+                )}
+              </div>
 
-              <div className="col-span-2 lg:col-span-3">
+              {/* Special Requirement */}
+              <div className="">
+                <Label
+                  htmlFor="specialRequirement"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Special Requirement
+                </Label>
+                <Textarea
+                  id="specialRequirement"
+                  {...register("specialRequirement")}
+                  placeholder="Special Requirement"
+                  rows={4}
+                />
+                {errors.specialRequirement && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.specialRequirement.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Notes */}
+              <div>
+                <Label
+                  htmlFor="notes"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Notes
+                </Label>
+                <Textarea
+                  id="notes"
+                  {...register("notes")}
+                  placeholder="Notes"
+                  rows={4}
+                />
+                {errors.notes && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.notes.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Bill Description */}
+              <div>
                 <Label
                   htmlFor="billDescription"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -956,8 +1231,8 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <Textarea
                   id="billDescription"
                   {...register("billDescription")}
-                  placeholder="bill description"
-                  rows={4} // Optional: control height
+                  placeholder="Bill Description"
+                  rows={4}
                 />
                 {errors.billDescription && (
                   <p className="text-red-500 text-xs mt-1">
@@ -973,7 +1248,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/bookings")}
+              onClick={() => navigate(`/bookings/${id}/details`)}
             >
               Cancel
             </Button>
@@ -981,7 +1256,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
               {isLoading ? (
                 <LoaderCircle className="animate-spin h-4 w-4" />
               ) : mode === "create" ? (
-                "Create journey booking"
+                "Create Hotel booking"
               ) : (
                 "Save Changes"
               )}
@@ -993,4 +1268,4 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   );
 };
 
-export default JourneyBookingForm;
+export default HotelBookingForm;

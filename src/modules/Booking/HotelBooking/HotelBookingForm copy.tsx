@@ -6,8 +6,7 @@ import {
   useFieldArray,
 } from "react-hook-form";
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
+
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,95 +60,140 @@ import {
   trainClassOptions,
 } from "@/config/data";
 const FormSchema = z.object({
-  mode: z
+  partyComingFrom: z
     .string()
-    .min(1, "Mode field is required.")
-    .max(100, "Mode field must not exceed 100 characters."),
-  fromPlace: z
+    .min(1, "Party coming from must be at least 1 characters.")
+    .max(100, "Party coming from must not exceed 100 characters."),
+  checkInDate: z.string().min(1, "Check-in date is required."),
+  checkOutDate: z.string().min(1, "Check-out date is required."),
+
+  nights: z
+    .number()
+    .int("Nights must be an integer.")
+    .min(0, "Nights field is required."),
+
+  cityId: z.coerce.string().min(1, "City field is required"),
+
+  hotelId: z.coerce.string().min(1, "hotel field is required"),
+
+  plan: z
     .string()
-    .min(1, "From place field is required.")
-    .max(100, "From place field must not exceed 100 characters."),
-  toPlace: z
+    .min(1, "Plan field is required.")
+    .max(100, "Plan must not exceed 100 characters."),
+
+  rooms: z.string().min(1, "Rooms field is required"),
+
+  accommodationId: z.coerce
     .string()
-    .min(1, "From place field is required.")
-    .max(100, "From place field must not exceed 100 characters."),
-  journeyBookingDate: z
+    .min(1, "Accommodation Type field is required"),
+
+  tariffPackage: z
     .string()
-    .min(1, " journey Booking Date field is required"),
-  fromDepartureDate: z.string().min(1, "From departure Date field is required"),
-  toArrivalDate: z.string().min(1, " To arrival Date field is required"),
-  foodType: z.string().optional(),
+    .max(100, "Tariff package must not exceed 100 characters.")
+    .optional(),
+
+  accommodationNote: z
+    .string()
+    .max(180, "Accommodation note must not exceed 180 characters.")
+    .optional(),
+
+  extraBed: z.coerce.number().min(0),
+
+  beds: z
+    .string()
+    .min(1, "Beds field is required.")
+    .max(22, "Beds must not exceed 22 characters."),
+
+  extraBedCost: z.coerce
+    .number({
+      invalid_type_error: "Extra bed cost must be a number.",
+    })
+    .nonnegative("Extra bed cost cannot be negative.")
+    .optional()
+    .nullable(),
+
+  hotelBookingDate: z.string().min(1, "Hotel booking date is required."),
+
+  bookingConfirmedBy: z
+    .string()
+    .min(1, "Confirmed by field is required.")
+    .max(100, "Confirmed by must not exceed 100 characters.")
+    .optional(),
+
+  confirmationNumber: z
+    .string()
+    .min(1, "Confirmation number field is required.")
+    .max(100, "Confirmation number must not exceed 100 characters.")
+    .optional(),
+
+  billingInstructions: z
+    .string()
+    .max(100, "Billing instructions must not exceed 100 characters.")
+    .optional(),
+
+  specialRequirement: z
+    .string()
+    .max(100, "Special requirement must not exceed 100 characters.")
+    .optional(),
+
+  notes: z
+    .string()
+    .max(100, "Notes must not exceed 100 characters.")
+    .optional(),
+
   billDescription: z
     .string()
-    .max(180, "Bill Description field must not exceed 100 characters.")
+    .max(100, "Bill description must not exceed 100 characters.")
     .optional(),
-  busName: z
-    .string()
-    .max(180, "Bus Name field must not exceed 100 characters.")
-    .optional(),
-  trainName: z
-    .string()
-    .max(180, "Train Name field must not exceed 100 characters.")
-    .optional(),
-  trainNumber: z
-    .string()
-    .max(180, "Train Number field must not exceed 100 characters.")
-    .optional(),
-  flightNumber: z
-    .string()
-    .max(180, "Train Number field must not exceed 100 characters.")
-    .optional(),
-  trainClass: z
-    .string()
-    .max(180, "Class field must not exceed 100 characters.")
-    .optional(),
-  airlineClass: z
-    .string()
-    .max(180, "Class field must not exceed 100 characters.")
-    .optional(),
-  flightClass: z
-    .string()
-    .max(180, "Class field must not exceed 100 characters.")
-    .optional(),
-  pnrNumber: z
-    .string()
-    .max(180, "PNR No. field must not exceed 100 characters.")
-    .optional(),
-  airlineId: z.coerce.number().nullable().optional(),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
 
 const defaultValues: FormInputs = {
-  mode: "",
-  fromPlace: "",
-  toPlace: "",
-  journeyBookingDate: new Date().toISOString().split("T")[0], // Default to today
-  fromDepartureDate: "",
-  toArrivalDate: "",
-  foodType: "",
+  partyComingFrom: "",
+  checkInDate: "", // Defaults to today (YYYY-MM-DD)
+  checkOutDate: "", // Defaults to today
+
+  nights: 0,
+
+  cityId: "",
+  hotelId: "",
+
+  plan: "",
+  rooms: "",
+
+  accommodationId: "",
+
+  tariffPackage: "",
+  accommodationNote: "",
+
+  extraBed: 0,
+  beds: "",
+
+  extraBedCost: null,
+
+  hotelBookingDate: new Date().toISOString().split("T")[0], // Defaults to today
+
+  bookingConfirmedBy: "",
+  confirmationNumber: "",
+  billingInstructions: "",
+  specialRequirement: "",
+  notes: "",
   billDescription: "",
-  busName: "",
-  trainName: "",
-  trainNumber: "",
-  flightNumber: "",
-  trainClass: "",
-  flightClass: "",
-  airlineClass: "",
-  pnrNumber: "",
-  airlineId: null,
 };
 
-const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
-  const { id, journeyBookingId } = useParams<{
+const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
+  const { id, hotelBookingId } = useParams<{
     id: string;
-    journeyBookingId: string;
+    hotelBookingId: string;
   }>();
-  const [openAirlineId, setOpenAirlineId] = useState<boolean>(false);
+  const [openCityId, setOpenCityId] = useState<boolean>(false);
+  const [openAccommodationId, setOpenAccommodationId] =
+    useState<boolean>(false);
+  const [openHotelId, setOpenHotelId] = useState<boolean>(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  dayjs.extend(utc);
-  dayjs.extend(timezone);
+
   const {
     register,
     handleSubmit,
@@ -164,25 +208,53 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
   });
 
-  // airlines
-  const { data: airlines, isLoading: isAirlineLoading } = useQuery({
-    queryKey: ["airlines"],
+  // cities
+  const { data: cities, isLoading: isCityLoading } = useQuery({
+    queryKey: ["cities"],
     queryFn: async () => {
-      const response = await get(`/airlines/all`);
+      const response = await get(`/cities/all`);
       return response; // API returns the sector object directly
     },
   });
 
-  const airlineOptions = [
-    { id: "none", airlineName: "---" }, // The 'unselect' option
-    ...(airlines ?? []),
+  const cityOptions = [
+    { id: "none", cityName: "---" }, // The 'unselect' option
+    ...(cities ?? []),
   ];
 
-  const { data: editJourneyBookingData, isLoading: editJourneyBookingLoading } =
+  // hotels
+  const { data: hotels, isLoading: isHotelLoading } = useQuery({
+    queryKey: ["hotels"],
+    queryFn: async () => {
+      const response = await get(`/hotels/all`);
+      return response; // API returns the sector object directly
+    },
+  });
+
+  const hotelOptions = [
+    { id: "none", hotelName: "---" }, // The 'unselect' option
+    ...(hotels ?? []),
+  ];
+
+  // accommodations
+  const { data: accommodations, isLoading: isAccommodationLoading } = useQuery({
+    queryKey: ["accommodations"],
+    queryFn: async () => {
+      const response = await get(`/accommodations/all`);
+      return response; // API returns the sector object directly
+    },
+  });
+
+  const accommodationOptions = [
+    { id: "none", accommodationName: "---" }, // The 'unselect' option
+    ...(accommodations ?? []),
+  ];
+
+  const { data: editHotelBookingData, isLoading: editHotelBookingLoading } =
     useQuery({
-      queryKey: ["editJourneyBooking", journeyBookingId],
+      queryKey: ["editHotelBooking", hotelBookingId],
       queryFn: async () => {
-        const response = await get(`/journey-bookings/${journeyBookingId}`);
+        const response = await get(`/hotel-bookings/${hotelBookingId}`);
         return response; // API returns the sector object directly
       },
     });
@@ -196,77 +268,94 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   });
 
   useEffect(() => {
-    if (editJourneyBookingData) {
+    if (editHotelBookingData) {
       reset({
-        mode: editJourneyBookingData.mode || "",
-        fromPlace: editJourneyBookingData.fromPlace || "",
-        toPlace: editJourneyBookingData.toPlace || "",
-        journeyBookingDate: editJourneyBookingData.journeyBookingDate
-          ? new Date(editJourneyBookingData.journeyBookingDate)
+        partyComingFrom: editHotelBookingData.partyComingFrom
+          ? editHotelBookingData.partyComingFrom
+          : "",
+        checkInDate: editHotelBookingData.checkInDate
+          ? new Date(editHotelBookingData.checkInDate)
+              .toISOString()
+              .split("T")[0]
+          : "",
+        checkOutDate: editHotelBookingData.checkOutDate
+          ? new Date(editHotelBookingData.checkOutDate)
               .toISOString()
               .split("T")[0]
           : "",
 
-        fromDepartureDate: editJourneyBookingData.fromDepartureDate
-          ? dayjs
-              .utc(editJourneyBookingData.fromDepartureDate) // Convert to UTC
-              .tz("Asia/Kolkata") // Convert to IST
-              .format("YYYY-MM-DDTHH:mm") // Convert to the required format for datetime-local
+        nights: editHotelBookingData.nights ? editHotelBookingData.nights : 0,
+
+        cityId: editHotelBookingData.cityId
+          ? editHotelBookingData.cityId
+          : null,
+        hotelId: editHotelBookingData.hotelId
+          ? editHotelBookingData.hotelId
+          : null,
+
+        plan: editHotelBookingData.plan ? editHotelBookingData.plan : "",
+        rooms: editHotelBookingData.rooms ? editHotelBookingData.rooms : "",
+
+        accommodationId: editHotelBookingData.accommodationId
+          ? editHotelBookingData.accommodationId
+          : null,
+
+        tariffPackage: editHotelBookingData.tariffPackage
+          ? editHotelBookingData.tariffPackage
           : "",
-        toArrivalDate: editJourneyBookingData.toArrivalDate
-          ? dayjs
-              .utc(editJourneyBookingData.toArrivalDate) // Convert to UTC
-              .tz("Asia/Kolkata") // Convert to IST
-              .format("YYYY-MM-DDTHH:mm") // Convert to the required format for datetime-local
+        accommodationNote: editHotelBookingData.accommodationNote
+          ? editHotelBookingData.accommodationNote
           : "",
 
-        // fromDepartureDate: editJourneyBookingData.fromDepartureDate
-        //   ? new Date(editJourneyBookingData.fromDepartureDate)
-        //       .toISOString()
-        //       .split("T")[0]
-        //   : "",
-        // toArrivalDate: editJourneyBookingData.toArrivalDate
-        //   ? new Date(editJourneyBookingData.toArrivalDate)
-        //       .toISOString()
-        //       .split("T")[0]
-        //   : "",
-        foodType: editJourneyBookingData.foodType || "",
-        trainNumber: editJourneyBookingData.trainNumber || "",
-        trainName: editJourneyBookingData.trainName || "",
-        busName: editJourneyBookingData.busName || "",
-        pnrNumber: editJourneyBookingData.pnrNumber || "",
-        trainClass:
-          editJourneyBookingData.mode === "Train"
-            ? editJourneyBookingData.class
-            : "",
-        flightClass:
-          editJourneyBookingData.mode === "Flight"
-            ? editJourneyBookingData.class
-            : "",
-        flightNumber: editJourneyBookingData.flightNumber || "",
+        extraBed:
+          editHotelBookingData.extraBed !== undefined
+            ? editHotelBookingData.extraBed
+            : 0,
+        beds: editHotelBookingData.beds ? editHotelBookingData.beds : "",
 
-        billDescription: editJourneyBookingData.billDescription || "",
-        airlineId: editJourneyBookingData.airlineId
-          ? editJourneyBookingData.airlineId
+        extraBedCost:
+          editHotelBookingData.extraBedCost !== undefined
+            ? editHotelBookingData.extraBedCost
+            : null,
+
+        hotelBookingDate: editHotelBookingData.hotelBookingDate
+          ? new Date(editHotelBookingData.hotelBookingDate)
+              .toISOString()
+              .split("T")[0]
+          : new Date().toISOString().split("T")[0], // Default to today
+
+        bookingConfirmedBy: editHotelBookingData.bookingConfirmedBy
+          ? editHotelBookingData.bookingConfirmedBy
+          : "",
+        confirmationNumber: editHotelBookingData.confirmationNumber
+          ? editHotelBookingData.confirmationNumber
+          : "",
+        billingInstructions: editHotelBookingData.billingInstructions
+          ? editHotelBookingData.billingInstructions
+          : "",
+        specialRequirement: editHotelBookingData.specialRequirement
+          ? editHotelBookingData.specialRequirement
+          : "",
+        notes: editHotelBookingData.notes ? editHotelBookingData.notes : "",
+        billDescription: editHotelBookingData.billDescription
+          ? editHotelBookingData.billDescription
           : "",
       });
     }
-  }, [editJourneyBookingData, reset, setValue]);
-
-  const modeValue = watch("mode");
+  }, [editHotelBookingData, reset]);
 
   // Mutation for creating a user
   const createMutation = useMutation({
-    mutationFn: (data: FormInputs) => post(`/journey-bookings/${id}`, data),
+    mutationFn: (data: FormInputs) => post(`/hotel-bookings/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["journey-bookings"]); // Refetch the users list
-      toast.success("Journey Booking added successfully");
+      queryClient.invalidateQueries(["hotel-bookings"]); // Refetch the users list
+      toast.success("Hotel Booking added successfully");
       navigate(`/bookings/${id}/details`);
     },
     onError: (error: any) => {
       Validate(error, setError);
       toast.error(
-        error.response?.data?.message || "Failed to create journey booking"
+        error.response?.data?.message || "Failed to create Hotel booking"
       );
     },
   });
@@ -274,93 +363,61 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   // Mutation for updating a user
   const updateMutation = useMutation({
     mutationFn: (data: FormInputs) =>
-      put(`/journey-bookings/${journeyBookingId}`, data),
+      put(`/hotel-bookings/${hotelBookingId}`, data),
     onSuccess: () => {
-      toast.success("Journey Booking updated successfully");
-      queryClient.invalidateQueries(["journey-bookings"]);
+      toast.success("Hotel Booking updated successfully");
+      queryClient.invalidateQueries(["hotel-bookings"]);
       navigate(`/bookings/${id}/details`);
     },
     onError: (error: any) => {
       Validate(error, setError);
       console.log("this is error", error);
       toast.error(
-        error.response?.data?.message || "Failed to update journey booking"
+        error.response?.data?.message || "Failed to update hotel booking"
       );
     },
   });
 
-  // // Handle form submission
-  // const onSubmit: SubmitHandler<FormInputs> = (data) => {
-  //   console.log("this is data ", data);
-  //   if (data.mode === "Train") {
-  //     data.busName = "";
-  //     data.flightClass = "";
-  //     data.airlineId = null;
-  //     data.flightNumber = "";
-  //   }
-  //   if (data.mode === "Flight") {
-  //     data.busName = "";
-  //     data.trainName = "";
-  //     data.trainNumber = "";
-  //     data.trainClass = "";
-  //   }
-  //   if (data.mode === "Bus") {
-  //     data.trainName = "";
-  //     data.trainNumber = "";
-  //     data.pnrNumber = "";
-  //     data.trainClass = "";
-  //     data.flightClass = "";
-  //     data.airlineId = null;
-  //     data.flightNumber = "";
-  //   }
-
-  //   if (mode === "create") {
-  //     createMutation.mutate(data); // Trigger create mutation
-  //   } else {
-  //     updateMutation.mutate(data); // Trigger update mutation
-  //   }
-  // };
-
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
-    let cleanedData = { ...data };
+    // let cleanedData = { ...data };
 
-    if (cleanedData.mode === "Train") {
-      cleanedData = {
-        ...cleanedData,
-        busName: "",
-        flightClass: "",
-        airlineId: null,
-        flightNumber: "",
-      };
-    }
+    // if (cleanedData.mode === "Train") {
+    //   cleanedData = {
+    //     ...cleanedData,
+    //     busName: "",
+    //     flightClass: "",
+    //     airlineId: null,
+    //     flightNumber: "",
+    //   };
+    // }
 
-    if (cleanedData.mode === "Flight") {
-      cleanedData = {
-        ...cleanedData,
-        busName: "",
-        trainName: "",
-        trainNumber: "",
-        trainClass: "",
-      };
-    }
+    // if (cleanedData.mode === "Flight") {
+    //   cleanedData = {
+    //     ...cleanedData,
+    //     busName: "",
+    //     trainName: "",
+    //     trainNumber: "",
+    //     trainClass: "",
+    //   };
+    // }
 
-    if (cleanedData.mode === "Bus") {
-      cleanedData = {
-        ...cleanedData,
-        trainName: "",
-        trainNumber: "",
-        pnrNumber: "",
-        trainClass: "",
-        flightClass: "",
-        airlineId: null,
-        flightNumber: "",
-      };
-    }
+    // if (cleanedData.mode === "Bus") {
+    //   cleanedData = {
+    //     ...cleanedData,
+    //     trainName: "",
+    //     trainNumber: "",
+    //     pnrNumber: "",
+    //     trainClass: "",
+    //     flightClass: "",
+    //     airlineId: null,
+    //     flightNumber: "",
+    //   };
+    // }
 
     if (mode === "create") {
-      createMutation.mutate(cleanedData);
+      createMutation.mutate(data);
     } else {
-      updateMutation.mutate(cleanedData);
+      updateMutation.mutate(data);
     }
   };
 
@@ -376,70 +433,102 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       ))} */}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="mx-auto mt-10 ">
-          <CardContent className="pt-6 space-y-8">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Client Details
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Client Name:</span>{" "}
-                  {editBookingData?.client?.clientName || "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">No. of Adults:</span>{" "}
-                  {editBookingData?.numberOfAdults ?? "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Children (5–11 yrs):</span>{" "}
-                  {editBookingData?.numberOfChildren5To11 ?? "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Children (under 5 yrs):</span>{" "}
-                  {editBookingData?.numberOfChildrenUnder5 ?? "N/A"}
-                </div>
-              </div>
-            </div>
+        <Card className="mx-auto mt-10 max-w-5xl">
+          <CardContent className="pt-6">
+            {/* start */}
 
-            {/* Booking Details */}
-            <div>
-              <h2 className="text-lg  font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            {/* Heading */}
+            <CardTitle className=" font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              Client Details
+            </CardTitle>
+
+            <div className="w-full mx-auto space-y-6">
+              {/* Client Name */}
+              <div>
+                <p className="text-sm text-gray-800 font-medium">
+                  Client Name:{" "}
+                  <span className="font-normal">
+                    {editBookingData?.client?.clientName || "-"}
+                  </span>
+                </p>
+              </div>
+
+              {/* Adults & Children Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <p className="text-sm text-gray-800 font-medium">
+                  No. of Adults:{" "}
+                  <span className="font-normal">
+                    {editBookingData?.numberOfAdults ?? "-"}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-800 font-medium">
+                  Children (5–11 yrs):{" "}
+                  <span className="font-normal">
+                    {editBookingData?.numberOfChildren5To11 ?? "-"}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-800 font-medium">
+                  Children (under 5 yrs):{" "}
+                  <span className="font-normal">
+                    {editBookingData?.numberOfChildrenUnder5 ?? "-"}
+                  </span>
+                </p>
+              </div>
+
+              {/* Booking Info Heading */}
+              <CardTitle className=" font-semibold text-gray-800 dark:text-gray-200 mb-4">
                 Client Booking Details
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Booking No:</span>{" "}
-                  {editBookingData?.bookingNumber || "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Booking Date:</span>{" "}
-                  {editBookingData?.bookingDate
-                    ? dayjs(editBookingData.bookingDate).format(
-                        "DD/MM/YYYY hh:mm A"
-                      )
-                    : "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Journey Date:</span>{" "}
-                  {editBookingData?.journeyDate
-                    ? dayjs(editBookingData.journeyDate).format("DD/MM/YYYY")
-                    : "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Branch:</span>{" "}
-                  {editBookingData?.branchId ?? "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Tour Name:</span>{" "}
-                  {editBookingData?.tour?.tourTitle ?? "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Booking Detail:</span>{" "}
-                  {editBookingData?.bookingDetail || "N/A"}
-                </div>
+              </CardTitle>
+
+              {/* Booking Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <p className="text-sm text-gray-800 font-medium">
+                  Booking No:{" "}
+                  <span className="font-normal">
+                    {editBookingData?.bookingNumber || "-"}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-800 font-medium">
+                  Booking Date:{" "}
+                  <span className="font-normal">
+                    {new Date(
+                      editBookingData?.bookingDate
+                    ).toLocaleDateString() || "-"}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-800 font-medium">
+                  Journey Date:{" "}
+                  <span className="font-normal">
+                    {new Date(
+                      editBookingData?.journeyDate
+                    ).toLocaleDateString() || "-"}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-800 font-medium">
+                  Branch:{" "}
+                  <span className="font-normal">
+                    {editBookingData?.branchId ?? "-"}
+                  </span>
+                </p>
+              </div>
+
+              {/* Tour and Booking Detail */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <p className="text-sm text-gray-800 font-medium">
+                  Tour Name:{" "}
+                  <span className="font-normal">
+                    {editBookingData?.tour?.tourTitle ?? "-"}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-800 font-medium">
+                  Booking Detail:{" "}
+                  <span className="font-normal">
+                    {editBookingData?.bookingDetail || "-"}
+                  </span>
+                </p>
               </div>
             </div>
+            {/* end */}
 
             {/* Client Details */}
             <CardTitle className="text-lg mt-5 font-semibold text-gray-800 dark:text-gray-200">
@@ -492,7 +581,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   htmlFor="fromPlace"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  From Place <span className="text-red-500">*</span>
+                  From Place
                 </Label>
                 <Input
                   id="fromPlace"
@@ -511,7 +600,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   htmlFor="toPlace"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  To Place <span className="text-red-500">*</span>
+                  To Place
                 </Label>
                 <Input
                   id="toPlace"
@@ -530,7 +619,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   htmlFor="journeyBookingDate"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Booking Date <span className="text-red-500">*</span>
+                  Booking Date
                 </Label>
                 <Input
                   id="journeyBookingDate"
@@ -550,11 +639,11 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   htmlFor="fromDepartureDate"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  From Departure Date <span className="text-red-500">*</span>
+                  From Departure Date
                 </Label>
                 <Input
                   id="fromDepartureDate"
-                  type="datetime-local"
+                  type="date"
                   {...register("fromDepartureDate")}
                 />
                 {errors.fromDepartureDate && (
@@ -570,11 +659,11 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   htmlFor="toArrivalDate"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  To Arrival Date <span className="text-red-500">*</span>
+                  To Arrival Date
                 </Label>
                 <Input
                   id="toArrivalDate"
-                  type="datetime-local"
+                  type="date"
                   {...register("toArrivalDate")}
                 />
                 {errors.toArrivalDate && (
@@ -798,7 +887,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                               variant="outline"
                               role="combobox"
                               aria-expanded={openAirlineId ? "true" : "false"} // This should depend on the popover state
-                              className=" w-[300px] justify-between mt-1"
+                              className=" w-[275px] justify-between mt-1"
                               onClick={() => setOpenAirlineId((prev) => !prev)} // Toggle popover on button click
                             >
                               {field.value
@@ -831,7 +920,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                                         } // 👈 Use airline name for filtering
                                         onSelect={(currentValue) => {
                                           if (airline.id === "none") {
-                                            setValue("airlineId", null); // Clear the value
+                                            setValue("airlineId", ""); // Clear the value
                                           } else {
                                             setValue("airlineId", airline.id);
                                           }
@@ -959,7 +1048,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(`/bookings/${id}/details`)}
+              onClick={() => navigate("/bookings")}
             >
               Cancel
             </Button>
@@ -979,4 +1068,4 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   );
 };
 
-export default JourneyBookingForm;
+export default HotelBookingForm;
