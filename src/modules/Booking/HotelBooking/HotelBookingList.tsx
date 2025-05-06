@@ -103,7 +103,11 @@ const HotelBookingList = ({ bookingId }) => {
   return (
     <div className="mt-2 ">
       <div className="mx-auto ">
-        <div className="mb-1 w-full flex flex-wrap justify-end items-center gap-2">
+        <div className="mb-1 w-full flex flex-wrap justify-between items-center gap-2">
+          <div className="text-xl font-bold text-gray-800 tracking-wide  dark:text-white ">
+            Hotel Booking
+          </div>
+
           <Button
             onClick={() =>
               navigate(`/bookings/${bookingId}/hotelBooking/create`)
@@ -148,8 +152,21 @@ const HotelBookingList = ({ bookingId }) => {
                     </TableHead>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
+                        <span>Nights</span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer">
+                      <div className="flex items-center">
+                        <span>Plan</span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer">
+                      <div className="flex items-center">
                         <span>Accommodation</span>
                       </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer text-right">
+                      <span>Actions</span>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -162,12 +179,15 @@ const HotelBookingList = ({ bookingId }) => {
                         {" "}
                         {hotel.checkInDate
                           ? dayjs(hotel.checkInDate).format("DD/MM/YYYY")
-                          : "N/A"}
-                        -
+                          : "N/A"}{" "}
+                        To{" "}
                         {hotel.checkOutDate
                           ? dayjs(hotel.checkOutDate).format("DD/MM/YYYY")
                           : "N/A"}
                       </TableCell>
+                      <TableCell>{hotel?.nights}</TableCell>
+                      <TableCell>{hotel?.plan}</TableCell>
+
                       <TableCell>
                         {hotel?.accommodation?.accommodationName || "N/A"}
                       </TableCell>

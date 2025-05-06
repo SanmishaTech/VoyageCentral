@@ -5,6 +5,7 @@ import {
   Controller,
   useFieldArray,
 } from "react-hook-form";
+import dayjs from "dayjs";
 import {
   budgetFieldOptions,
   noOfAdultsOptions,
@@ -73,6 +74,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import JourneyBookingList from "./JourneyBooking/JourneyBookingList";
 import HotelBookingList from "./HotelBooking/HotelBookingList";
+import ServiceBookingList from "./ServiceBooking/ServiceBookingList";
+import { Separator } from "@radix-ui/react-separator";
 const BookingDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -92,107 +95,80 @@ const BookingDetails = () => {
         <h1 className="text-2xl font-bold mb-6">Booking Details</h1>
 
         <Card className="mx-auto mt-10">
-          <CardContent className="pt-6">
-            {/* Heading */}
-            <CardTitle className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-4">
-              Client Details
-            </CardTitle>
-
-            <div className="w-full mx-auto space-y-6">
-              {/* Client Name */}
-              <div>
-                <p className="text-sm text-gray-800 font-medium">
-                  Client Name:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.client?.clientName || "-"}
-                  </span>
-                </p>
-              </div>
-
-              {/* Adults & Children Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <p className="text-sm text-gray-800 font-medium">
-                  No. of Adults:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.numberOfAdults ?? "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Children (5–11 yrs):{" "}
-                  <span className="font-normal">
-                    {editBookingData?.numberOfChildren5To11 ?? "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Children (under 5 yrs):{" "}
-                  <span className="font-normal">
-                    {editBookingData?.numberOfChildrenUnder5 ?? "-"}
-                  </span>
-                </p>
-              </div>
-
-              {/* Booking Info Heading */}
-              <CardTitle className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Client Booking Details
-              </CardTitle>
-
-              {/* Booking Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <p className="text-sm text-gray-800 font-medium">
-                  Booking No:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.bookingNumber || "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Booking Date:{" "}
-                  <span className="font-normal">
-                    {new Date(
-                      editBookingData?.bookingDate
-                    ).toLocaleDateString() || "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Journey Date:{" "}
-                  <span className="font-normal">
-                    {new Date(
-                      editBookingData?.journeyDate
-                    ).toLocaleDateString() || "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Branch:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.branchId ?? "-"}
-                  </span>
-                </p>
-              </div>
-
-              {/* Tour and Booking Detail */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <p className="text-sm text-gray-800 font-medium">
-                  Tour Name:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.tour?.tourTitle ?? "-"}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  Booking Detail:{" "}
-                  <span className="font-normal">
-                    {editBookingData?.bookingDetail || "-"}
-                  </span>
-                </p>
+          <CardContent className="pt-6 space-y-8">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Client Details
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Client Name:</span>{" "}
+                  {editBookingData?.client?.clientName || "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">No. of Adults:</span>{" "}
+                  {editBookingData?.numberOfAdults ?? "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Children (5–11 yrs):</span>{" "}
+                  {editBookingData?.numberOfChildren5To11 ?? "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Children (under 5 yrs):</span>{" "}
+                  {editBookingData?.numberOfChildrenUnder5 ?? "N/A"}
+                </div>
               </div>
             </div>
 
+            {/* Booking Details */}
+            <div>
+              <h2 className="text-lg  font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Client Booking Details
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Booking No:</span>{" "}
+                  {editBookingData?.bookingNumber || "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Booking Date:</span>{" "}
+                  {editBookingData?.bookingDate
+                    ? dayjs(editBookingData.bookingDate).format(
+                        "DD/MM/YYYY hh:mm A"
+                      )
+                    : "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Journey Date:</span>{" "}
+                  {editBookingData?.journeyDate
+                    ? dayjs(editBookingData.journeyDate).format("DD/MM/YYYY")
+                    : "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Branch:</span>{" "}
+                  {editBookingData?.branchId ?? "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Tour Name:</span>{" "}
+                  {editBookingData?.tour?.tourTitle ?? "N/A"}
+                </div>
+                <div className="text-sm text-gray-800 dark:text-gray-300">
+                  <span className="font-medium">Booking Detail:</span>{" "}
+                  {editBookingData?.bookingDetail || "N/A"}
+                </div>
+              </div>
+            </div>
             {/* --- Tabs Start --- */}
-            <div className="w-full">
-              <Tabs defaultValue="account" className="w-full">
-                <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-4">
+            <div className=" mt-5 w-full">
+              <Tabs defaultValue="JourneyBooking" className="w-full">
+                <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto mb-4">
                   <TabsTrigger value="JourneyBooking">
                     Journey Booking
                   </TabsTrigger>
                   <TabsTrigger value="HotelBooking">Hotel Booking</TabsTrigger>
+                  <TabsTrigger value="ServiceBooking">
+                    Service Booking
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="JourneyBooking">
@@ -200,6 +176,9 @@ const BookingDetails = () => {
                 </TabsContent>
                 <TabsContent value="HotelBooking">
                   <HotelBookingList bookingId={id} />
+                </TabsContent>
+                <TabsContent value="ServiceBooking">
+                  <ServiceBookingList bookingId={id} />
                 </TabsContent>
               </Tabs>
             </div>
