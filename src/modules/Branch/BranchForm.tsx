@@ -182,7 +182,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
         {/* Name Field */}
         <div className="grid gap-2 relative">
           <Label htmlFor="branchName">
-            Branch Name<span className="text-red-500">*</span>
+            Branch Name <span className="text-red-500">*</span>
           </Label>
           <Input
             id="branchName"

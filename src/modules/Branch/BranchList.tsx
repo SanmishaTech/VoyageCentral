@@ -223,7 +223,7 @@ const UserList = () => {
                       onClick={() => handleSort("branchName")}
                       className="cursor-pointer"
                     >
-                      <div className="flex items-center">
+                      <div className="flex items-center w-[250px] max-w-[250px] break-words whitespace-normal">
                         <span>Branch Name</span>
                         {sortBy === "branchName" && (
                           <span className="ml-1">
@@ -295,9 +295,15 @@ const UserList = () => {
                   {/* ganesh */}
                   {branches.map((branch) => (
                     <TableRow key={branch.id}>
-                      <TableCell>{branch.branchName}</TableCell>
-                      <TableCell>{branch.contactName || "N/A"}</TableCell>
-                      <TableCell>{branch.contactEmail || "N/A"}</TableCell>
+                      <TableCell className="w-[250px] max-w-[250px] break-words whitespace-normal">
+                        {branch.branchName}
+                      </TableCell>
+                      <TableCell className="w-[250px] max-w-[250px] break-words whitespace-normal">
+                        {branch.contactName || "N/A"}
+                      </TableCell>
+                      <TableCell className="w-[250px] max-w-[250px] break-words whitespace-normal">
+                        {branch.contactEmail || "N/A"}
+                      </TableCell>
                       <TableCell>{branch.contactMobile || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">

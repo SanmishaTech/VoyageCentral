@@ -187,7 +187,7 @@ const HotelList = () => {
                   <TableRow>
                     <TableHead
                       onClick={() => handleSort("hotelName")}
-                      className="cursor-pointer"
+                      className="cursor-pointer max-w-[250px] break-words whitespace-normal"
                     >
                       <div className="flex items-center">
                         <span>Hotel Name</span>
@@ -205,7 +205,7 @@ const HotelList = () => {
 
                     <TableHead
                       onClick={() => handleSort("contactPerson")}
-                      className="cursor-pointer"
+                      className="cursor-pointer max-w-[250px] break-words whitespace-normal"
                     >
                       <div className="flex items-center">
                         <span>Contact Person</span>
@@ -260,8 +260,12 @@ const HotelList = () => {
                 <TableBody>
                   {hotels.map((hotel) => (
                     <TableRow key={hotel.id}>
-                      <TableCell>{hotel.hotelName}</TableCell>
-                      <TableCell>{hotel.contactPerson || "N/A"}</TableCell>
+                      <TableCell className="max-w-[250px] break-words whitespace-normal">
+                        {hotel.hotelName}
+                      </TableCell>
+                      <TableCell className="max-w-[250px] break-words whitespace-normal">
+                        {hotel.contactPerson || "N/A"}
+                      </TableCell>
                       <TableCell>{hotel.hotelContactNo1 || "N/A"}</TableCell>
                       <TableCell>{hotel.officeContactNo1 || "N/A"}</TableCell>
                       <TableCell>

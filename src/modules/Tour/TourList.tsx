@@ -273,9 +273,11 @@ const TourList = () => {
                 <TableBody>
                   {tours.map((tour) => (
                     <TableRow key={tour.id}>
-                      <TableCell>{tour.tourTitle}</TableCell>
+                      <TableCell className="max-w-[300px] break-words whitespace-normal">
+                        {tour.tourTitle}
+                      </TableCell>
                       <TableCell>{tour.tourType || "N/A"}</TableCell>
-                      <TableCell>
+                      <TableCell className="max-w-[300px] break-words whitespace-normal">
                         {tour?.sector?.sectorName
                           ? tour.sector.sectorName
                           : "N/A"}

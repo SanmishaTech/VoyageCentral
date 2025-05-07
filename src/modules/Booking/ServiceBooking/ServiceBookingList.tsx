@@ -195,7 +195,7 @@ const ServiceBookingList = ({ bookingId }) => {
       <ConfirmDialog
         isOpen={showConfirmation}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this hotel booking? This action cannot be undone."
+        description="Are you sure you want to delete this service booking? This action cannot be undone."
         onCancel={() => {
           setShowConfirmation(false);
           setServiceBookingToDelete(null);

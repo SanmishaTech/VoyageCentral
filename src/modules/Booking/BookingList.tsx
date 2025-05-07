@@ -458,7 +458,7 @@ const BookingList = () => {
                           ? dayjs(booking.journeyDate).format("DD/MM/YYYY")
                           : "N/A"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="max-w-[150px] break-words whitespace-normal">
                         {booking?.client.clientName || "N/A"}
                       </TableCell>
                       <TableCell>
@@ -467,11 +467,11 @@ const BookingList = () => {
                           ? dayjs(booking.followUpDate).format("DD/MM/YYYY")
                           : "N/A"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="max-w-[150px] break-words whitespace-normal">
                         {(booking?.branch && booking?.branch.branchName) ||
                           "N/A"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="max-w-[150px] break-words whitespace-normal">
                         {(booking?.tour && booking?.tour.tourTitle) || "N/A"}
                       </TableCell>
                       <TableCell className="flex justify-end">
