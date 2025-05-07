@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { post } from "@/services/apiService";
 import { LoaderCircle } from "lucide-react";
+import Validate from "@/lib/Handlevalidation";
 
 const updateProfileSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -32,6 +33,7 @@ const UpdateProfile = () => {
     register,
     handleSubmit,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<UpdateProfileInputs>({
     resolver: zodResolver(updateProfileSchema),
@@ -79,6 +81,7 @@ const UpdateProfile = () => {
 
       toast.success("Profile updated successfully");
     } catch (error: any) {
+      Validate(error, setError);
       toast.error(error.message || "Failed to update profile");
     } finally {
       setIsLoading(false);

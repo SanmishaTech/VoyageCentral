@@ -221,7 +221,10 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
         ? {
             // Set defaults for create mode if needed, especially for nested objects
             user: { name: "", email: "", password: "" },
-            subscription: { packageId: undefined, startDate: "" },
+            subscription: {
+              packageId: undefined,
+              startDate: new Date().toISOString().split("T")[0],
+            },
           }
         : {},
   });

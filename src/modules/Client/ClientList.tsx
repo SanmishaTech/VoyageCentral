@@ -189,7 +189,7 @@ const ClientList = () => {
                       onClick={() => handleSort("clientName")}
                       className="cursor-pointer"
                     >
-                      <div className="flex items-center">
+                      <div className="flex items-center max-w-[250px] break-words whitespace-normal">
                         <span>Client Name</span>
                         {sortBy === "clientName" && (
                           <span className="ml-1">
@@ -260,9 +260,13 @@ const ClientList = () => {
                 <TableBody>
                   {clients.map((client) => (
                     <TableRow key={client.id}>
-                      <TableCell>{client.clientName}</TableCell>
+                      <TableCell className="max-w-[300px] break-words whitespace-normal">
+                        {client.clientName}
+                      </TableCell>
                       <TableCell>{client.mobile1 || "N/A"}</TableCell>
-                      <TableCell>{client.email || "N/A"}</TableCell>
+                      <TableCell className="max-w-[300px] break-words whitespace-normal">
+                        {client.email || "N/A"}
+                      </TableCell>
                       <TableCell>{client.gender || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">

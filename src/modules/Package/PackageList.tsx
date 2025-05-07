@@ -195,8 +195,8 @@ const PackageList = () => {
                 <TableRow>
                   <TableHead
                     onClick={() => handleSort("packageName")}
-                    className="cursor-pointer"
-                  >
+                    className="cursor-pointer  w-[375px] max-w-[375px] break-words whitespace-normal"
+                  >                           
                     <div className="flex items-center">
                       <span>Package Name</span>
                       {sortBy === "packageName" && (
@@ -284,7 +284,7 @@ const PackageList = () => {
               <TableBody>
                 {packages.map((pkg: any) => (
                   <TableRow key={pkg.id}>
-                    <TableCell className="text-start">
+                    <TableCell className="text-start w-[375px] max-w-[375px] break-words whitespace-normal">
                       {pkg.packageName}
                     </TableCell>
                     <TableCell className="text-center">

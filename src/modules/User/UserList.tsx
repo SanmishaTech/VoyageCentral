@@ -508,8 +508,12 @@ const UserList = () => {
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell>{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
+                      <TableCell className="max-w-[200px] break-words whitespace-normal">
+                        {user.name}
+                      </TableCell>
+                      <TableCell className="max-w-[200px] break-words whitespace-normal">
+                        {user.email}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline">
                           {user.role

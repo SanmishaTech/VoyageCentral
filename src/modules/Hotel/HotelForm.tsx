@@ -72,6 +72,31 @@ const FormSchema = z.object({
     .string()
     .max(100, "Contact person name is too long.")
     .optional(),
+  contactPersonName2: z
+    .string()
+    .max(100, "Contact person name is too long.")
+    .optional(),
+  contactPersonEmail: z
+    .string()
+    .refine((val) => val === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: "email must be a valid email address..",
+    })
+    .optional(),
+  contactPersonEmail2: z
+    .string()
+    .refine((val) => val === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: "email must be a valid email address..",
+    })
+    .optional(),
+  contactPersonMobile: z
+    .string()
+    .max(15, "Mobile number is too long.")
+    .optional(),
+  contactPersonMobile2: z
+    .string()
+    .max(15, "Mobile number is too long.")
+    .optional(),
+
   hotelContactNo1: z
     .string()
     .max(20, "Hotel contact number 1 is too long.")
@@ -286,6 +311,12 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
 
         officePincode: editHotelData.officePincode || "",
         contactPerson: editHotelData.contactPerson || "",
+        contactPersonEmail: editHotelData.contactPersonEmail || "",
+        contactPersonMobile: editHotelData.contactPersonMobile || "",
+        contactPersonName2: editHotelData.contactPersonName2 || "",
+        contactPersonEmail2: editHotelData.contactPersonEmail2 || "",
+        contactPersonMobile2: editHotelData.contactPersonMobile2 || "",
+
         hotelContactNo1: editHotelData.hotelContactNo1 || "",
         hotelContactNo2: editHotelData.hotelContactNo2 || "",
         officeContactNo1: editHotelData.officeContactNo1 || "",
@@ -805,25 +836,126 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                 Contact Details
               </h3>
               <div className="space-y-4">
-                {/* Contact Person */}
-                <div>
-                  <Label
-                    htmlFor="contactPerson"
-                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Contact Person
-                  </Label>
-                  <Input
-                    id="contactPerson"
-                    {...register("contactPerson")}
-                    placeholder="Enter contact person name"
-                  />
-                  {errors.contactPerson && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.contactPerson.message}
-                    </p>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Contact Person */}
+                  <div>
+                    <Label
+                      htmlFor="contactPerson"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Contact Person Name 1
+                    </Label>
+                    <Input
+                      id="contactPerson"
+                      {...register("contactPerson")}
+                      placeholder="Enter name"
+                    />
+                    {errors.contactPerson && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.contactPerson.message}
+                      </p>
+                    )}
+                  </div>
+                  {/* COntact person Email */}
+                  <div>
+                    <Label
+                      htmlFor="contactPersonEmail"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Contact Person Email 1
+                    </Label>
+                    <Input
+                      id="contactPersonEmail"
+                      {...register("contactPersonEmail")}
+                      placeholder="Enter email"
+                    />
+                    {errors.contactPersonEmail && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.contactPersonEmail.message}
+                      </p>
+                    )}
+                  </div>
+                  {/* Contact person Mobile */}
+                  <div>
+                    <Label
+                      htmlFor="contactPersonMobile"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Contact Person Mobile 1
+                    </Label>
+                    <Input
+                      id="contactPersonMobile"
+                      {...register("contactPersonMobile")}
+                      placeholder="Enter number"
+                    />
+                    {errors.contactPersonMobile && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.contactPersonMobile.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Contact Person 2 */}
+                  <div>
+                    <Label
+                      htmlFor="contactPersonName2"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Contact Person 2
+                    </Label>
+                    <Input
+                      id="contactPersonName2"
+                      {...register("contactPersonName2")}
+                      placeholder="Enter name"
+                    />
+                    {errors.contactPersonName2 && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.contactPersonName2.message}
+                      </p>
+                    )}
+                  </div>
+                  {/* COntact person Email 2 */}
+                  <div>
+                    <Label
+                      htmlFor="contactPersonEmail2"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Contact Person Email 2
+                    </Label>
+                    <Input
+                      id="contactPersonEmail2"
+                      {...register("contactPersonEmail2")}
+                      placeholder="Enter email"
+                    />
+                    {errors.contactPersonEmail2 && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.contactPersonEmail2.message}
+                      </p>
+                    )}
+                  </div>
+                  {/* Contact person Mobile 2 */}
+                  <div>
+                    <Label
+                      htmlFor="contactPersonMobile2"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Contact Person Mobile 2
+                    </Label>
+                    <Input
+                      id="contactPersonMobile2"
+                      {...register("contactPersonMobile2")}
+                      placeholder="Enter number"
+                    />
+                    {errors.contactPersonMobile2 && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.contactPersonMobile2.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 {/* Contact Numbers */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>

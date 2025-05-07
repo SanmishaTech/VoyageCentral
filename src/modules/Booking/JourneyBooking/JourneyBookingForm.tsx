@@ -37,6 +37,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import TourBookingDetailsTable from "../TourBookingDetailsTable";
 import { Switch } from "@/components/ui/switch";
 import Validate from "@/lib/Handlevalidation";
 import {
@@ -187,7 +188,11 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       },
     });
 
-  const { data: editBookingData, isLoading: editBookingLoading } = useQuery({
+  const {
+    data: editBookingData,
+    isLoading: editBookingLoading,
+    isError: isEditBookingError,
+  } = useQuery({
     queryKey: ["editBooking", id],
     queryFn: async () => {
       const response = await get(`/bookings/${id}`);
@@ -378,68 +383,13 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card className="mx-auto mt-10 ">
           <CardContent className="pt-6 space-y-8">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Client Details
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Client Name:</span>{" "}
-                  {editBookingData?.client?.clientName || "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">No. of Adults:</span>{" "}
-                  {editBookingData?.numberOfAdults ?? "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Children (5–11 yrs):</span>{" "}
-                  {editBookingData?.numberOfChildren5To11 ?? "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Children (under 5 yrs):</span>{" "}
-                  {editBookingData?.numberOfChildrenUnder5 ?? "N/A"}
-                </div>
-              </div>
-            </div>
-
-            {/* Booking Details */}
-            <div>
-              <h2 className="text-lg  font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Client Booking Details
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Booking No:</span>{" "}
-                  {editBookingData?.bookingNumber || "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Booking Date:</span>{" "}
-                  {editBookingData?.bookingDate
-                    ? dayjs(editBookingData.bookingDate).format(
-                        "DD/MM/YYYY hh:mm A"
-                      )
-                    : "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Journey Date:</span>{" "}
-                  {editBookingData?.journeyDate
-                    ? dayjs(editBookingData.journeyDate).format("DD/MM/YYYY")
-                    : "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Branch:</span>{" "}
-                  {editBookingData?.branchId ?? "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Tour Name:</span>{" "}
-                  {editBookingData?.tour?.tourTitle ?? "N/A"}
-                </div>
-                <div className="text-sm text-gray-800 dark:text-gray-300">
-                  <span className="font-medium">Booking Detail:</span>{" "}
-                  {editBookingData?.bookingDetail || "N/A"}
-                </div>
-              </div>
-            </div>
+            {/* start */}
+            <TourBookingDetailsTable
+              editBookingLoading={editBookingLoading}
+              isEditBookingError={isEditBookingError}
+              editBookingData={editBookingData}
+            />
+            {/* end */}
 
             {/* Client Details */}
             <CardTitle className="text-lg mt-5 font-semibold text-gray-800 dark:text-gray-200">

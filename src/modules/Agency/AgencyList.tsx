@@ -222,7 +222,7 @@ const UserList = () => {
             </div>
           ) : agencies.length > 0 ? (
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="">
                 <TableHeader>
                   <TableRow>
                     <TableHead
@@ -318,9 +318,7 @@ const UserList = () => {
                     <TableRow key={agency.id}>
                       <TableCell>{agency.businessName}</TableCell>
                       <TableCell>{agency.addressLine1}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{agency.addressLine2}</Badge>
-                      </TableCell>
+                      <TableCell>{agency.addressLine2}</TableCell>
                       <TableCell>{agency.state}</TableCell>
                       <TableCell>{agency.city}</TableCell>
                       <TableCell>
@@ -349,45 +347,6 @@ const UserList = () => {
                               <Trash2 size={16} />
                             </Button>
                           </ConfirmDialog>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56">
-                              <DropdownMenuGroup>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleChangeStatus(agency.id, agency.active)
-                                  }
-                                >
-                                  <div className="flex items-center gap-2">
-                                    {agency.active ? (
-                                      <XCircle className="h-4 w-4" />
-                                    ) : (
-                                      <CheckCircle className="h-4 w-4" />
-                                    )}
-                                    <span>
-                                      Set{" "}
-                                      {agency.active ? "Inactive" : "Active"}
-                                    </span>
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleOpenChangePassword(agency.id)
-                                  }
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <ShieldEllipsis className="h-4 w-4" />
-                                    <span>Change Password</span>
-                                  </div>
-                                </DropdownMenuItem>
-                              </DropdownMenuGroup>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
