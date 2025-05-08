@@ -381,7 +381,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     <>
       {/* JSX Code for HotelForm.tsx */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="mx-auto mt-10 max-w-5xl">
+        <Card className="mx-auto mt-10">
           <CardContent className="pt-6">
             {/* Client Details */}
             <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
@@ -661,7 +661,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                           </p>
                         )}
                       </TableCell>
-                      <TableCell className="w-[600px] px-1">
+                      <TableCell className="max-w-[600px] px-1 whitespace-normal break-words">
                         <Textarea
                           {...register(`itineraries.${index}.description`)}
                           placeholder="Enter description"
@@ -674,7 +674,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                           </p>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="w-40">
                         <Controller
                           name={`itineraries.${index}.cityId`}
                           control={control}
@@ -727,7 +727,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                       )}
                       {/* itineraryId id */}
 
-                      <TableCell>
+                      <TableCell className="w-20">
                         <Button
                           type="button"
                           variant="destructive"

@@ -107,7 +107,6 @@ const BookingDetails = () => {
 
         <Card className="mx-auto mt-10">
           <CardContent className="pt-6 space-y-8">
-           
             {/* start */}
             <TourBookingDetailsTable
               editBookingLoading={editBookingLoading}
@@ -118,7 +117,7 @@ const BookingDetails = () => {
             {/* --- Tabs Start --- */}
             <div className=" mt-5 w-full">
               <Tabs defaultValue="JourneyBooking" className="w-full">
-                <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto mb-4">
+                <TabsList className="grid grid-cols-1 md:grid-cols-3 w-full max-w-md mx-auto mb-16 md:mb-4">
                   <TabsTrigger value="JourneyBooking">
                     Journey Booking
                   </TabsTrigger>

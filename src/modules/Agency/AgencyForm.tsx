@@ -1,5 +1,5 @@
 import { useEffect, useState, ChangeEvent } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,9 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
+
 import {
   Popover,
   PopoverContent,
@@ -77,8 +79,8 @@ interface ApiResponse {
   businessName: string;
   addressLine1: string;
   addressLine2: string | null;
-  state: string;
-  city: string;
+  stateId: string | number;
+  cityId: string | number;
   pincode: string;
   uploadUUID: string | null;
   logoFilename: string | null;
@@ -139,8 +141,14 @@ const baseAgencySchema = z.object({
     .optional(), // Allow empty or null based on backend
   addressLine1: z.string().min(1, "Address Line 1 is required"),
   addressLine2: z.string().or(z.literal("")).or(z.null()).optional(), // Allow empty or null
-  state: z.string().min(1, "State is required"),
-  city: z.string().min(1, "City is required"),
+  cityId: z.union([
+    z.string().min(1, "City field is required."),
+    z.number().min(1, "City Field is required"),
+  ]),
+  stateId: z.union([
+    z.string().min(1, "State field is required."),
+    z.number().min(1, "State Field is required"),
+  ]),
   pincode: z.string().min(1, "Pincode is required"), // Consider regex for format
   contactPersonName: z.string().min(1, "Contact Person Name is required"),
   contactPersonEmail: z
@@ -180,6 +188,10 @@ const updateAgencySchema = baseAgencySchema; // Use the base schema for update v
 // --- Component ---
 const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id } = useParams<{ id: string }>();
+  const [openCityId, setOpenCityId] = useState<boolean>(false);
+  const [stateId, setStateId] = useState<string | null>("");
+
+  const [openStateId, setOpenStateId] = useState<boolean>(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false); // For package dropdown
@@ -189,17 +201,6 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
   const [letterHeadPreview, setLetterHeadPreview] = useState<string | null>(
     null
   );
-
-  // Fetch packages (only needed for create mode)
-  const { data: packages = [] } = useQuery<Package[]>({
-    queryKey: ["packages"],
-    queryFn: async () => {
-      // Consider fetching all packages if the list isn't too large, or implement server-side search
-      const response = await get("/packages?limit=200"); // Fetch more packages
-      return response.packages || []; // Ensure it returns an array
-    },
-    enabled: mode === "create", // Only fetch when creating
-  });
 
   // Determine the correct schema based on mode
   const currentSchema =
@@ -212,6 +213,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     setValue,
     reset,
     setError,
+    control,
     watch,
     formState: { errors },
   } = useForm<FormInputs>({
@@ -227,6 +229,51 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
             },
           }
         : {},
+  });
+
+  // states
+  const { data: indianStates, isLoading: isIndianStatesLoading } = useQuery({
+    queryKey: ["states", 1],
+    queryFn: async () => {
+      const response = await get(`/states/india`);
+      return response; // API returns the sector object directly
+    },
+  });
+
+  const stateOptions = [
+    { id: "none", stateName: "---" }, // The 'unselect' option
+    ...(indianStates ?? []),
+  ];
+
+  // const stateId = watch("stateId");
+
+  // hotel cities
+  const { data: cities, isLoading: isCitiesLoading } = useQuery({
+    queryKey: ["cities", stateId],
+    queryFn: async () => {
+      if (stateId === "null" || stateId === null || stateId === undefined) {
+        return [];
+      }
+      const response = await get(`/cities/by-state/${stateId}`);
+      return response; // API returns the sector object directly
+    },
+    enabled: !!stateId,
+  });
+
+  const cityOptions = [
+    { id: "none", cityName: "---" }, // The 'unselect' option
+    ...(cities ?? []),
+  ];
+
+  // Fetch packages (only needed for create mode)
+  const { data: packages = [] } = useQuery<Package[]>({
+    queryKey: ["packages"],
+    queryFn: async () => {
+      // Consider fetching all packages if the list isn't too large, or implement server-side search
+      const response = await get("/packages?limit=200"); // Fetch more packages
+      return response.packages || []; // Ensure it returns an array
+    },
+    enabled: mode === "create", // Only fetch when creating
   });
 
   // Watch file inputs for preview updates
@@ -246,6 +293,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
           const resp: ApiResponse = await get(`/agencies/${id}`);
           console.log("Fetched Agency Data:", resp); // Debug fetched data
           setAgencyData(resp); // Set the full agency data
+          setStateId(String(resp.stateId) || "");
 
           // Reset form with fetched data (excluding files and nested objects for edit)
           reset({
@@ -253,8 +301,8 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
             gstin: resp.gstin ?? "", // Handle null from API
             addressLine1: resp.addressLine1,
             addressLine2: resp.addressLine2 ?? "", // Handle null
-            state: resp.state,
-            city: resp.city,
+            stateId: resp.stateId ? resp.stateId : "", // Handle null
+            cityId: resp.cityId ? resp.cityId : "", // Handle null
             pincode: resp.pincode,
             contactPersonName: resp.contactPersonName,
             contactPersonEmail: resp.contactPersonEmail,
@@ -465,7 +513,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     <>
       {/* --- Form --- */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="mx-auto mt-10 min-w-5xl">
+        <Card className="mx-auto mt-10">
           {" "}
           {/* Constrain width */}
           <CardContent className="pt-6">
@@ -557,37 +605,159 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label
-                    htmlFor="state"
+                    htmlFor="stateId"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    State <span className="text-red-500">*</span>
+                    State
                   </Label>
-                  <Input
-                    id="state"
-                    {...register("state")}
-                    placeholder="e.g., Maharashtra"
+                  <Controller
+                    name="stateId"
+                    control={control}
+                    render={({ field }) => (
+                      <Popover open={openStateId} onOpenChange={setOpenStateId}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openStateId ? "true" : "false"} // This should depend on the popover state
+                            className="w-[325px] justify-between overflow-hidden mt-1"
+                            onClick={() => setOpenStateId((prev) => !prev)} // Toggle popover on button click
+                          >
+                            {field.value
+                              ? stateOptions &&
+                                stateOptions.find(
+                                  (state) => state.id === field.value
+                                )?.stateName
+                              : "Select state"}
+                            <ChevronsUpDown className="opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[325px] p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search state..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No state found.</CommandEmpty>
+                              <CommandGroup>
+                                {stateOptions &&
+                                  stateOptions.map((state) => (
+                                    <CommandItem
+                                      key={state.id}
+                                      value={state.stateName.toLowerCase()} // 👈 Use client name for filtering
+                                      onSelect={(currentValue) => {
+                                        if (state.id === "none") {
+                                          setValue("stateId", "");
+                                        } else {
+                                          setValue("stateId", state.id);
+                                          setStateId(state.id); // Update stateId for city fetching
+                                        }
+                                        setValue("cityId", ""); // Reset city when state changes
+
+                                        setOpenStateId(false);
+                                        // Close popover after selection
+                                      }}
+                                    >
+                                      {state.stateName}
+                                      <Check
+                                        className={cn(
+                                          "ml-auto",
+                                          state.id === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    )}
                   />
-                  {errors.state && (
+                  {errors.stateId && (
                     <p className="text-red-500 text-xs mt-1">
-                      {errors.state.message}
+                      {errors.stateId.message}
                     </p>
                   )}
                 </div>
                 <div>
                   <Label
-                    htmlFor="city"
+                    htmlFor="cityId"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     City <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="city"
-                    {...register("city")}
-                    placeholder="e.g., Mumbai"
+                  <Controller
+                    name="cityId"
+                    control={control}
+                    render={({ field }) => (
+                      <Popover open={openCityId} onOpenChange={setOpenCityId}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openCityId ? "true" : "false"} // This should depend on the popover state
+                            className="w-[325px] justify-between overflow-hidden mt-1"
+                            onClick={() => setOpenCityId((prev) => !prev)} // Toggle popover on button click
+                          >
+                            {field.value
+                              ? cityOptions &&
+                                cityOptions.find(
+                                  (city) => city.id === field.value
+                                )?.cityName
+                              : "Select city"}
+                            <ChevronsUpDown className="opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[325px] p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search city..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No city found.</CommandEmpty>
+                              <CommandGroup>
+                                {cityOptions &&
+                                  cityOptions.map((city) => (
+                                    <CommandItem
+                                      key={city.id}
+                                      value={city.cityName.toLowerCase()} // 👈 Use client name for filtering
+                                      onSelect={(currentValue) => {
+                                        if (city.id === "none") {
+                                          setValue("cityId", "");
+                                        } else {
+                                          setValue("cityId", city.id);
+                                        }
+
+                                        setOpenCityId(false);
+                                        // Close popover after selection
+                                      }}
+                                    >
+                                      {city.cityName}
+                                      <Check
+                                        className={cn(
+                                          "ml-auto",
+                                          city.id === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    )}
                   />
-                  {errors.city && (
+                  {errors.cityId && (
                     <p className="text-red-500 text-xs mt-1">
-                      {errors.city.message}
+                      {errors.cityId.message}
                     </p>
                   )}
                 </div>
@@ -1042,7 +1212,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
 
       {/* --- Display Users & Subscriptions in Edit Mode --- */}
       {mode === "edit" && agencyData && (
-        <div className="mx-auto mt-8 mb-10 space-y-6 min-w-5xl">
+        <div className="mx-auto mt-8 mb-10 space-y-6">
           {" "}
           {/* Added bottom margin */}
           {/* --- Users Table --- */}

@@ -247,7 +247,7 @@ const AddFollowUp = () => {
         </form>
         {/* Follow-Ups Table */}
         <div className="mt-10">
-          <Card className=" max-w-5xl">
+          <Card className="">
             <CardContent>
               <h2 className="text-xl font-semibold mb-4">Follow-Ups History</h2>
               {isFollowUpsLoading ? (
@@ -280,7 +280,7 @@ const AddFollowUp = () => {
                               )
                             : "N/A"}
                         </TableCell>
-                        <TableCell className="px-6">
+                        <TableCell className="max-w-[500px] px-1 whitespace-normal break-words">
                           {followUp.remarks}
                         </TableCell>
                       </TableRow>

@@ -211,7 +211,7 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
     enabled: !!id && mode === "edit",
   });
 
-  // countries
+  // states
   const { data: indianStates, isLoading: isIndianStatesLoading } = useQuery({
     queryKey: ["states", 1],
     queryFn: async () => {
@@ -220,7 +220,7 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
     },
   });
 
-  // hotel states
+  // hotel cities
   const { data: cities, isLoading: isCitiesLoading } = useQuery({
     queryKey: ["cities", stateId],
     queryFn: async () => {

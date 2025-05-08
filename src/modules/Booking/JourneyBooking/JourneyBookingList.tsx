@@ -164,7 +164,7 @@ const JourneyBookingList = ({ bookingId }) => {
                 <TableBody>
                   {journeyBookings.map((journey) => (
                     <TableRow key={journey.id}>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm w-40">
                         {journey.fromDepartureDate
                           ? dayjs(journey.fromDepartureDate).format(
                               "DD/MM/YYYY hh:mm A"
@@ -179,10 +179,16 @@ const JourneyBookingList = ({ bookingId }) => {
                       </TableCell>
 
                       <TableCell>{journey.mode}</TableCell>
-                      <TableCell>{journey.fromPlace || "N/A"}</TableCell>
-                      <TableCell>{journey.toPlace || "N/A"}</TableCell>
-                      <TableCell>{journey.pnrNumber || "N/A"}</TableCell>
-                      <TableCell className="">
+                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
+                        {journey.fromPlace || "N/A"}
+                      </TableCell>
+                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
+                        {journey.toPlace || "N/A"}
+                      </TableCell>
+                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
+                        {journey.pnrNumber || "N/A"}
+                      </TableCell>
+                      <TableCell className="w-20">
                         <div className="flex justify-end gap-2">
                           <Button
                             variant="outline"
