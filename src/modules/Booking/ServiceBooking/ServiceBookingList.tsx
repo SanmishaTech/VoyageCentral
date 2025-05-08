@@ -155,10 +155,12 @@ const ServiceBookingList = ({ bookingId }) => {
                 <TableBody>
                   {serviceBookings.map((service) => (
                     <TableRow key={service.id}>
-                      <TableCell>{service?.description}</TableCell>
+                      <TableCell className="max-w-[600px] px-1 whitespace-normal break-words">
+                        {service?.description}
+                      </TableCell>
                       <TableCell> {formatCurrency(service?.cost)}</TableCell>
 
-                      <TableCell className="">
+                      <TableCell className="20">
                         <div className="flex justify-end gap-2">
                           <Button
                             variant="outline"

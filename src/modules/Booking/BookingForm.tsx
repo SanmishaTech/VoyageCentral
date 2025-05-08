@@ -454,7 +454,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
 
             {/* start code */}
             {/* start code */}
-            <div className="w-full max-w-screen-lg mx-auto">
+            <div className="w-full  mx-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
                 <div className="col-span-2 lg:col-span-1">
                   <Label
@@ -601,7 +601,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                                 variant="outline"
                                 role="combobox"
                                 aria-expanded={openClientId ? "true" : "false"} // This should depend on the popover state
-                                className=" w-[275px] justify-between mt-1"
+                                className=" w-[275px] overflow-hidden justify-between mt-1"
                                 onClick={() => setOpenClientId((prev) => !prev)} // Toggle popover on button click
                               >
                                 {field.value
@@ -881,7 +881,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                             variant="outline"
                             role="combobox"
                             aria-expanded={openTourId ? "true" : "false"} // This should depend on the popover state
-                            className=" w-[325px] justify-between mt-1"
+                            className="w-[325px] justify-between overflow-hidden mt-1"
                             onClick={() => setOpenTourId((prev) => !prev)} // Toggle popover on button click
                           >
                             {field.value
@@ -1077,7 +1077,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                         )}
                       </TableCell>
 
-                      <TableCell className="w-[600px] px-1">
+                      <TableCell className="max-w-[500px] px-1 whitespace-normal break-words">
                         <Textarea
                           {...register(`bookingDetails.${index}.description`)}
                           className="w-[400px] lg:w-full"

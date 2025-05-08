@@ -242,13 +242,14 @@ const UserList = () => {
                         )}
                       </div>
                     </TableHead>
+
                     <TableHead
-                      onClick={() => handleSort("addressLine1")}
+                      onClick={() => handleSort("contactPersonName")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Address Line 1</span>
-                        {sortBy === "addressLine1" && (
+                        <span>Contact Person</span>
+                        {sortBy === "contactPersonName" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -260,12 +261,29 @@ const UserList = () => {
                       </div>
                     </TableHead>
                     <TableHead
-                      onClick={() => handleSort("addressLine2")}
+                      onClick={() => handleSort("contactPersonEmail")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Address Line 2</span>
-                        {sortBy === "addressLine2" && (
+                        <span>Email</span>
+                        {sortBy === "contactPersonEmail" && (
+                          <span className="ml-1">
+                            {sortOrder === "asc" ? (
+                              <ChevronUp size={16} />
+                            ) : (
+                              <ChevronDown size={16} />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort("contactPersonPhone")}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <span>Mobile</span>
+                        {sortBy === "contactPersonPhone" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -316,11 +334,22 @@ const UserList = () => {
                 <TableBody>
                   {agencies.map((agency) => (
                     <TableRow key={agency.id}>
-                      <TableCell>{agency.businessName}</TableCell>
-                      <TableCell>{agency.addressLine1}</TableCell>
-                      <TableCell>{agency.addressLine2}</TableCell>
-                      <TableCell>{agency.state}</TableCell>
-                      <TableCell>{agency.city}</TableCell>
+                      <TableCell className="max-w-[150px] break-words whitespace-normal">
+                        {agency.businessName}
+                      </TableCell>
+                      <TableCell className="max-w-[150px] break-words whitespace-normal">
+                        {agency.contactPersonName}
+                      </TableCell>
+                      <TableCell className="max-w-[150px] break-words whitespace-normal">
+                        {agency.contactPersonEmail}
+                      </TableCell>
+                      <TableCell>{agency.contactPersonPhone}</TableCell>
+                      <TableCell className="max-w-[150px] break-words whitespace-normal">
+                        {agency.state}
+                      </TableCell>
+                      <TableCell className="max-w-[150px] break-words whitespace-normal">
+                        {agency.city}
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button

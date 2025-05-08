@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
 
 const TourBookingDetailsTable = ({
   editBookingLoading,
@@ -24,9 +25,11 @@ const TourBookingDetailsTable = ({
   return (
     <div>
       <div className="mb-7">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <h2 className="text-lg mb-1 font-semibold text-gray-900 dark:text-gray-100">
           Client Details
         </h2>
+        <Separator className="mb-4" />
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="text-sm text-gray-800 dark:text-gray-300">
             <span className="font-medium">Client Name:</span>{" "}
@@ -49,9 +52,11 @@ const TourBookingDetailsTable = ({
 
       {/* Booking Details */}
       <div className="mb-7">
-        <h2 className="text-lg  font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <h2 className="text-lg  font-semibold text-gray-900 dark:text-gray-100 mb-1">
           Client Booking Details
         </h2>
+        <Separator className="mb-4" />
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="text-sm text-gray-800 dark:text-gray-300">
             <span className="font-medium">Booking No:</span>{" "}
@@ -111,19 +116,19 @@ const TourBookingDetailsTable = ({
                   <TableBody>
                     {editBookingData.bookingDetails.map((booking) => (
                       <TableRow className="h-15" key={booking.id}>
-                        <TableCell className="w-10 text-sm">
+                        <TableCell className="w-10 text-sm text-left align-top">
                           {booking.day}
                         </TableCell>
-                        <TableCell className="w-20 text-sm">
+                        <TableCell className="w-20 text-sm text-left align-top">
                           {" "}
                           {booking.date
                             ? dayjs(booking.date).format("DD/MM/YYYY")
                             : "N/A"}
                         </TableCell>
-                        <TableCell className=" text-sm w-[375px] whitespace-normal break-words">
+                        <TableCell className=" text-sm w-[375px] whitespace-normal break-words text-left align-top">
                           {booking.description}
                         </TableCell>
-                        <TableCell className="text-sm w-20">
+                        <TableCell className="text-sm w-20 text-left align-top">
                           {booking?.city?.cityName || "N/A"}
                         </TableCell>
                       </TableRow>

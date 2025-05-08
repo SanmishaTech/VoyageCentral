@@ -173,8 +173,12 @@ const HotelBookingList = ({ bookingId }) => {
                 <TableBody>
                   {hotelBookings.map((hotel) => (
                     <TableRow key={hotel.id}>
-                      <TableCell>{hotel?.hotel?.hotelName}</TableCell>
-                      <TableCell>{hotel?.city?.cityName || "N/A"}</TableCell>
+                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
+                        {hotel?.hotel?.hotelName}
+                      </TableCell>
+                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
+                        {hotel?.city?.cityName || "N/A"}
+                      </TableCell>
                       <TableCell>
                         {" "}
                         {hotel.checkInDate
@@ -188,10 +192,10 @@ const HotelBookingList = ({ bookingId }) => {
                       <TableCell>{hotel?.nights}</TableCell>
                       <TableCell>{hotel?.plan}</TableCell>
 
-                      <TableCell>
+                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
                         {hotel?.accommodation?.accommodationName || "N/A"}
                       </TableCell>
-                      <TableCell className="">
+                      <TableCell className="w-20">
                         <div className="flex justify-end gap-2">
                           <Button
                             variant="outline"

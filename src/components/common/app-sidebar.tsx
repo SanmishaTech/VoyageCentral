@@ -54,21 +54,19 @@ const initialData = {
           icon: UsersRound,
         },
       ],
-      // navMain: [
-      //   {
-      //     title: "Masters",
-      //     url: "#",
-      //     icon: SquareTerminal,
-      //     isActive: true,
-      //     items: [
-      //       { title: "Country", url: "/countries" },
-      //       { title: "State", url: "./states" },
-      //       { title: "City", url: "/cities" },
-      //       { title: "Sector", url: "/sectors" },
-      //       { title: "Branches", url: "/branches" },
-      //     ],
-      //   },
-      // ],
+      navMain: [
+        {
+          title: "Masters",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: true,
+          items: [
+            { title: "Country", url: "/countries" },
+            { title: "State", url: "./states" },
+            { title: "City", url: "/cities" },
+          ],
+        },
+      ],
     },
     admin: {
       projects: [],

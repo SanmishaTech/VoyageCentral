@@ -41,6 +41,8 @@ import {
   MoreHorizontal,
   CheckCircle,
   XCircle,
+  SquarePen,
+  BookText,
 } from "lucide-react";
 import ConfirmDialog from "@/components/common/confirm-dialog";
 import { saveAs } from "file-saver";
@@ -324,7 +326,7 @@ const BookingList = () => {
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Booking Number</span>
+                        <span>Booking No.</span>
                         {sortBy === "bookingNumber" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
@@ -445,7 +447,9 @@ const BookingList = () => {
                 <TableBody>
                   {bookings.map((booking) => (
                     <TableRow key={booking.id}>
-                      <TableCell>{booking.bookingNumber}</TableCell>
+                      <TableCell className="">
+                        {booking.bookingNumber}
+                      </TableCell>
                       <TableCell>
                         {" "}
                         {booking.bookingDate
@@ -474,9 +478,9 @@ const BookingList = () => {
                       <TableCell className="max-w-[150px] break-words whitespace-normal">
                         {(booking?.tour && booking?.tour.tourTitle) || "N/A"}
                       </TableCell>
-                      <TableCell className="flex justify-end">
+                      <TableCell className="flex flex-col items-center justify-end">
                         <div className="flex gap-2">
-                          <Button
+                          {/* <Button
                             // variant="outline"
                             size="sm"
                             onClick={() =>
@@ -484,8 +488,8 @@ const BookingList = () => {
                             }
                           >
                             Follow Up
-                          </Button>
-                          <Button
+                          </Button> */}
+                          {/* <Button
                             variant="outline"
                             size="sm"
                             onClick={() =>
@@ -493,15 +497,15 @@ const BookingList = () => {
                             }
                           >
                             <Edit size={16} />
-                          </Button>
+                          </Button> */}
 
-                          <Button
+                          {/* <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => confirmDelete(booking.id)}
                           >
                             <Trash2 size={16} />
-                          </Button>
+                          </Button> */}
                           <Button
                             variant="outline"
                             size="sm"
@@ -512,6 +516,46 @@ const BookingList = () => {
                             Booking
                           </Button>
                         </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56">
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  navigate(`/bookings/${booking.id}/followUp`)
+                                }
+                              >
+                                <div className="flex items-center gap-2">
+                                  <BookText className="h-4 w-4" />
+                                  <span>Follow Up</span>
+                                </div>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  navigate(`/bookings/${booking.id}/edit`)
+                                }
+                              >
+                                <div className="flex items-center gap-2">
+                                  <SquarePen className="h-4 w-4" />
+                                  <span>Edit</span>
+                                </div>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => confirmDelete(booking.id)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Trash2 className="h-4 w-4" />
+                                  <span>Delete</span>
+                                </div>
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
