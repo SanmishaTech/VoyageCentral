@@ -26,6 +26,10 @@ import HotelList from "@/modules/Hotel/HotelList";
 import CreateHotel from "@/modules/Hotel/CreateHotel";
 import EditHotel from "@/modules/Hotel/EditHotel";
 
+import AgentList from "@/modules/Agent/AgentList";
+import CreateAgent from "@/modules/Agent/CreateAgent";
+import EditAgent from "@/modules/Agent/EditAgent";
+
 import ClientList from "@/modules/Client/ClientList";
 import CreateClient from "@/modules/Client/CreateClient";
 import EditClient from "@/modules/Client/EditClient";
@@ -409,6 +413,32 @@ const App = () => {
               }
             />
             {/* Service booking end */}
+            <Route
+              path="/agents"
+              element={
+                <ProtectedRoute>
+                  <AgentList />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/agents/create"
+              element={
+                <ProtectedRoute>
+                  <CreateAgent />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/agents/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditAgent />
+                </ProtectedRoute>
+              }
+            />
           </Route>
         </Routes>
       </Router>

@@ -51,89 +51,71 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 
-const fetchUsers = async (
+const fetchAgents = async (
   page: number,
   sortBy: string,
   sortOrder: string,
   search: string,
-  active: string,
-  roles: string[],
   recordsPerPage: number
 ) => {
-  const rolesQuery = roles.length > 0 ? `&roles=${roles.join(",")}` : "";
   const response = await get(
-    `/agencies?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&active=${active}${rolesQuery}&limit=${recordsPerPage}`
+    `/agents?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&limit=${recordsPerPage}`
   );
   return response;
 };
 
-const UserList = () => {
+const AgentList = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10); // Add recordsPerPage state
-  const [sortBy, setSortBy] = useState("businessName"); // Default sort column
+  const [sortBy, setSortBy] = useState("agentName"); // Default sort column
   const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
   const [search, setSearch] = useState(""); // Search query
-  const [active, setActive] = useState("all"); // Active filter (all, true, false)
-  const [roles, setRoles] = useState<string[]>([]); // Selected roles for filtering
-  const [availableRoles, setAvailableRoles] = useState<Option[]>([]); // Roles fetched from API
-  const [showFilters, setShowFilters] = useState(false); // State to show/hide filters
-  const [showChangePassword, setShowChangePassword] = useState(false); // State to toggle ChangePassword dialog
-  const [selectedUser, setSelectedUser] = useState<number | null>(null); // Track the selected user for password change
   const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
-  const [userToDelete, setUserToDelete] = useState<number | null>(null); // Track the user ID to delete
+  const [agentToDelete, setAgentToDelete] = useState<number | null>(null); //
+  //  Track the user ID to delete
   const navigate = useNavigate();
 
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [
-      "agencies",
+      "agents",
       currentPage,
       sortBy,
       sortOrder,
       search,
-      active,
-      roles,
       recordsPerPage,
     ],
     queryFn: () =>
-      fetchUsers(
-        currentPage,
-        sortBy,
-        sortOrder,
-        search,
-        active,
-        roles,
-        recordsPerPage
-      ),
+      fetchAgents(currentPage, sortBy, sortOrder, search, recordsPerPage),
   });
 
-  const agencies = data?.agencies || [];
+  const agents = data?.agents || [];
   const totalPages = data?.totalPages || 1;
-  const totalUsers = data?.totalUsers || 0;
+  const totalAgents = data?.totalAgents || 0;
 
   // Mutation for deleting a user
-  const deleteUserMutation = useMutation({
-    mutationFn: (id: number) => del(`/agencies/${id}`),
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => del(`/agents/${id}`),
     onSuccess: () => {
-      toast.success("User deleted successfully");
-      queryClient.invalidateQueries(["agencies"]);
+      toast.success("Agent deleted successfully");
+      queryClient.invalidateQueries(["agents"]);
     },
     onError: () => {
-      toast.error("Failed to delete agency");
+      toast.error("Failed to delete agent");
     },
   });
 
   const confirmDelete = (id: number) => {
-    setUserToDelete(id);
+    setAgentToDelete(id);
     setShowConfirmation(true);
   };
 
   const handleDelete = () => {
-    if (userToDelete) {
-      deleteUserMutation.mutate(userToDelete);
+    if (agentToDelete) {
+      deleteMutation.mutate(agentToDelete);
       setShowConfirmation(false);
-      setUserToDelete(null);
+      setAgentToDelete(null);
     }
   };
 
@@ -155,32 +137,10 @@ const UserList = () => {
     setCurrentPage(1); // Reset to the first page
   };
 
-  // Handle active filter change
-  const handleActiveChange = (value: string) => {
-    setActive(value);
-    setCurrentPage(1); // Reset to the first page
-  };
-
-  // Handle role filter change
-  const handleRoleChange = (selectedRoles: Option[]) => {
-    setRoles(selectedRoles.map((role) => role.value)); // Extract values from selected options
-    setCurrentPage(1); // Reset to the first page
-  };
-
-  const handleOpenChangePassword = (userId: number) => {
-    setSelectedUser(userId); // Set the selected user
-    setShowChangePassword(true); // Show the ChangePassword dialog
-  };
-
-  const handleCloseChangePassword = () => {
-    setSelectedUser(null); // Clear the selected user
-    setShowChangePassword(false); // Hide the ChangePassword dialog
-  };
-
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Agency Management
+        Agent Management
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>
@@ -189,7 +149,7 @@ const UserList = () => {
             {/* Search Input */}
             <div className="flex-grow">
               <Input
-                placeholder="Search agencies..."
+                placeholder="Search agents..."
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
@@ -200,11 +160,11 @@ const UserList = () => {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                onClick={() => navigate("/agencies/create")}
+                onClick={() => navigate("/agents/create")}
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add
+                Add Agent
               </Button>
             </div>
           </div>
@@ -218,20 +178,20 @@ const UserList = () => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load agencies.
+              Failed to load Agents.
             </div>
-          ) : agencies.length > 0 ? (
+          ) : agents.length > 0 ? (
             <div className="overflow-x-auto">
-              <Table className="">
+              <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead
-                      onClick={() => handleSort("businessName")}
-                      className="cursor-pointer"
+                      onClick={() => handleSort("agentName")}
+                      className="cursor-pointer max-w-[250px] break-words whitespace-normal"
                     >
                       <div className="flex items-center">
-                        <span>Business Name</span>
-                        {sortBy === "businessName" && (
+                        <span>Agent Name</span>
+                        {sortBy === "agentName" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -244,76 +204,8 @@ const UserList = () => {
                     </TableHead>
 
                     <TableHead
-                      onClick={() => handleSort("contactPersonName")}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-center">
-                        <span>Contact Person</span>
-                        {sortBy === "contactPersonName" && (
-                          <span className="ml-1">
-                            {sortOrder === "asc" ? (
-                              <ChevronUp size={16} />
-                            ) : (
-                              <ChevronDown size={16} />
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      onClick={() => handleSort("contactPersonEmail")}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-center">
-                        <span>Email</span>
-                        {sortBy === "contactPersonEmail" && (
-                          <span className="ml-1">
-                            {sortOrder === "asc" ? (
-                              <ChevronUp size={16} />
-                            ) : (
-                              <ChevronDown size={16} />
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      onClick={() => handleSort("contactPersonPhone")}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-center">
-                        <span>Mobile</span>
-                        {sortBy === "contactPersonPhone" && (
-                          <span className="ml-1">
-                            {sortOrder === "asc" ? (
-                              <ChevronUp size={16} />
-                            ) : (
-                              <ChevronDown size={16} />
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead
-                      onClick={() => handleSort("stateName")}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-center">
-                        <span>State</span>
-                        {sortBy === "stateName" && (
-                          <span className="ml-1">
-                            {sortOrder === "asc" ? (
-                              <ChevronUp size={16} />
-                            ) : (
-                              <ChevronDown size={16} />
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead
                       onClick={() => handleSort("cityName")}
-                      className="cursor-pointer"
+                      className="cursor-pointer max-w-[250px] break-words whitespace-normal"
                     >
                       <div className="flex items-center">
                         <span>City</span>
@@ -328,54 +220,71 @@ const UserList = () => {
                         )}
                       </div>
                     </TableHead>
+                    <TableHead
+                      onClick={() => handleSort("mobile1")}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <span>Mobile</span>
+                        {sortBy === "mobile1" && (
+                          <span className="ml-1">
+                            {sortOrder === "asc" ? (
+                              <ChevronUp size={16} />
+                            ) : (
+                              <ChevronDown size={16} />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead
+                      onClick={() => handleSort("email1")}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <span>Email</span>
+                        {sortBy === "email1" && (
+                          <span className="ml-1">
+                            {sortOrder === "asc" ? (
+                              <ChevronUp size={16} />
+                            ) : (
+                              <ChevronDown size={16} />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {agencies.map((agency) => (
-                    <TableRow key={agency.id}>
-                      <TableCell className="max-w-[150px] break-words whitespace-normal">
-                        {agency.businessName}
+                  {agents.map((agent) => (
+                    <TableRow key={agent.id}>
+                      <TableCell className="max-w-[250px] break-words whitespace-normal">
+                        {agent.agentName}
                       </TableCell>
-                      <TableCell className="max-w-[150px] break-words whitespace-normal">
-                        {agency.contactPersonName}
+                      <TableCell className="max-w-[250px] break-words whitespace-normal">
+                        {agent.city.cityId || "N/A"}
                       </TableCell>
-                      <TableCell className="max-w-[150px] break-words whitespace-normal">
-                        {agency.contactPersonEmail}
-                      </TableCell>
-                      <TableCell>{agency.contactPersonPhone}</TableCell>
-                      <TableCell className="max-w-[150px] break-words whitespace-normal">
-                        {agency?.state?.stateName || "N/A"}
-                      </TableCell>
-                      <TableCell className="max-w-[150px] break-words whitespace-normal">
-                        {agency?.city?.cityName || "N/A"}
-                      </TableCell>
+                      <TableCell>{agent.mobile1 || "N/A"}</TableCell>
+                      <TableCell>{agent.email1 || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() =>
-                              navigate(`/agencies/${agency.id}/edit`)
-                            }
+                            onClick={() => navigate(`/agents/${agent.id}/edit`)}
                           >
                             <Edit size={16} />
                           </Button>
-                          <ConfirmDialog
-                            title="Confirm Deletion"
-                            description="Are you sure you want to delete this agency? This action cannot be undone."
-                            confirmLabel="Delete"
-                            cancelLabel="Cancel"
-                            onConfirm={() => handleDelete(agency.id)}
+
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => confirmDelete(agent.id)}
                           >
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => confirmDelete(agency.id)}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </ConfirmDialog>
+                            <Trash2 size={16} />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -385,7 +294,7 @@ const UserList = () => {
               <CustomPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                totalRecords={totalUsers}
+                totalRecords={totalAgents}
                 recordsPerPage={recordsPerPage}
                 onPageChange={setCurrentPage} // Pass setCurrentPage directly
                 onRecordsPerPageChange={(newRecordsPerPage) => {
@@ -395,7 +304,7 @@ const UserList = () => {
               />
             </div>
           ) : (
-            <div className="text-center">No Agency Found.</div>
+            <div className="text-center">No Agents Found.</div>
           )}
         </CardContent>
       </Card>
@@ -403,10 +312,10 @@ const UserList = () => {
       <ConfirmDialog
         isOpen={showConfirmation}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this user? This action cannot be undone."
+        description="Are you sure you want to delete this Agent? This action cannot be undone."
         onCancel={() => {
           setShowConfirmation(false);
-          setUserToDelete(null);
+          setAgentToDelete(null);
         }}
         onConfirm={handleDelete}
       />
@@ -414,4 +323,4 @@ const UserList = () => {
   );
 };
 
-export default UserList;
+export default AgentList;
