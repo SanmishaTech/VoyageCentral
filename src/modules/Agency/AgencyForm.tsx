@@ -608,7 +608,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                     htmlFor="stateId"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    State
+                    State <span className="text-red-500">*</span>
                   </Label>
                   <Controller
                     name="stateId"

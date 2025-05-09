@@ -88,6 +88,7 @@ const initialData = {
             { title: "Vehicle", url: "/vehicles" },
             { title: "Airline", url: "/airlines" },
             { title: "Hotels", url: "/hotels" },
+            { title: "Agents", url: "/agents" },
             { title: "Clients", url: "/clients" },
             { title: "Banks", url: "/banks" },
             { title: "Fairs", url: "/fairs" },
