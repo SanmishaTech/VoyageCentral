@@ -128,7 +128,7 @@ const TourBookingDetailsTable = ({
                         <TableCell className=" text-sm w-[375px] whitespace-normal break-words text-left align-top">
                           {booking.description}
                         </TableCell>
-                        <TableCell className="text-sm w-20 text-left align-top">
+                        <TableCell className="text-sm w-20 text-left whitespace-normal break-words align-top">
                           {booking?.city?.cityName || "N/A"}
                         </TableCell>
                       </TableRow>

@@ -83,6 +83,7 @@ import JourneyBookingList from "./JourneyBooking/JourneyBookingList";
 import HotelBookingList from "./HotelBooking/HotelBookingList";
 import ServiceBookingList from "./ServiceBooking/ServiceBookingList";
 import { Separator } from "@radix-ui/react-separator";
+import VehicleBookingList from "./VehicleBooking/VehicleBookingList";
 const BookingDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -117,13 +118,16 @@ const BookingDetails = () => {
             {/* --- Tabs Start --- */}
             <div className=" mt-5 w-full">
               <Tabs defaultValue="JourneyBooking" className="w-full">
-                <TabsList className="grid grid-cols-1 md:grid-cols-3 w-full max-w-md mx-auto mb-16 md:mb-4">
+                <TabsList className="grid grid-cols-1 md:grid-cols-4 w-full max-w-md mx-auto mb-16 md:mb-4">
                   <TabsTrigger value="JourneyBooking">
                     Journey Booking
                   </TabsTrigger>
                   <TabsTrigger value="HotelBooking">Hotel Booking</TabsTrigger>
                   <TabsTrigger value="ServiceBooking">
                     Service Booking
+                  </TabsTrigger>
+                  <TabsTrigger value="VehicleBooking">
+                    Vehicle Booking
                   </TabsTrigger>
                 </TabsList>
 
@@ -135,6 +139,9 @@ const BookingDetails = () => {
                 </TabsContent>
                 <TabsContent value="ServiceBooking">
                   <ServiceBookingList bookingId={id} />
+                </TabsContent>
+                <TabsContent value="VehicleBooking">
+                  <VehicleBookingList bookingId={id} />
                 </TabsContent>
               </Tabs>
             </div>
