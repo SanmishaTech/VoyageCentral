@@ -195,6 +195,17 @@ const defaultValues: FormInputs = {
   vehicleHotelBookings: [],
 };
 
+const defaultHotelBooking = {
+  vehicleHotelId: "",
+  cityId: "",
+  hotelId: "",
+  checkInDate: "",
+  checkOutDate: "",
+  numberOfRooms: "",
+  plan: "",
+  numberOfNights: 0,
+};
+
 const VehicleBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id, vehicleBookingId } = useParams<{
     id: string;
@@ -233,6 +244,7 @@ const VehicleBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     fields: vehicleHotelBookingsFields,
     append: appendVehicleHotelBookings,
     remove: removeVehicleHotelBookings,
+    insert: insertVehicleHotelBooking,
   } = useFieldArray({
     control,
     name: "vehicleHotelBookings", // Name of the array in the form schema
@@ -1018,7 +1030,20 @@ const VehicleBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                         </p>
                       )}
 
-                      <TableCell className="w-[32px] text-right m-0  p-0">
+                      <TableCell className="w-[32px] text-right m-0 p-0">
+                        {/* <Button
+                          variant="outline"
+                          size="icon"
+                          type="button"
+                          onClick={() =>
+                            insertVehicleHotelBooking(
+                              index + 1,
+                              defaultHotelBooking
+                            )
+                          }
+                        >
+                          <PlusCircle className="h-4 w-4" />
+                        </Button> */}
                         <Button
                           type="button"
                           variant="destructive"
