@@ -47,9 +47,11 @@ import CreateServiceBooking from "@/modules/Booking/ServiceBooking/CreateService
 import UpdateServiceBooking from "@/modules/Booking/ServiceBooking/EditServiceBooking";
 import CreateVehicleBooking from "@/modules/Booking/VehicleBooking/CreateVehicleBooking";
 import UpdateVehicleBooking from "@/modules/Booking/VehicleBooking/EditVehicleBooking";
+import CreateTravelDocument from "@/modules/Booking/TravelDocument/CreateTravelDocument";
+import UpdateTravelDocument from "@/modules/Booking/TravelDocument/EditTravelDocument";
+import CreateTourMember from "@/modules/Booking/TourMembers/CreateTourMember";
 
 import BranchList from "@/modules/Branch/BranchList";
-
 import TourList from "@/modules/Tour/TourList";
 import CreateTour from "@/modules/Tour/CreateTour";
 import EditTour from "@/modules/Tour/EditTour";
@@ -455,6 +457,32 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <UpdateVehicleBooking />
+                </ProtectedRoute>
+              }
+            />
+            {/* travel document start */}
+            <Route
+              path="/bookings/:id/travelDocument/create"
+              element={
+                <ProtectedRoute>
+                  <CreateTravelDocument />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id/travelDocument/:travelDocumentId/edit"
+              element={
+                <ProtectedRoute>
+                  <UpdateTravelDocument />
+                </ProtectedRoute>
+              }
+            />
+            {/* travel document end */}
+            <Route
+              path="/bookings/:id/tourMember/create"
+              element={
+                <ProtectedRoute>
+                  <CreateTourMember />
                 </ProtectedRoute>
               }
             />

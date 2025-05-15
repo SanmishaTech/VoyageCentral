@@ -55,50 +55,50 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 
-const ServiceBookingList = ({ bookingId }) => {
+const TravelDocumentList = ({ bookingId }) => {
   const queryClient = useQueryClient();
   const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
-  const [serviceBookingToDelete, setServiceBookingToDelete] = useState<
+  const [travelDocumentToDelete, setTravelDocumentToDelete] = useState<
     number | null
   >(null); //
   //  Track the user ID to delete
   const navigate = useNavigate();
 
-  const fetchServiceBookings = async () => {
-    const response = await get(`/service-bookings/booking/${bookingId}`);
+  const fetchTravelDocuments = async () => {
+    const response = await get(`/travel-documents/booking/${bookingId}`);
     return response;
   };
 
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["service-bookings"],
-    queryFn: () => fetchServiceBookings(),
+    queryKey: ["travel-documents", bookingId],
+    queryFn: () => fetchTravelDocuments(),
   });
 
-  const serviceBookings = data?.serviceBookings || [];
+  const travelDocuments = data?.travelDocuments || [];
 
   // Mutation for deleting a user
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => del(`/service-bookings/${id}`),
+    mutationFn: (id: number) => del(`/travel-documents/${id}`),
     onSuccess: () => {
-      toast.success("Service Booking deleted successfully");
-      queryClient.invalidateQueries(["service-bookings"]);
+      toast.success("Travel Document deleted successfully");
+      queryClient.invalidateQueries(["travel-documents"]);
     },
     onError: () => {
-      toast.error("Failed to delete Service Booking");
+      toast.error("Failed to delete Travel Document");
     },
   });
 
   const confirmDelete = (id: number) => {
-    setServiceBookingToDelete(id);
+    setTravelDocumentToDelete(id);
     setShowConfirmation(true);
   };
 
   const handleDelete = () => {
-    if (serviceBookingToDelete) {
-      deleteMutation.mutate(serviceBookingToDelete);
+    if (travelDocumentToDelete) {
+      deleteMutation.mutate(travelDocumentToDelete);
       setShowConfirmation(false);
-      setServiceBookingToDelete(null);
+      setTravelDocumentToDelete(null);
     }
   };
 
@@ -107,17 +107,17 @@ const ServiceBookingList = ({ bookingId }) => {
       <div className="mx-auto ">
         <div className="mb-1 w-full flex flex-wrap justify-between items-center gap-2">
           <div className="text-xl font-bold text-gray-800 tracking-wide  dark:text-white ">
-            Service Booking
+            Travel Documents
           </div>
 
           <Button
             onClick={() =>
-              navigate(`/bookings/${bookingId}/serviceBooking/create`)
+              navigate(`/bookings/${bookingId}/travelDocument/create`)
             }
             className="bg-primary text-xs hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
           >
             <PlusCircle className="mr-2 h-5 w-5" />
-            Add Service Booking
+            Add Travel Document
           </Button>
         </div>
 
@@ -129,9 +129,9 @@ const ServiceBookingList = ({ bookingId }) => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load service booking details.
+              Failed to load travel document details.
             </div>
-          ) : serviceBookings.length > 0 ? (
+          ) : travelDocuments.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -143,7 +143,7 @@ const ServiceBookingList = ({ bookingId }) => {
                     </TableHead>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>Cost</span>
+                        <span>Private Document</span>
                       </div>
                     </TableHead>
 
@@ -153,12 +153,12 @@ const ServiceBookingList = ({ bookingId }) => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {serviceBookings.map((service) => (
-                    <TableRow key={service.id}>
+                  {travelDocuments.map((doc) => (
+                    <TableRow key={doc.id}>
                       <TableCell className="max-w-[600px] px-1 whitespace-normal break-words">
-                        {service?.description}
+                        {doc?.description}
                       </TableCell>
-                      <TableCell> {formatCurrency(service?.cost)}</TableCell>
+                      <TableCell> {doc.isPrivate ? "Yes" : "No"}</TableCell>
 
                       <TableCell className="20">
                         <div className="flex justify-end gap-2">
@@ -167,7 +167,7 @@ const ServiceBookingList = ({ bookingId }) => {
                             size="sm"
                             onClick={() =>
                               navigate(
-                                `/bookings/${bookingId}/serviceBooking/${service.id}/edit`
+                                `/bookings/${bookingId}/travelDocument/${doc.id}/edit`
                               )
                             }
                           >
@@ -177,7 +177,7 @@ const ServiceBookingList = ({ bookingId }) => {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => confirmDelete(service.id)}
+                            onClick={() => confirmDelete(doc.id)}
                           >
                             <Trash2 size={16} />
                           </Button>
@@ -189,7 +189,7 @@ const ServiceBookingList = ({ bookingId }) => {
               </Table>
             </div>
           ) : (
-            <div className="text-center">No Service booking Found.</div>
+            <div className="text-center">No Travel Document Found.</div>
           )}
         </div>
       </div>
@@ -197,10 +197,10 @@ const ServiceBookingList = ({ bookingId }) => {
       <ConfirmDialog
         isOpen={showConfirmation}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this service booking? This action cannot be undone."
+        description="Are you sure you want to delete this travel Document? This action cannot be undone."
         onCancel={() => {
           setShowConfirmation(false);
-          setServiceBookingToDelete(null);
+          setTravelDocumentToDelete(null);
         }}
         onConfirm={handleDelete}
       />
@@ -208,4 +208,4 @@ const ServiceBookingList = ({ bookingId }) => {
   );
 };
 
-export default ServiceBookingList;
+export default TravelDocumentList;

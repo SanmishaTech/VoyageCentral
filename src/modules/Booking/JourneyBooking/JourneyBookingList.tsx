@@ -68,7 +68,7 @@ const JourneyBookingList = ({ bookingId }) => {
 
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["journey-bookings"],
+    queryKey: ["journey-bookings", bookingId],
     queryFn: () => fetchJourneyBookings(),
   });
 
