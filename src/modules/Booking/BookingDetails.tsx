@@ -84,6 +84,8 @@ import HotelBookingList from "./HotelBooking/HotelBookingList";
 import ServiceBookingList from "./ServiceBooking/ServiceBookingList";
 import { Separator } from "@radix-ui/react-separator";
 import VehicleBookingList from "./VehicleBooking/VehicleBookingList";
+import TravelDocumentList from "./TravelDocument/TravelDocumentList";
+import TourMemberList from "./TourMembers/TourMemberList";
 const BookingDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -106,7 +108,7 @@ const BookingDetails = () => {
       <div className="mt-2 p-6">
         <h1 className="text-2xl font-bold mb-6">Booking Details</h1>
 
-        <Card className="mx-auto mt-10">
+        <Card className="mx-auto mt-10 ">
           <CardContent className="pt-6 space-y-8">
             {/* start */}
             <TourBookingDetailsTable
@@ -118,7 +120,7 @@ const BookingDetails = () => {
             {/* --- Tabs Start --- */}
             <div className=" mt-5 w-full">
               <Tabs defaultValue="JourneyBooking" className="w-full">
-                <TabsList className="grid grid-cols-1 md:grid-cols-4 w-full max-w-md mx-auto mb-16 md:mb-4">
+                <TabsList className="grid grid-cols-1 md:grid-cols-6 w-full mb-44 md:mb-4">
                   <TabsTrigger value="JourneyBooking">
                     Journey Booking
                   </TabsTrigger>
@@ -128,6 +130,10 @@ const BookingDetails = () => {
                   </TabsTrigger>
                   <TabsTrigger value="VehicleBooking">
                     Vehicle Booking
+                  </TabsTrigger>
+                  <TabsTrigger value="TourMembers">Tour Members</TabsTrigger>
+                  <TabsTrigger value="TravelDocument">
+                    Travel Documents
                   </TabsTrigger>
                 </TabsList>
 
@@ -142,6 +148,12 @@ const BookingDetails = () => {
                 </TabsContent>
                 <TabsContent value="VehicleBooking">
                   <VehicleBookingList bookingId={id} />
+                </TabsContent>
+                <TabsContent value="TourMembers">
+                  <TourMemberList bookingId={id} />
+                </TabsContent>
+                <TabsContent value="TravelDocument">
+                  <TravelDocumentList bookingId={id} />
                 </TabsContent>
               </Tabs>
             </div>

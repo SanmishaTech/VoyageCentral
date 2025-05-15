@@ -102,7 +102,7 @@ const TourBookingDetailsTable = ({
               <div className="text-center text-red-500">
                 Failed to load booking.
               </div>
-            ) : editBookingData.bookingDetails.length > 0 ? (
+            ) : editBookingData?.bookingDetails?.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -114,7 +114,7 @@ const TourBookingDetailsTable = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {editBookingData.bookingDetails.map((booking) => (
+                    {editBookingData?.bookingDetails?.map((booking) => (
                       <TableRow className="h-15" key={booking.id}>
                         <TableCell className="w-10 text-sm text-left align-top">
                           {booking.day}

@@ -69,7 +69,7 @@ const VehicleBookingList = ({ bookingId }) => {
 
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["vehicle-bookings"],
+    queryKey: ["vehicle-bookings", bookingId],
     queryFn: () => fetchVehicleBookings(),
   });
 
