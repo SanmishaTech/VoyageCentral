@@ -150,8 +150,8 @@ const FormSchema = z.object({
     }),
 
   bank1Id: z.union([
-    z.number().min(1, { message: "Country field is required." }),
-    z.string().min(1, { message: "Country field is required." }),
+    z.number().min(1, { message: "Bank Name field is required." }),
+    z.string().min(1, { message: "Bank Name field is required." }),
   ]),
 
   bankAccountNumber2: z

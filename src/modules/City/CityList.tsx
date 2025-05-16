@@ -234,7 +234,7 @@ const UserList = () => {
             <div className="text-center text-red-500">
               Failed to load cities.
             </div>
-          ) : cities.length > 0 ? (
+          ) : cities?.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>

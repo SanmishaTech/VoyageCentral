@@ -168,7 +168,7 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
               )}
             </div>
             <div className="grid gap-2 relative">
-              <Label htmlFor="cost">Cost</Label>
+              <Label htmlFor="cost">Cost (₹)</Label>
               <Input
                 id="cost"
                 placeholder="Enter cost"

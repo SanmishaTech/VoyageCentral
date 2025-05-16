@@ -88,6 +88,9 @@ interface ApiResponse {
   contactPersonName: string;
   contactPersonEmail: string;
   contactPersonPhone: string;
+  contactPersonName2: string;
+  contactPersonEmail2: string;
+  contactPersonPhone2: string;
   gstin: string | null;
   createdAt: string;
   updatedAt: string;
@@ -151,14 +154,40 @@ const baseAgencySchema = z.object({
   ]),
   pincode: z.string().min(1, "Pincode is required"), // Consider regex for format
   contactPersonName: z.string().min(1, "Contact Person Name is required"),
+  contactPersonName2: z
+    .string()
+    .regex(
+      /^([A-Za-z\s\u0900-\u097F]+)?$/,
+      "Contact name can only contain letters."
+    )
+    .refine((val) => val === "" || val.trim().length > 0, {
+      message: "Contact name cannot be only spaces.",
+    }),
   contactPersonEmail: z
     .string()
     .email("Invalid email format")
     .min(1, "Contact Person Email is required"),
+  contactPersonEmail2: z
+    .string()
+    .max(100, "Contact Person Email is too long")
+    .email("Invalid email format")
+    .or(z.literal(""))
+    .optional(),
   contactPersonPhone: z
     .string()
     .min(10, "Contact Person Phone requires at least 10 digits")
-    .max(15, "Contact Person Phone too long"), // Allow slightly more chars for formatting/country code
+    .max(10, "Contact Person Phone too long"),
+  // contactPersonPhone2: z
+  //   .string()
+  //   .regex(
+  //     /^(\d{10})?$/,
+  //     "Contact Person Phone must be exactly 10 digits or empty."
+  //   ),
+  contactPersonPhone2: z
+    .string()
+    .refine((val) => val === "" || /^[0-9]{10}$/.test(val), {
+      message: "Contact Person Phone field must contain exactly 10 digits.",
+    }),
   letterHead: letterHeadSchema,
   logo: logoSchema,
 });
@@ -221,6 +250,9 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     defaultValues:
       mode === "create"
         ? {
+            contactPersonEmail2: "",
+            contactPersonPhone2: "",
+            contactPersonName2: "",
             // Set defaults for create mode if needed, especially for nested objects
             user: { name: "", email: "", password: "" },
             subscription: {
@@ -307,6 +339,9 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
             contactPersonName: resp.contactPersonName,
             contactPersonEmail: resp.contactPersonEmail,
             contactPersonPhone: resp.contactPersonPhone,
+            contactPersonName2: resp.contactPersonName2 || "",
+            contactPersonEmail2: resp.contactPersonEmail2 || "",
+            contactPersonPhone2: resp.contactPersonPhone2 || "",
             // logo and letterHead are handled via previews/existing URLs
             // user and subscription are not editable in this part of the form
           } as Partial<FormInputs>); // Use Partial as user/sub are not in update schema
@@ -916,7 +951,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                   htmlFor="contactPersonName"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Name <span className="text-red-500">*</span>
+                  Contact Person Name 1<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="contactPersonName"
@@ -934,7 +969,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                   htmlFor="contactPersonEmail"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Email <span className="text-red-500">*</span>
+                  Contact Person Email 1<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="contactPersonEmail"
@@ -953,7 +988,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                   htmlFor="contactPersonPhone"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Phone <span className="text-red-500">*</span>
+                  Contact Person Phone 1<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="contactPersonPhone"
@@ -964,6 +999,62 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                 {errors.contactPersonPhone && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.contactPersonPhone.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label
+                  htmlFor="contactPersonName2"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Contact Person Name 2
+                </Label>
+                <Input
+                  id="contactPersonName2"
+                  {...register("contactPersonName2")}
+                  placeholder="e.g., Jane Doe"
+                />
+                {errors.contactPersonName2 && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.contactPersonName2.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label
+                  htmlFor="contactPersonEmail2"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Contact Person Email 2
+                </Label>
+                <Input
+                  id="contactPersonEmail2"
+                  type="email"
+                  {...register("contactPersonEmail2")}
+                  placeholder="e.g., jane.doe@example.com"
+                />
+                {errors.contactPersonEmail2 && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.contactPersonEmail2.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label
+                  htmlFor="contactPersonPhone2"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Contact Person Phone 2
+                </Label>
+                <Input
+                  id="contactPersonPhone2"
+                  type="tel"
+                  {...register("contactPersonPhone2")}
+                  placeholder="e.g., 9876543210"
+                />
+                {errors.contactPersonPhone2 && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.contactPersonPhone2.message}
                   </p>
                 )}
               </div>
@@ -1069,7 +1160,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                         type="date"
                         {...register("subscription.startDate" as any)}
                         className="w-full"
-                        min={new Date().toISOString().split("T")[0]} // Prevent past dates
+                        // min={new Date().toISOString().split("T")[0]} // Prevent past dates
                       />
                       {errors.subscription?.startDate && (
                         <p className="text-red-500 text-xs mt-1">
