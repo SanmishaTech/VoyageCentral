@@ -50,6 +50,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
+import dayjs from "dayjs";
 
 const fetchUsers = async (
   page: number,
@@ -176,7 +177,6 @@ const UserList = () => {
     setSelectedUser(null); // Clear the selected user
     setShowChangePassword(false); // Hide the ChangePassword dialog
   };
-
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
@@ -295,6 +295,23 @@ const UserList = () => {
                       </div>
                     </TableHead>
                     <TableHead
+                      onClick={() => handleSort("endDate")}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center">
+                        <span>End Date</span>
+                        {sortBy === "endDate" && (
+                          <span className="ml-1">
+                            {sortOrder === "asc" ? (
+                              <ChevronUp size={16} />
+                            ) : (
+                              <ChevronDown size={16} />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                    {/* <TableHead
                       onClick={() => handleSort("stateName")}
                       className="cursor-pointer"
                     >
@@ -327,7 +344,7 @@ const UserList = () => {
                           </span>
                         )}
                       </div>
-                    </TableHead>
+                    </TableHead> */}
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -345,11 +362,19 @@ const UserList = () => {
                       </TableCell>
                       <TableCell>{agency.contactPersonPhone}</TableCell>
                       <TableCell className="max-w-[150px] break-words whitespace-normal">
+                        {agency?.currentSubscription?.endDate
+                          ? dayjs(agency?.currentSubscription?.endDate).format(
+                              "DD/MM/YYYY"
+                            )
+                          : "N/A"}
+                      </TableCell>
+
+                      {/* <TableCell className="max-w-[150px] break-words whitespace-normal">
                         {agency?.state?.stateName || "N/A"}
                       </TableCell>
                       <TableCell className="max-w-[150px] break-words whitespace-normal">
                         {agency?.city?.cityName || "N/A"}
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>
                         <div className="flex gap-2">
                           <Button

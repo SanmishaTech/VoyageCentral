@@ -39,6 +39,9 @@ const FormSchema = z.object({
       "Contact Name can only contain letters."
     )
     .optional(),
+  pincode: z.string().refine((val) => /^\d{6}$/.test(val), {
+    message: "Pincode must be of 6 digits.",
+  }),
 
   contactMobile: z
     .string()
@@ -66,11 +69,19 @@ const FormSchema = z.object({
     .optional(),
   address: z
     .string()
-    .max(100, "Address field should not exceed 100 characters")
-    .optional(),
+    .min(1, "Address field is required")
+    .max(100, "Address field should not exceed 100 characters"),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
+const defaultValues: FormInputs = {
+  branchName: "",
+  contactName: "",
+  pincode: "",
+  contactMobile: "",
+  contactEmail: "",
+  address: "",
+};
 
 interface FormProps {
   mode: "create" | "edit";
@@ -96,6 +107,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
     formState: { errors },
   } = useForm<FormInputs>({
     resolver: zodResolver(FormSchema),
+    defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
   });
 
   // Fetch user data for edit mode
@@ -104,11 +116,12 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
       const fetchBranch = async () => {
         try {
           const branch = await get(`/branches/${branchId}`);
-          setValue("branchName", branch.branchName);
-          setValue("contactName", branch.contactName);
-          setValue("contactEmail", branch.contactEmail);
-          setValue("contactMobile", branch.contactMobile);
-          setValue("address", branch.address);
+          setValue("branchName", branch.branchName || "");
+          setValue("contactName", branch.contactName || "");
+          setValue("contactEmail", branch.contactEmail || "");
+          setValue("contactMobile", branch.contactMobile || "");
+          setValue("address", branch.address || "");
+          setValue("pincode", branch.pincode || "");
         } catch (error: any) {
           toast.error("Failed to fetch branch details");
         }
@@ -247,7 +260,7 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
         </div>
 
         {/* Address Field */}
-        <div className="grid gap-2 relative">
+        {/* <div className="grid gap-2 relative">
           <Label htmlFor="address">Address</Label>
           <Input
             id="address"
@@ -260,10 +273,48 @@ const BranchForm = ({ mode, branchId, onSuccess, className }: FormProps) => {
               {errors.address.message}
             </span>
           )}
+        </div> */}
+        <div className="grid grid-cols-3 gap-4">
+          {/* Address Field - spans 2 columns */}
+          <div className="col-span-2 relative">
+            <Label className="mb-1" htmlFor="address">
+              Address <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="address"
+              type="text"
+              placeholder="Enter Address"
+              {...register("address")}
+            />
+            {errors.address && (
+              <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
+                {errors.address.message}
+              </span>
+            )}
+          </div>
+
+          {/* Pincode Field - spans 1 column */}
+          <div className="relative">
+            <Label className="mb-1" htmlFor="pincode">
+              Pincode <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="pincode"
+              type="text"
+              placeholder="Enter Pincode"
+              maxLength={6}
+              {...register("pincode")}
+            />
+            {errors.pincode && (
+              <span className="text-red-500 text-xs absolute bottom-0 translate-y-[110%]">
+                {errors.pincode.message}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Submit and Cancel Buttons */}
-        <div className="justify-end flex gap-4">
+        <div className="justify-end flex gap-4 mt-3">
           <Button type="button" variant="outline" onClick={handleCancel}>
             Cancel
           </Button>

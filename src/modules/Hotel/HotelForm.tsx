@@ -33,6 +33,7 @@ const FormSchema = z.object({
 
   hotelAddressLine1: z
     .string()
+    .min(1, "Address Line 1 is required.")
     .max(255, "Address Line 1 cannot exceed 255 characters.")
     .optional(),
   hotelAddressLine2: z
@@ -46,7 +47,7 @@ const FormSchema = z.object({
   hotelCountry: z.string().max(100, "Country name is too long.").optional(),
   hotelState: z.string().max(100, "State name is too long.").optional(),
   hotelCity: z.string().max(100, "City name is too long.").optional(),
-  hotelPincode: z.string().max(15, "Pincode is too long.").optional(),
+  // hotelPincode: z.string().max(15, "Pincode is too long.").optional(),
 
   officeAddressLine1: z
     .string()
@@ -139,36 +140,70 @@ const FormSchema = z.object({
     .refine((val) => val === "" || /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(val), {
       message: "Invalid PAN number format. Example: ABCDE1234F",
     }),
-
-  bank1Id: z.string().max(100, "Bank name is too long.").optional(),
-  bankAccountNumber1: z
+  hotelPincode: z
     .string()
-    .refine((val) => val === "" || /^[0-9]{8,18}$/.test(val), {
-      message:
-        "Invalid bank account number format. Must be between 8 and 18 digits.",
-    })
-    .optional(),
-  branch1: z.string().max(100, "Branch name is too long.").optional(),
+    .min(1, "pincode field is required")
+    .max(15, "Pincode is too long."),
+  bank1Id: z
+    .string()
+    .min(1, "Bank Name Field is required")
+    .max(100, "Bank name is too long."),
+  // bankAccountNumber1: z
+  //   .string()
+  //   .refine((val) => val === "" || /^[0-9]{8,18}$/.test(val), {
+  //     message:
+  //       "Invalid bank account number format. Must be between 8 and 18 digits.",
+  //   })
+  //   .optional(),
+  // branch1: z.string().max(100, "Branch name is too long.").optional(),
+  // beneficiaryName1: z
+  //   .string()
+  //   .max(100, "Beneficiary name is too long.")
+  //   .optional(),
+
+  // ifsc_code1: z
+  //   .string()
+  //   .refine((val) => val === "" || /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
+  //     message: "Invalid IFSC code format. Example: SBIN0001234",
+  //   }),
+
+  // swiftCode1: z
+  //   .string()
+  //   .refine(
+  //     (val) =>
+  //       val === "" || /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(val),
+  //     {
+  //       message: "Invalid SWIFT code format. Example: SBININBBXXX or SBININBB",
+  //     }
+  //   ),
+  bankAccountNumber1: z.string().refine((val) => /^[0-9]{8,18}$/.test(val), {
+    message: "Invalid bank account number. Must be 8-18 digits.",
+  }),
+
+  branch1: z
+    .string()
+    .min(1, "Branch 1 field is required")
+    .max(100, "Branch name is too long."),
+
   beneficiaryName1: z
     .string()
-    .max(100, "Beneficiary name is too long.")
-    .optional(),
+    .min(1, "Beneficiary name field is required")
+    .max(100, "Beneficiary name is too long."),
 
-  ifsc_code1: z
-    .string()
-    .refine((val) => val === "" || /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
-      message: "Invalid IFSC code format. Example: SBIN0001234",
-    }),
+  ifsc_code1: z.string().refine((val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
+    message: "Invalid IFSC code format. Example: SBIN0001234",
+  }),
 
   swiftCode1: z
     .string()
-    .refine(
-      (val) =>
-        val === "" || /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(val),
-      {
-        message: "Invalid SWIFT code format. Example: SBININBBXXX or SBININBB",
-      }
-    ),
+    .refine((val) => /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(val), {
+      message: "Invalid SWIFT code format. Example: SBININBBXXX or SBININBB",
+    }),
+
+  // bank1Id: z.union([
+  //   z.number().min(1, { message: "Bank Name field is required." }),
+  //   z.string().min(1, { message: "Bank Name field is required." }),
+  // ]),
   bank2Id: z.string().max(100, "Bank name is too long.").optional(),
   bankAccountNumber2: z
     .string()
@@ -211,6 +246,57 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const defaultValues: z.infer<typeof FormSchema> = {
+    hotelName: "",
+
+    hotelAddressLine1: "",
+    hotelAddressLine2: "",
+    hotelAddressLine3: "",
+    hotelCountry: "",
+    hotelState: "",
+    hotelCity: "",
+    hotelPincode: "",
+
+    officeAddressLine1: "",
+    officeAddressLine2: "",
+    officeAddressLine3: "",
+    officeCountry: "",
+    officeState: "",
+    officeCity: "",
+    officePincode: "",
+
+    contactPerson: "",
+    contactPersonName2: "",
+    contactPersonEmail: "",
+    contactPersonEmail2: "",
+    contactPersonMobile: "",
+    contactPersonMobile2: "",
+
+    hotelContactNo1: "",
+    hotelContactNo2: "",
+    officeContactNo1: "",
+    officeContactNo2: "",
+
+    email1: "",
+    email2: "",
+    website: "",
+    panNumber: "",
+
+    bank1Id: "",
+    bankAccountNumber1: "",
+    branch1: "",
+    beneficiaryName1: "",
+    ifscCode1: "",
+    swiftCode1: "",
+
+    bank2Id: "",
+    bankAccountNumber2: "",
+    branch2: "",
+    beneficiaryName2: "",
+    ifsc_code2: "",
+    swiftCode2: "",
+  };
+
   const {
     register,
     handleSubmit,
@@ -222,6 +308,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
     formState: { errors },
   } = useForm<FormInputs>({
     resolver: zodResolver(FormSchema),
+    defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
   });
 
   const { data: editHotelData, isLoading: editHotelLoading } = useQuery({
@@ -450,7 +537,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                         htmlFor="hotelAddressLine1"
                         className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
-                        Address Line 1
+                        Address Line 1 <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="hotelAddressLine1"
@@ -617,7 +704,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                         htmlFor="hotelPincode"
                         className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                       >
-                        Pincode
+                        Pincode <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="hotelPincode"
@@ -1123,7 +1210,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                     htmlFor="bank1Id"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Bank Name
+                    Bank Name <span className="text-red-500">*</span>
                   </Label>
                   <Controller
                     name="bank1Id"
@@ -1149,13 +1236,18 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       </Select>
                     )}
                   />
+                  {errors.bank1Id && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.bank1Id.message}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label
                     htmlFor="bankAccountNumber1"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Bank Account Number
+                    Bank Account Number <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="bankAccountNumber1"
@@ -1173,7 +1265,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                     htmlFor="branch1"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Branch
+                    Branch <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="branch1"
@@ -1191,7 +1283,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                     htmlFor="beneficiaryName1"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Beneficiary Name
+                    Beneficiary Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="beneficiaryName1"
@@ -1209,7 +1301,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                     htmlFor="ifsc_code1"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    IFSC Code
+                    IFSC Code <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="ifsc_code1"
@@ -1227,7 +1319,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                     htmlFor="swiftCode1"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    SWIFT Code
+                    SWIFT Code <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="swiftCode1"

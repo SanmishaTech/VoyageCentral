@@ -62,7 +62,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, del, patch } from "@/services/apiService";
 import { toast } from "sonner";
@@ -94,6 +94,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
+import TourBookingDetailsTable from "../TourBookingDetailsTable";
 
 const TourMemberSchema = z.object({
   tourMemberId: z.string().optional(),
@@ -136,17 +137,36 @@ const TourMemberSchema = z.object({
     .max(100, "Email must not exceed 100 characters."),
 });
 
-const FormSchema = z.object({
+const AddFormSchema = z.object({
   tourMembers: z.array(TourMemberSchema).optional(),
 });
 type FormInputs = z.infer<typeof FormSchema>;
-
-const TourMemberList = ({ bookingId }) => {
+const TourMemberForm = ({ mode }: { mode: "create" | "edit" }) => {
   const queryClient = useQueryClient();
-  const defaultValues: z.infer<typeof FormSchema> = {
+  const { id: bookingId, tourMemberId } = useParams<{
+    id: string;
+    tourMemberId: string;
+  }>();
+
+  const addDefaultValues: z.infer<typeof AddFormSchema> = {
     tourMembers: [], // Optional array
   };
 
+  const editDefaultValues: z.infer<typeof TourMemberSchema> = {
+    name: "",
+    email: "",
+    mobile: "",
+    gender: "",
+    relation: "",
+    dateOfBirth: "",
+    anniversaryDate: "",
+    foodType: "",
+    aadharNo: "",
+    tourMemberId: "",
+    // Optional array
+  };
+
+  let schema = mode === "create" ? AddFormSchema : TourMemberSchema;
   const {
     register,
     handleSubmit,
@@ -157,7 +177,8 @@ const TourMemberList = ({ bookingId }) => {
     setError,
     formState: { errors },
   } = useForm<FormInputs>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(schema),
+    defaultValues: mode === "create" ? addDefaultValues : editDefaultValues, // Use default values in create mode
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -180,53 +201,23 @@ const TourMemberList = ({ bookingId }) => {
     },
   });
 
-  const fetchTourMembers = async () => {
-    const response = await get(`/tour-members/booking/${bookingId}`);
-    return response;
-  };
-
-  // Fetch users using react-query
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["tour-members", bookingId],
-    queryFn: () => fetchTourMembers(),
-  });
-
-  const tourMembers = data?.tourMembers || [];
-
-  useEffect(() => {
-    if (tourMembers) {
-      const tourMemberData =
-        tourMembers?.map((member) => ({
-          tourMemberId: String(member.id) || "",
-          aadharNo: member.aadharNo || "",
-          name: member.name || "",
-          gender: member.gender || "",
-          relation: member.relation || "",
-          dateOfBirth: member.dateOfBirth
-            ? new Date(member.dateOfBirth).toISOString().split("T")[0]
-            : "",
-          anniversaryDate: member.anniversaryDate
-            ? new Date(member.anniversaryDate).toISOString().split("T")[0]
-            : "",
-          foodType: member.foodType || "",
-          mobile: member.mobile || "",
-          email: member.email || "",
-        })) || [];
-
-      // ✅ Reset full form including field array
-      reset({
-        tourMembers: tourMemberData, // ✅ include this
-      });
+  const { data: editTourMemberData, isLoading: isTourMemberLoading } = useQuery(
+    {
+      queryKey: ["editTourMember", tourMemberId],
+      queryFn: async () => {
+        const response = await get(`/tour-members/${tourMemberId}`);
+        return response; // API returns the sector object directly
+      },
     }
-  }, [tourMembers, reset, setValue]);
+  );
 
   // data from client master
   useEffect(() => {
-    if (editBookingData && tourMembers?.length === 0) {
+    if (editBookingData && mode === "create") {
       const tourMemberDataFromClientMaster =
         editBookingData.client.familyFriends?.map((member) => ({
           tourMemberId: "",
-          aadharNo: member.aadharNo || "",
+          aadharNo: member.aadharNo ? String(member.aadharNo) : "",
           name: member.name || "",
           gender: member.gender || "",
           relation: member.relation || "",
@@ -245,272 +236,568 @@ const TourMemberList = ({ bookingId }) => {
         tourMembers: tourMemberDataFromClientMaster,
       });
     }
-  }, [editBookingData, reset]);
+  }, [editBookingData, reset, mode]);
 
-  // data from client master
+  useEffect(() => {
+    if (editTourMemberData) {
+      reset({
+        // tourMemberId: editTourMemberData.id || "",
+        aadharNo: editTourMemberData.aadharNo
+          ? String(editTourMemberData.aadharNo)
+          : "",
+        name: editTourMemberData.name || "",
+        gender: editTourMemberData.gender || "",
+        relation: editTourMemberData.relation || "",
+        dateOfBirth: editTourMemberData.dateOfBirth
+          ? new Date(editTourMemberData.dateOfBirth).toISOString().split("T")[0]
+          : "",
+        anniversaryDate: editTourMemberData.anniversaryDate
+          ? new Date(editTourMemberData.anniversaryDate)
+              .toISOString()
+              .split("T")[0]
+          : "",
+        foodType: editTourMemberData.foodType || "",
+        mobile: String(editTourMemberData.mobile) || "",
+        email: editTourMemberData.email || "",
+      });
+    }
+  }, [editTourMemberData, reset]);
+
+  // Mutation for creating a user
+  const createMutation = useMutation({
+    mutationFn: (data: FormInputs) => post(`/tour-members/${bookingId}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["tour-members", bookingId]); // Refetch the users list
+      toast.success("Vehicle Booking added successfully");
+      navigate(`/bookings/${bookingId}/details`);
+    },
+    onError: (error: any) => {
+      Validate(error, setError);
+      toast.error(
+        error.response?.data?.message || "Failed to create Tour Member"
+      );
+    },
+  });
 
   // Mutation for updating a user
   const updateMutation = useMutation({
-    mutationFn: (data: FormInputs) => put(`/tour-members/${bookingId}`, data),
+    mutationFn: (data: FormInputs) =>
+      put(`/tour-members/${tourMemberId}`, data),
     onSuccess: () => {
       toast.success("Tour Members saved successfully");
       queryClient.invalidateQueries(["tour-members", bookingId]);
+      navigate(`/bookings/${bookingId}/details`);
     },
     onError: (error: any) => {
       console.log(error, "error");
       Validate(error, setError);
       toast.error(
-        error.response?.data?.message || "Failed to save tour Members"
+        error.response?.data?.message || "Failed to save tour Member"
       );
     },
   });
 
   // Handle form submission
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
-    updateMutation.mutate(data); // Trigger update mutation
+    if (mode === "create") {
+      createMutation.mutate(data);
+    } else {
+      updateMutation.mutate(data);
+    }
   };
-  const isTourLoading = updateMutation.isPending;
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
-      {/* {Object.entries(errors).map(([field, error]) => (
+      {Object.entries(errors).map(([field, error]) => (
         <p key={field} className="text-red-500 text-sm">
           {error?.message as string}
         </p>
-      ))} */}
+      ))}
+      <Card className="mx-auto mt-10 ">
+        <CardContent className="pt-6 space-y-8">
+          <TourBookingDetailsTable
+            editBookingLoading={editBookingLoading}
+            isEditBookingError={isEditBookingError}
+            editBookingData={editBookingData}
+          />
 
-      {/* start */}
-      <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200 ">
-        Tour Members
-      </CardTitle>
-      <div className="mt-2">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Gender</TableHead>
-              <TableHead>Relation</TableHead>
-              <TableHead>Aadhar No</TableHead>
-              <TableHead>Date of Birth</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {fields.map((field, index) => (
-              <TableRow key={field.id}>
-                <TableCell>
-                  <Input
-                    {...register(`tourMembers.${index}.name`)}
-                    placeholder="Enter name"
-                  />
-                  {errors.tourMembers?.[index]?.name && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.tourMembers[index]?.name?.message}
-                    </p>
-                  )}
-                  <div className="mt-2">
-                    <Label
-                      htmlFor={`tourMembers.${index}.anniversaryDate`}
-                      className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Anniversary Date
-                    </Label>
-                    <Input
-                      type="date"
-                      id={`tourMembers.${index}.anniversaryDate`}
-                      {...register(`tourMembers.${index}.anniversaryDate`)}
-                    />
-                    {errors.tourMembers?.[index]?.anniversaryDate && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.tourMembers[index]?.anniversaryDate?.message}
-                      </p>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Select
-                    onValueChange={(value) =>
-                      setValue(`tourMembers.${index}.gender`, value)
-                    }
-                    value={watch(`tourMembers.${index}.gender`)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {genderOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="mt-2">
-                    <Label
-                      htmlFor={`tourMembers.${index}.foodType`}
-                      className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Food Type
-                    </Label>
-                    <Select
-                      onValueChange={(value) =>
-                        setValue(`tourMembers.${index}.foodType`, value)
-                      }
-                      value={watch(`tourMembers.${index}.foodType`)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select foodType" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {foodTypeOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Input
-                    {...register(`tourMembers.${index}.relation`)}
-                    placeholder="Enter relation"
-                  />
-                  {errors.tourMembers?.[index]?.relation && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.tourMembers[index]?.relation?.message}
-                    </p>
-                  )}
-                  <div className="mt-2">
-                    <Label
-                      htmlFor={`tourMembers.${index}.mobile`}
-                      className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Mobile
-                    </Label>
-                    <Input
-                      id={`tourMembers.${index}.mobile`}
-                      {...register(`tourMembers.${index}.mobile`)}
-                      placeholder="Enter mobile"
-                    />
-                    {errors.tourMembers?.[index]?.mobile && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.tourMembers[index]?.mobile?.message}
-                      </p>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Input
-                    {...register(`tourMembers.${index}.aadharNo`)}
-                    placeholder="Enter Aadhar No"
-                  />
-                  {errors.tourMembers?.[index]?.aadharNo && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.tourMembers[index]?.aadharNo?.message}
-                    </p>
-                  )}
-                  <div className="mt-2">
-                    <Label
-                      htmlFor={`tourMembers.${index}.email`}
-                      className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Email
-                    </Label>
-                    <Input
-                      id={`tourMembers.${index}.email`}
-                      {...register(`tourMembers.${index}.email`)}
-                      placeholder="Enter email"
-                    />
-                    {errors.tourMembers?.[index]?.email && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.tourMembers[index]?.email?.message}
-                      </p>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="align-top">
-                  <Input
-                    type="date"
-                    {...register(`tourMembers.${index}.dateOfBirth`)}
-                  />
-                  {errors.tourMembers?.[index]?.dateOfBirth && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.tourMembers[index]?.dateOfBirth?.message}
-                    </p>
-                  )}
-                </TableCell>
+          {/* start */}
+          {mode === "create" ? (
+            <>
+              <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200 ">
+                Tour Members
+              </CardTitle>
+              <div className="mt-2">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Gender</TableHead>
+                      <TableHead>Relation</TableHead>
+                      <TableHead>Aadhar No</TableHead>
+                      <TableHead>Date of Birth</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fields.map((field, index) => (
+                      <TableRow key={field.id}>
+                        <TableCell>
+                          <Input
+                            {...register(`tourMembers.${index}.name`)}
+                            placeholder="Enter name"
+                          />
+                          {errors.tourMembers?.[index]?.name && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.tourMembers[index]?.name?.message}
+                            </p>
+                          )}
+                          <div className="mt-2">
+                            <Label
+                              htmlFor={`tourMembers.${index}.anniversaryDate`}
+                              className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                            >
+                              Anniversary Date
+                            </Label>
+                            <Input
+                              type="date"
+                              id={`tourMembers.${index}.anniversaryDate`}
+                              {...register(
+                                `tourMembers.${index}.anniversaryDate`
+                              )}
+                            />
+                            {errors.tourMembers?.[index]?.anniversaryDate && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {
+                                  errors.tourMembers[index]?.anniversaryDate
+                                    ?.message
+                                }
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            onValueChange={(value) =>
+                              setValue(`tourMembers.${index}.gender`, value)
+                            }
+                            value={watch(`tourMembers.${index}.gender`)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {genderOptions.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {errors.tourMembers?.[index]?.gender && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.tourMembers[index]?.gender?.message}
+                            </p>
+                          )}
+                          <div className="mt-2">
+                            <Label
+                              htmlFor={`tourMembers.${index}.foodType`}
+                              className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                            >
+                              Food Type <span className="text-red-500">*</span>
+                            </Label>
+                            <Select
+                              onValueChange={(value) =>
+                                setValue(`tourMembers.${index}.foodType`, value)
+                              }
+                              value={watch(`tourMembers.${index}.foodType`)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select foodType" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {foodTypeOptions.map((option) => (
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {errors.tourMembers?.[index]?.foodType && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.tourMembers[index]?.foodType?.message}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            {...register(`tourMembers.${index}.relation`)}
+                            placeholder="Enter relation"
+                          />
+                          {errors.tourMembers?.[index]?.relation && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.tourMembers[index]?.relation?.message}
+                            </p>
+                          )}
+                          <div className="mt-2">
+                            <Label
+                              htmlFor={`tourMembers.${index}.mobile`}
+                              className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                            >
+                              Mobile
+                            </Label>
+                            <Input
+                              id={`tourMembers.${index}.mobile`}
+                              {...register(`tourMembers.${index}.mobile`)}
+                              placeholder="Enter mobile"
+                            />
+                            {errors.tourMembers?.[index]?.mobile && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.tourMembers[index]?.mobile?.message}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            {...register(`tourMembers.${index}.aadharNo`)}
+                            placeholder="Enter Aadhar No"
+                          />
+                          {errors.tourMembers?.[index]?.aadharNo && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.tourMembers[index]?.aadharNo?.message}
+                            </p>
+                          )}
+                          <div className="mt-2">
+                            <Label
+                              htmlFor={`tourMembers.${index}.email`}
+                              className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                            >
+                              Email
+                            </Label>
+                            <Input
+                              id={`tourMembers.${index}.email`}
+                              {...register(`tourMembers.${index}.email`)}
+                              placeholder="Enter email"
+                            />
+                            {errors.tourMembers?.[index]?.email && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.tourMembers[index]?.email?.message}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="align-top">
+                          <Input
+                            type="date"
+                            {...register(`tourMembers.${index}.dateOfBirth`)}
+                          />
+                          {errors.tourMembers?.[index]?.dateOfBirth && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.tourMembers[index]?.dateOfBirth?.message}
+                            </p>
+                          )}
+                        </TableCell>
 
-                {/* tourMemberId id */}
-                <Input
-                  type="hidden"
-                  {...register(`tourMembers.${index}.tourMemberId`)}
-                />
-                {errors.tourMembers?.[index]?.tourMemberId && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.tourMembers[index]?.tourMemberId?.message}
-                  </p>
-                )}
-                {/* tourMemberId id */}
+                        {/* tourMemberId id */}
+                        <Input
+                          type="hidden"
+                          {...register(`tourMembers.${index}.tourMemberId`)}
+                        />
+                        {errors.tourMembers?.[index]?.tourMemberId && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.tourMembers[index]?.tourMemberId?.message}
+                          </p>
+                        )}
+                        {/* tourMemberId id */}
 
-                <TableCell>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => remove(index)}
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-4"
-          onClick={() =>
-            append({
-              tourMemberId: "",
-              name: "",
-              gender: "",
-              relation: "",
-              aadharNo: "",
-              dateOfBirth: "",
-              anniversaryDate: "",
-              foodType: "",
-              mobile: "",
-              email: "",
-            })
-          }
-        >
-          <PlusCircle className="mr-2 h-5 w-5" />
-          Add Tour Member
-        </Button>
-      </div>
-      {/* end */}
-      {/* </CardContent> */}
-      {/* Submit/Cancel Buttons */}
-      <div className="flex justify-end gap-3 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 rounded-b-lg">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => navigate("/bookings")}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isTourLoading} className="min-w-[90px]">
-          {isTourLoading ? (
-            <LoaderCircle className="animate-spin h-4 w-4" />
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() => remove(index)}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() =>
+                    append({
+                      tourMemberId: "",
+                      name: "",
+                      gender: "",
+                      relation: "",
+                      aadharNo: "",
+                      dateOfBirth: "",
+                      anniversaryDate: "",
+                      foodType: "",
+                      mobile: "",
+                      email: "",
+                    })
+                  }
+                >
+                  <PlusCircle className="mr-2 h-5 w-5" />
+                  Add Tour Member
+                </Button>
+              </div>
+            </>
           ) : (
-            <>Save Changes</>
+            <>
+              {" "}
+              <CardTitle className="text-lg mt-5 font-semibold text-gray-800 dark:text-gray-200">
+                Tour Member
+              </CardTitle>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+                <div className="col-span-2 md:col-span-1">
+                  <Label
+                    htmlFor="name"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="name"
+                    {...register("name")}
+                    placeholder="from place"
+                  />
+                  {errors.name && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="col-span-2 md:col-span-1">
+                  <Label
+                    htmlFor="email"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Email <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="email"
+                    {...register("email")}
+                    placeholder="from place"
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="col-span-2 md:col-span-1">
+                  <Label
+                    htmlFor="mobile"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Mobile <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="toPlace"
+                    {...register("mobile")}
+                    placeholder="from place"
+                  />
+                  {errors.mobile && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.mobile.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="col-span-2 md:col-span-1">
+                  <Label
+                    htmlFor="dateOfBirth"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Date of Birth <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    {...register("dateOfBirth")}
+                  />
+                  {errors.dateOfBirth && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.dateOfBirth.message}
+                    </p>
+                  )}
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <Label
+                    htmlFor="gender"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Gender <span className="text-red-500">*</span>
+                  </Label>
+                  <Controller
+                    name="gender"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        key={field.value}
+                        onValueChange={(value) => setValue("gender", value)}
+                        value={watch("gender")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {genderOptions.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={String(option.value)}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.gender && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.gender.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="col-span-2 md:col-span-1">
+                  <Label
+                    htmlFor="anniversaryDate"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Anniversary Date
+                  </Label>
+                  <Input
+                    id="anniversaryDate"
+                    type="date"
+                    {...register("anniversaryDate")}
+                  />
+                  {errors.anniversaryDate && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.anniversaryDate.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* toArrivalDate */}
+                <div className="col-span-2 md:col-span-1">
+                  <Label
+                    htmlFor="relation"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Relation <span className="text-red-500">*</span>
+                  </Label>
+                  <Input id="relation" type="text" {...register("relation")} />
+                  {errors.relation && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.relation.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="col-span-2 md:col-span-1">
+                  <Label
+                    htmlFor="foodType"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Food Type <span className="text-red-500">*</span>
+                  </Label>
+                  <Controller
+                    name="foodType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        key={field.value}
+                        onValueChange={(value) =>
+                          setValue("foodType", value === "none" ? "" : value)
+                        }
+                        value={watch("foodType")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {foodTypeOptions.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={String(option.value)}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.foodType && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.foodType.message}
+                    </p>
+                  )}
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <Label
+                    htmlFor="aadharNo"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Aadhar No.
+                  </Label>
+                  <Input
+                    id="aadharNo"
+                    type="number"
+                    {...register("aadharNo")}
+                  />
+                  {errors.aadharNo && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.aadharNo.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </>
           )}
-        </Button>
-      </div>
-      {/* </Card> */}
+
+          {/* end */}
+        </CardContent>
+        {/* Submit/Cancel Buttons */}
+        <div className="flex justify-end gap-3 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 rounded-b-lg">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(`/bookings/${bookingId}/details`)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isLoading} className="min-w-[90px]">
+            {isLoading ? (
+              <LoaderCircle className="animate-spin h-4 w-4" />
+            ) : mode === "create" ? (
+              "Add Tour Member"
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
+        </div>
+      </Card>
     </form>
   );
 };
 
-export default TourMemberList;
+export default TourMemberForm;

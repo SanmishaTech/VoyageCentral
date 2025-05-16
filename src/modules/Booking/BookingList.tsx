@@ -128,8 +128,12 @@ const BookingList = () => {
       toast.success("Booking deleted successfully");
       queryClient.invalidateQueries(["bookings"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Booking");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete tours");
+      }
     },
   });
 
@@ -192,7 +196,8 @@ const BookingList = () => {
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Booking Management
+        {/* Booking Management */}
+        Tour Enquiries
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>

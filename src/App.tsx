@@ -69,6 +69,7 @@ import AirlineList from "@/modules/Airline/AirlineList";
 import BankList from "@/modules/Bank/BankList";
 import FairList from "@/modules/Fair/FairList";
 import StaffList from "./modules/Staff/StaffList";
+import EditTourMember from "./modules/Booking/TourMembers/EditTourMember";
 
 const App = () => {
   useEffect(() => {
@@ -483,6 +484,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <CreateTourMember />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id/tourMember/:tourMemberId/edit"
+              element={
+                <ProtectedRoute>
+                  <EditTourMember />
                 </ProtectedRoute>
               }
             />
