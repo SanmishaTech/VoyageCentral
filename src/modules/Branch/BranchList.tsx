@@ -125,8 +125,12 @@ const UserList = () => {
       toast.success("Branch deleted successfully");
       queryClient.invalidateQueries(["branches"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Branch");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Branch");
+      }
     },
   });
 

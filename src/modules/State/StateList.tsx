@@ -124,8 +124,12 @@ const UserList = () => {
       toast.success("User deleted successfully");
       queryClient.invalidateQueries(["states"]);
     },
-    onError: () => {
-      toast.error("Failed to delete states");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete State");
+      }
     },
   });
 
@@ -218,7 +222,7 @@ const UserList = () => {
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add
+                Add State
               </Button>
             </div>
           </div>

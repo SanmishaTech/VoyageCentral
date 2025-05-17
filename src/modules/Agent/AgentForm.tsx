@@ -47,16 +47,16 @@ const FormSchema = z.object({
   addressLine1: z
     .string()
     .min(1, "address line 1 cannot be left blank.")
-    .max(255, "Address Line 1 cannot exceed 255 characters."),
+    .max(2000, "Address Line 1 cannot exceed 2000 characters."),
 
   addressLine2: z
     .string()
-    .max(255, "Address Line 2 cannot exceed 255 characters.")
+    .max(2000, "Address Line 2 cannot exceed 2000 characters.")
     .optional(),
 
   addressLine3: z
     .string()
-    .max(255, "Address Line 3 cannot exceed 255 characters.")
+    .max(2000, "Address Line 3 cannot exceed 2000 characters.")
     .optional(),
 
   countryId: z.union([
@@ -74,10 +74,7 @@ const FormSchema = z.object({
     z.string().min(1, { message: "City field is required." }),
   ]),
 
-  pincode: z
-    .string()
-    .min(1, "pincode field is required")
-    .max(15, "Pincode is too long."),
+  pincode: z.string().regex(/^\d{6}$/, "Pincode must be exactly 6 digits."),
 
   contactPersonName: z
     .string()
@@ -86,10 +83,16 @@ const FormSchema = z.object({
 
   mobile1: z
     .string()
-    .min(10, "mobile 1 field is required")
-    .max(15, "Mobile number is too long."),
-
-  mobile2: z.string().max(15, "Mobile number is too long.").optional(),
+    .optional()
+    .refine((val) => /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
+  mobile2: z
+    .string()
+    .optional()
+    .refine((val) => val === "" || /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
 
   email1: z.string().refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
     message: "Primary email must be a valid email address.",
@@ -115,13 +118,17 @@ const FormSchema = z.object({
 
   landlineNumber1: z
     .string()
-    .max(20, "Landline number 1 is too long.")
-    .optional(),
+    .optional()
+    .refine((val) => val === "" || /^0\d{9,10}$/.test(val), {
+      message: "Landline number 1 must be 10 or 11 digits and start with 0.",
+    }),
 
   landlineNumber2: z
     .string()
-    .max(20, "Landline number 2 is too long.")
-    .optional(),
+    .optional()
+    .refine((val) => val === "" || /^0\d{9,10}$/.test(val), {
+      message: "Landline number 1 must be 10 or 11 digits and start with 0.",
+    }),
 
   bank2Id: z.coerce.number().nullable(),
 
@@ -779,6 +786,7 @@ const AgentForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <Input
                     id="pincode"
                     {...register("pincode")}
+                    maxLength={6}
                     placeholder="Enter pincode"
                   />
                   {errors.pincode && (
@@ -831,6 +839,7 @@ const AgentForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <Input
                       id="mobile1"
                       {...register("mobile1")}
+                      maxLength={10}
                       placeholder="Enter hotel contact no 1"
                     />
                     {errors.mobile1 && (
@@ -849,6 +858,7 @@ const AgentForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <Input
                       id="mobile2"
                       {...register("mobile2")}
+                      maxLength={10}
                       placeholder="Enter hotel contact no 2"
                     />
                     {errors.mobile2 && (
@@ -867,6 +877,7 @@ const AgentForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <Input
                       id="landlineNumber1"
                       {...register("landlineNumber1")}
+                      maxLength={11}
                       placeholder="Enter office contact no 1"
                     />
                     {errors.landlineNumber1 && (
@@ -885,6 +896,7 @@ const AgentForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <Input
                       id="landlineNumber2"
                       {...register("landlineNumber2")}
+                      maxLength={11}
                       placeholder="Enter office contact no 2"
                     />
                     {errors.landlineNumber2 && (

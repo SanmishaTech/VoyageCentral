@@ -15,6 +15,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ZodError, ZodIssue } from "zod";
+import Validate from "@/lib/Handlevalidation";
 
 //
 // 1. Define the shape of what your backend is returning
@@ -31,16 +32,34 @@ const packageSchema = z.object({
   numberOfBranches: z
     .string()
     .transform(Number)
-    .pipe(z.number().min(1, "Must have at least 1 branch")),
+    .pipe(
+      z
+        .number()
+        .min(1, "Must have at least 1 branch")
+        .max(100, "Cannot exceed 100 branches")
+    ),
   usersPerBranch: z
     .string()
     .transform(Number)
-    .pipe(z.number().min(1, "Must have at least 1 User")),
+    .pipe(
+      z
+        .number()
+        .min(1, "Must have at least 1 user")
+        .max(1000, "Cannot exceed 1000 users per branch")
+    ),
   periodInMonths: z
     .string()
     .transform(Number)
-    .pipe(z.number().min(1, "Period must be at least 1 month")),
-  cost: z.coerce.number().min(1, "Cost must be at least 1"),
+    .pipe(
+      z
+        .number()
+        .min(1, "Period must be at least 1 month")
+        .max(60, "Period cannot exceed 60 months")
+    ),
+  cost: z.coerce
+    .number()
+    .min(1, "Cost must be at least 1")
+    .max(1000000, "Cost cannot exceed 1,000,000"),
 });
 
 type PackageFormData = z.infer<typeof packageSchema>;
@@ -57,6 +76,7 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
     handleSubmit,
     formState: { errors },
     reset,
+    setError,
   } = useForm<PackageFormData>({
     resolver: zodResolver(packageSchema),
     defaultValues: {
@@ -93,6 +113,7 @@ const CreatePackage: React.FC<CreatePackageProps> = ({ isOpen, onClose }) => {
       onClose();
     },
     onError: (error) => {
+      Validate(error, setError);
       throwAsZodError(backendErr);
       toast.error("Failed to create package");
     },

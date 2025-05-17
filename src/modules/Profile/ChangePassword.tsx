@@ -25,12 +25,19 @@ interface ApiError extends Error {
 
 const passwordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Current Password is required"),
+    currentPassword: z
+      .string()
+      .min(1, "Current Password is required")
+      .max(100, "New Password must not exceed 100 characters"),
+
     newPassword: z
       .string()
       .min(6, "Password must be at least 6 characters long")
-      .min(1, "New Password is required"),
-    confirmPassword: z.string().min(1, "Confirm Password is required"),
+      .max(100, "New Password must not exceed 100 characters"),
+    confirmPassword: z
+      .string()
+      .min(1, "Confirm Password is required")
+      .max(100, "New Password must not exceed 100 characters"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords must match",

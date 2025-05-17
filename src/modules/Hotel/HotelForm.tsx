@@ -24,7 +24,8 @@ import { get } from "@/services/apiService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 import { set } from "date-fns";
-
+import { PhoneInput } from "react-international-phone";
+import "react-international-phone/style.css"; // Import styles for the phone input
 const FormSchema = z.object({
   hotelName: z
     .string()
@@ -34,32 +35,31 @@ const FormSchema = z.object({
   hotelAddressLine1: z
     .string()
     .min(1, "Address Line 1 is required.")
-    .max(255, "Address Line 1 cannot exceed 255 characters.")
+    .max(2000, "Address Line 1 cannot exceed 2000 characters.")
     .optional(),
   hotelAddressLine2: z
     .string()
-    .max(255, "Address Line 2 cannot exceed 255 characters.")
+    .max(2000, "Address Line 2 cannot exceed 2000 characters.")
     .optional(),
   hotelAddressLine3: z
     .string()
-    .max(255, "Address Line 3 cannot exceed 255 characters.")
+    .max(2000, "Address Line 3 cannot exceed 2000 characters.")
     .optional(),
   hotelCountry: z.string().max(100, "Country name is too long.").optional(),
   hotelState: z.string().max(100, "State name is too long.").optional(),
   hotelCity: z.string().max(100, "City name is too long.").optional(),
-  // hotelPincode: z.string().max(15, "Pincode is too long.").optional(),
 
   officeAddressLine1: z
     .string()
-    .max(255, "Office Address Line 1 cannot exceed 255 characters.")
+    .max(2000, "Office Address Line 1 cannot exceed 2000 characters.")
     .optional(),
   officeAddressLine2: z
     .string()
-    .max(255, "Office Address Line 2 cannot exceed 255 characters.")
+    .max(2000, "Office Address Line 2 cannot exceed 2000 characters.")
     .optional(),
   officeAddressLine3: z
     .string()
-    .max(255, "Office Address Line 3 cannot exceed 255 characters.")
+    .max(2000, "Office Address Line 3 cannot exceed 2000 characters.")
     .optional(),
   officeCountry: z
     .string()
@@ -67,15 +67,25 @@ const FormSchema = z.object({
     .optional(),
   officeState: z.string().max(100, "Office state name is too long.").optional(),
   officeCity: z.string().max(100, "Office city name is too long.").optional(),
-  officePincode: z.string().max(15, "Office pincode is too long.").optional(),
-
+  officePincode: z //international pincode validation
+    .string()
+    .optional()
+    .refine((val) => val === "" || /^[A-Za-z0-9\s\-]{3,10}$/.test(val), {
+      message: "Invalid pincode format",
+    }),
   contactPerson: z
     .string()
     .max(100, "Contact person name is too long.")
+    .refine((val) => val === "" || /^[A-Za-z\s\u0900-\u097F]+$/.test(val), {
+      message: "Only letters are allowed.",
+    })
     .optional(),
   contactPersonName2: z
     .string()
     .max(100, "Contact person name is too long.")
+    .refine((val) => val === "" || /^[A-Za-z\s\u0900-\u097F]+$/.test(val), {
+      message: "Only letters are allowed.",
+    })
     .optional(),
   contactPersonEmail: z
     .string()
@@ -91,29 +101,49 @@ const FormSchema = z.object({
     .optional(),
   contactPersonMobile: z
     .string()
-    .max(15, "Mobile number is too long.")
-    .optional(),
+    .optional()
+    .refine((val) => val === "" || /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
+
+  // contactPersonMobile: z
+  //   .string()
+  //   .optional()
+  //   .refine((val) => !val || /^\+\d{1,3}[1-9]\d{5,14}$/.test(val), {
+  //     message: "Enter a valid mobile number with country code and digits.",
+  //   }),
+
   contactPersonMobile2: z
     .string()
-    .max(15, "Mobile number is too long.")
-    .optional(),
+    .optional()
+    .refine((val) => val === "" || /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
 
-  hotelContactNo1: z
-    .string()
-    .max(20, "Hotel contact number 1 is too long.")
-    .optional(),
-  hotelContactNo2: z
-    .string()
-    .max(20, "Hotel contact number 2 is too long.")
-    .optional(),
-  officeContactNo1: z
-    .string()
-    .max(20, "Office contact number 1 is too long.")
-    .optional(),
   officeContactNo2: z
     .string()
-    .max(20, "Office contact number 2 is too long.")
-    .optional(),
+    .optional()
+    .refine((val) => val === "" || /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
+  officeContactNo1: z
+    .string()
+    .optional()
+    .refine((val) => val === "" || /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
+  hotelContactNo2: z
+    .string()
+    .optional()
+    .refine((val) => val === "" || /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
+  hotelContactNo1: z
+    .string()
+    .optional()
+    .refine((val) => val === "" || /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
 
   email1: z
     .string()
@@ -142,40 +172,15 @@ const FormSchema = z.object({
     }),
   hotelPincode: z
     .string()
-    .min(1, "pincode field is required")
-    .max(15, "Pincode is too long."),
+    .optional()
+    .refine((val) => val === "" || /^[A-Za-z0-9\s\-]{3,10}$/.test(val), {
+      message: "Invalid pincode format",
+    }),
   bank1Id: z
     .string()
     .min(1, "Bank Name Field is required")
     .max(100, "Bank name is too long."),
-  // bankAccountNumber1: z
-  //   .string()
-  //   .refine((val) => val === "" || /^[0-9]{8,18}$/.test(val), {
-  //     message:
-  //       "Invalid bank account number format. Must be between 8 and 18 digits.",
-  //   })
-  //   .optional(),
-  // branch1: z.string().max(100, "Branch name is too long.").optional(),
-  // beneficiaryName1: z
-  //   .string()
-  //   .max(100, "Beneficiary name is too long.")
-  //   .optional(),
 
-  // ifsc_code1: z
-  //   .string()
-  //   .refine((val) => val === "" || /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
-  //     message: "Invalid IFSC code format. Example: SBIN0001234",
-  //   }),
-
-  // swiftCode1: z
-  //   .string()
-  //   .refine(
-  //     (val) =>
-  //       val === "" || /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(val),
-  //     {
-  //       message: "Invalid SWIFT code format. Example: SBININBBXXX or SBININBB",
-  //     }
-  //   ),
   bankAccountNumber1: z.string().refine((val) => /^[0-9]{8,18}$/.test(val), {
     message: "Invalid bank account number. Must be 8-18 digits.",
   }),
@@ -185,10 +190,17 @@ const FormSchema = z.object({
     .min(1, "Branch 1 field is required")
     .max(100, "Branch name is too long."),
 
+  // beneficiaryName1: z
+  //   .string()
+  //   .min(1, "Beneficiary name field is required")
+  //   .max(100, "Beneficiary name is too long."),
   beneficiaryName1: z
     .string()
-    .min(1, "Beneficiary name field is required")
-    .max(100, "Beneficiary name is too long."),
+    .min(1, "Beneficiary Name cannot be left blank.") // Ensuring minimum length of 2
+    .max(100, "Beneficiary Name must not exceed 100 characters.")
+    .refine((val) => /^[A-Za-z\s\u0900-\u097F]+$/.test(val), {
+      message: "Beneficiary Name can only contain letters.",
+    }),
 
   ifsc_code1: z.string().refine((val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val), {
     message: "Invalid IFSC code format. Example: SBIN0001234",
@@ -213,9 +225,17 @@ const FormSchema = z.object({
     })
     .optional(),
   branch2: z.string().max(100, "Branch name is too long.").optional(),
+  // beneficiaryName2: z
+  //   .string()
+  //   .max(100, "Beneficiary name is too long.")
+  //   .optional(),
   beneficiaryName2: z
     .string()
-    .max(100, "Beneficiary name is too long.")
+    .max(100, "Beneficiary Name must not exceed 100 characters.")
+    .regex(
+      /^[A-Za-z\s\u0900-\u097F]*$/,
+      "Beneficiary Name can only contain letters."
+    )
     .optional(),
 
   ifsc_code2: z
@@ -286,7 +306,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
     bankAccountNumber1: "",
     branch1: "",
     beneficiaryName1: "",
-    ifscCode1: "",
+    ifsc_code1: "",
     swiftCode1: "",
 
     bank2Id: "",
@@ -476,6 +496,9 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
 
   // Handle form submission
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
+    // if (data.mobile && data.mobile.length <= 3) {
+    //   data.mobile = ""; // Set the mobile to an empty string if only country code is entered
+    // }
     if (mode === "create") {
       createMutation.mutate(data); // Trigger create mutation
     } else {
@@ -974,7 +997,9 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       id="contactPersonMobile"
                       {...register("contactPersonMobile")}
                       placeholder="Enter number"
+                      maxLength={10}
                     />
+
                     {errors.contactPersonMobile && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors.contactPersonMobile.message}
@@ -1034,7 +1059,24 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       id="contactPersonMobile2"
                       {...register("contactPersonMobile2")}
                       placeholder="Enter number"
+                      maxLength={10}
                     />
+                    {/* <Controller
+                      name="contactPersonMobile2"
+                      control={control}
+                      render={({ field }) => (
+                        <PhoneInput
+                          {...field}
+                          defaultCountry="IN" // Default country for the country code
+                          // value={mobile}
+                          // onChange={setMobile}
+                          id="contactPersonMobile2"
+                          name="contactPersonMobile2"
+                          placeholder="Enter mobile number"
+                          className="w-full mt-1"
+                        />
+                      )}
+                    /> */}
                     {errors.contactPersonMobile2 && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors.contactPersonMobile2.message}
@@ -1045,7 +1087,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
 
                 {/* Contact Numbers */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
+                  <div className="">
                     <Label
                       htmlFor="hotelContactNo1"
                       className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -1056,7 +1098,9 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       id="hotelContactNo1"
                       {...register("hotelContactNo1")}
                       placeholder="Enter hotel contact no 1"
+                      maxLength={10}
                     />
+
                     {errors.hotelContactNo1 && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors.hotelContactNo1.message}
@@ -1074,7 +1118,9 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       id="hotelContactNo2"
                       {...register("hotelContactNo2")}
                       placeholder="Enter hotel contact no 2"
+                      maxLength={10}
                     />
+
                     {errors.hotelContactNo2 && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors.hotelContactNo2.message}
@@ -1092,7 +1138,9 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       id="officeContactNo1"
                       {...register("officeContactNo1")}
                       placeholder="Enter office contact no 1"
+                      maxLength={10}
                     />
+
                     {errors.officeContactNo1 && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors.officeContactNo1.message}
@@ -1110,6 +1158,7 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
                       id="officeContactNo2"
                       {...register("officeContactNo2")}
                       placeholder="Enter office contact no 2"
+                      maxLength={10}
                     />
                     {errors.officeContactNo2 && (
                       <p className="text-red-500 text-xs mt-1">

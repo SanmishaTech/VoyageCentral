@@ -101,8 +101,12 @@ const AgentList = () => {
       toast.success("Agent deleted successfully");
       queryClient.invalidateQueries(["agents"]);
     },
-    onError: () => {
-      toast.error("Failed to delete agent");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete agent");
+      }
     },
   });
 

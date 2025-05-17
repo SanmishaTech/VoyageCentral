@@ -82,8 +82,12 @@ const HotelBookingList = ({ bookingId }) => {
       toast.success("Journey Booking deleted successfully");
       queryClient.invalidateQueries(["hotel-bookings"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Hotel Booking");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Hotel Booking");
+      }
     },
   });
 

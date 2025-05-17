@@ -135,13 +135,16 @@ const letterHeadSchema = fileSchema
 
 // Base schema for common fields
 const baseAgencySchema = z.object({
-  businessName: z.string().min(1, "Business Name is required"),
+  businessName: z
+    .string()
+    .min(1, "Business Name is required")
+    .max(100, "Business Name must not exceed 100 characters"),
   gstin: z
     .string()
     .length(15, "GSTIN must be exactly 15 characters long")
     .or(z.literal(""))
     .or(z.null())
-    .optional(), // Allow empty or null based on backend
+    .optional(), 
   addressLine1: z.string().min(1, "Address Line 1 is required"),
   addressLine2: z.string().or(z.literal("")).or(z.null()).optional(), // Allow empty or null
   cityId: z.union([
@@ -250,15 +253,32 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     defaultValues:
       mode === "create"
         ? {
-            contactPersonEmail2: "",
-            contactPersonPhone2: "",
-            contactPersonName2: "",
-            // Set defaults for create mode if needed, especially for nested objects
-            user: { name: "", email: "", password: "" },
+            // start
+            businessName: "",
+            gstin: "", // Optional, empty string allowed
+            addressLine1: "",
+            addressLine2: "", // Optional
+            cityId: "", // Could be a string or number
+            stateId: "", // Could be a string or number
+            pincode: "",
+            contactPersonName: "",
+            contactPersonName2: "", // Optional
+            contactPersonEmail: "",
+            contactPersonEmail2: "", // Optional
+            contactPersonPhone: "",
+            contactPersonPhone2: "", // Optional
+            letterHead: null, // File | null
+            logo: null, // File | null
+            user: {
+              name: "",
+              email: "",
+              password: "",
+            },
             subscription: {
               packageId: undefined,
               startDate: new Date().toISOString().split("T")[0],
             },
+            // end
           }
         : {},
   });

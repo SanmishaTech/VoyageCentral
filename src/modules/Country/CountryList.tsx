@@ -126,8 +126,12 @@ const UserList = () => {
       toast.success("User deleted successfully");
       queryClient.invalidateQueries(["countries"]);
     },
-    onError: () => {
-      toast.error("Failed to delete countries");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete countries");
+      }
     },
   });
 
@@ -220,7 +224,7 @@ const UserList = () => {
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add
+                Add Country
               </Button>
             </div>
           </div>

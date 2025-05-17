@@ -102,11 +102,11 @@ const PackageList = () => {
       queryClient.invalidateQueries(["packages"]); // Refresh the package list
     },
     onError: (error) => {
-      console.error(
-        "Error deleting package:",
-        error.response?.data || error.message
-      ); // Debugging
-      toast.error("Failed to delete package");
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete package");
+      }
     },
   });
 
@@ -181,7 +181,7 @@ const PackageList = () => {
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add
+                Add Package
               </Button>
             </div>
           </div>
@@ -196,7 +196,7 @@ const PackageList = () => {
                   <TableHead
                     onClick={() => handleSort("packageName")}
                     className="cursor-pointer  w-[375px] max-w-[375px] break-words whitespace-normal"
-                  >                           
+                  >
                     <div className="flex items-center">
                       <span>Package Name</span>
                       {sortBy === "packageName" && (

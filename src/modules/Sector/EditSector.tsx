@@ -18,7 +18,11 @@ import { Loader } from "lucide-react";
 import Validate from "@/lib/Handlevalidation";
 
 const sectorSchema = z.object({
-  sectorName: z.string().min(1, "Sector name is required"),
+  sectorName: z
+    .string()
+    .min(1, "Sector Name is required")
+    .max(100, "Sector Name cannot exceed 100 characters")
+    .regex(/^[A-Za-z\s]+$/, "Sector Name can only contain letters."),
 });
 
 type SectorFormData = z.infer<typeof sectorSchema>;

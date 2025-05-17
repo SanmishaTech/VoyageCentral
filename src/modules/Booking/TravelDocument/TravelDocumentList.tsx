@@ -84,8 +84,12 @@ const TravelDocumentList = ({ bookingId }) => {
       toast.success("Travel Document deleted successfully");
       queryClient.invalidateQueries(["travel-documents"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Travel Document");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Travel Document");
+      }
     },
   });
 

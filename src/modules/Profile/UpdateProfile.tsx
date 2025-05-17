@@ -19,8 +19,16 @@ import { LoaderCircle } from "lucide-react";
 import Validate from "@/lib/Handlevalidation";
 
 const updateProfileSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address").min(1, "Email is required"),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name cannot exceed 100 characters")
+    .regex(/^[A-Za-z\s]+$/, "Name can only contain letters."),
+  email: z
+    .string()
+    .email("Invalid email address")
+    .min(1, "Email is required")
+    .max(100, "Email cannot exceed 100 characters"),
 });
 
 type UpdateProfileInputs = z.infer<typeof updateProfileSchema>;

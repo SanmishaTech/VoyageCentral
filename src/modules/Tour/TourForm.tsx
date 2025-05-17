@@ -104,7 +104,7 @@ const ItinerarySchema = z.object({
   description: z
     .string()
     .min(1, "Description is required.")
-    .max(190, "Description must not exceed 190 characters."),
+    .max(2000, "Description must not exceed 2000 characters."),
   cityId: z.string().optional(),
 });
 
@@ -128,7 +128,7 @@ const FormSchema = z.object({
   attachment: attachmentSchema,
   notes: z
     .string()
-    .max(190, "Notes must not exceed 100 characters.")
+    .max(2000, "Notes must not exceed 2000 characters.")
     .optional(),
 
   sectorId: z.string().optional(),

@@ -74,8 +74,12 @@ const FairList = () => {
       toast.success("Fair deleted successfully");
       queryClient.invalidateQueries(["fairs"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Fair");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Service");
+      }
     },
   });
 

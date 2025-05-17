@@ -82,8 +82,12 @@ const TourMemberList = ({ bookingId }) => {
       toast.success("Tour Member deleted successfully");
       queryClient.invalidateQueries(["tour-members", bookingId]);
     },
-    onError: () => {
-      toast.error("Failed to delete tour member");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Tour member");
+      }
     },
   });
 
