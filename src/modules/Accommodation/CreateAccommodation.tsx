@@ -17,7 +17,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Validate from "@/lib/Handlevalidation";
 
 const accommodationSchema = z.object({
-  accommodationName: z.string().min(1, "Accommodation name is required"),
+  accommodationName: z
+    .string()
+    .min(1, "Accommodation Name is required")
+    .max(100, "Accommodation Name cannot exceed 100 characters"),
 });
 
 type AccommodationFormData = z.infer<typeof accommodationSchema>;

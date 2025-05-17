@@ -145,8 +145,12 @@ const UserList = () => {
       toast.success("User deleted successfully");
       queryClient.invalidateQueries(["users"]);
     },
-    onError: () => {
-      toast.error("Failed to delete user");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Subcription");
+      }
     },
   });
 

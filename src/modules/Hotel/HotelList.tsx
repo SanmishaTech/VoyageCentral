@@ -101,8 +101,12 @@ const HotelList = () => {
       toast.success("Hotel deleted successfully");
       queryClient.invalidateQueries(["hotels"]);
     },
-    onError: () => {
-      toast.error("Failed to delete hotel");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Hotel");
+      }
     },
   });
 

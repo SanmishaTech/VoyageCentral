@@ -45,18 +45,10 @@ const FormSchema = z.object({
 
   contactMobile: z
     .string()
-    .max(20, "Mobile number must not exceed 20 characters.") // Allow space for country code and mobile number
-    .refine(
-      (val) =>
-        val === "" ||
-        /^[+]?[0-9]{1,4}[-\s]?[0-9]{6,15}$/.test(val) ||
-        /^[6-9]\d{9}$/.test(val),
-      {
-        message:
-          "Mobile number must be a valid number (with or without country code).",
-      }
-    )
-    .optional(),
+    .optional()
+    .refine((val) => val === "" || /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
   contactEmail: z
     .string()
     .refine(
@@ -70,7 +62,7 @@ const FormSchema = z.object({
   address: z
     .string()
     .min(1, "Address field is required")
-    .max(100, "Address field should not exceed 100 characters"),
+    .max(2000, "Address field should not exceed 2000 characters"),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;

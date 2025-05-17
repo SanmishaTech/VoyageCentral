@@ -127,8 +127,12 @@ const VehicleList = () => {
       toast.success("Vehicle deleted successfully");
       queryClient.invalidateQueries(["vehicles"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Vehicle");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Vehicle");
+      }
     },
   });
 

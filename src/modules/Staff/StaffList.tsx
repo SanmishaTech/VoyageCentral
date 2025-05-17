@@ -137,8 +137,12 @@ const StaffsList = () => {
       toast.success("Staff deleted successfully");
       queryClient.invalidateQueries(["staffs"]);
     },
-    onError: () => {
-      toast.error("Failed to delete staff");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Staff");
+      }
     },
   });
 

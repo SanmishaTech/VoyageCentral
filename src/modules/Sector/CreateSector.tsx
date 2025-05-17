@@ -14,9 +14,14 @@ import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Validate from "@/lib/Handlevalidation";
 
 const countriesSchema = z.object({
-  sectorName: z.string().min(1, "Sector name is required"),
+  sectorName: z
+    .string()
+    .min(1, "Sector Name is required")
+    .max(100, "Sector Name cannot exceed 100 characters")
+    .regex(/^[A-Za-z\s]+$/, "Sector Name can only contain letters."),
 });
 
 type SectorFormData = z.infer<typeof countriesSchema>;
@@ -33,6 +38,7 @@ const CreateSector: React.FC<CreateSectorProps> = ({ isOpen, onClose }) => {
     handleSubmit,
     formState: { errors },
     reset,
+    setError,
   } = useForm<SectorFormData>({
     resolver: zodResolver(countriesSchema),
     defaultValues: {
@@ -48,7 +54,8 @@ const CreateSector: React.FC<CreateSectorProps> = ({ isOpen, onClose }) => {
       reset();
       onClose();
     },
-    onError: () => {
+    onError: (error) => {
+      Validate(error, setError);
       toast.error("Failed to create sectors");
     },
   });

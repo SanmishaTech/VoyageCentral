@@ -82,8 +82,12 @@ const VehicleBookingList = ({ bookingId }) => {
       toast.success("Vehicle Booking deleted successfully");
       queryClient.invalidateQueries(["vehicle-bookings"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Vehicle Booking");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Vehicle Booking");
+      }
     },
   });
 

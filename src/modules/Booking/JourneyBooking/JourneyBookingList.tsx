@@ -81,8 +81,12 @@ const JourneyBookingList = ({ bookingId }) => {
       toast.success("Journey Booking deleted successfully");
       queryClient.invalidateQueries(["journey-bookings"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Journey Booking");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Journey Booking");
+      }
     },
   });
 

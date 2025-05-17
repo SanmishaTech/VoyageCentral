@@ -22,16 +22,34 @@ const packageSchema = z.object({
   numberOfBranches: z
     .string()
     .transform(Number)
-    .pipe(z.number().min(1, "Must have at least 1 branch")),
+    .pipe(
+      z
+        .number()
+        .min(1, "Must have at least 1 branch")
+        .max(100, "Cannot exceed 100 branches")
+    ),
   usersPerBranch: z
     .string()
     .transform(Number)
-    .pipe(z.number().min(1, "Must have at least 1 User")),
+    .pipe(
+      z
+        .number()
+        .min(1, "Must have at least 1 user")
+        .max(1000, "Cannot exceed 1000 users per branch")
+    ),
   periodInMonths: z
     .string()
     .transform(Number)
-    .pipe(z.number().min(1, "Period must be at least 1 month")),
-  cost: z.coerce.number().min(1, "Cost must be at least 1"),
+    .pipe(
+      z
+        .number()
+        .min(1, "Period must be at least 1 month")
+        .max(60, "Period cannot exceed 60 months")
+    ),
+  cost: z.coerce
+    .number()
+    .min(1, "Cost must be at least 1")
+    .max(1000000, "Cost cannot exceed 1,000,000"),
 });
 
 type PackageFormData = z.infer<typeof packageSchema>;
@@ -196,19 +214,19 @@ const EditPackage = ({ packageId, isOpen, onClose }: EditPackageProps) => {
             </div>
             <DialogFooter>
               <Button
-                type="submit"
-                className="bg-primary text-white"
-                disabled={updatePackageMutation.isLoading}
-              >
-                Update Package
-              </Button>
-              <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 className="ml-2"
               >
                 Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-primary text-white"
+                disabled={updatePackageMutation.isLoading}
+              >
+                Update Package
               </Button>
             </DialogFooter>
           </form>

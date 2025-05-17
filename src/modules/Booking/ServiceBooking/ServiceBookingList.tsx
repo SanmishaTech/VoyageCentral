@@ -84,8 +84,12 @@ const ServiceBookingList = ({ bookingId }) => {
       toast.success("Service Booking deleted successfully");
       queryClient.invalidateQueries(["service-bookings"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Service Booking");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Service Booking");
+      }
     },
   });
 

@@ -124,8 +124,12 @@ const UserList = () => {
       toast.success("User deleted successfully");
       queryClient.invalidateQueries(["sectors"]);
     },
-    onError: () => {
-      toast.error("Failed to delete sectors");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Sector");
+      }
     },
   });
 

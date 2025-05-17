@@ -101,8 +101,12 @@ const ClientList = () => {
       toast.success("Client deleted successfully");
       queryClient.invalidateQueries(["clients"]);
     },
-    onError: () => {
-      toast.error("Failed to delete clients");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Client");
+      }
     },
   });
 

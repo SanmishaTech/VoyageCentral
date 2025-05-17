@@ -42,8 +42,11 @@ const FamilyFriendSchema = z.object({
   friendId: z.string().optional(),
   name: z
     .string()
-    .min(1, "Name is required.")
-    .max(100, "Name must not exceed 100 characters."),
+    .min(1, "Name cannot be left blank.") // Ensuring minimum length of 2
+    .max(100, "Name must not exceed 100 characters.")
+    .refine((val) => /^[A-Za-z\s\u0900-\u097F]+$/.test(val), {
+      message: "Name can only contain letters.",
+    }),
   gender: z
     .string()
     .max(20, "Gender must not exceed 20 characters.")
@@ -66,20 +69,13 @@ const FamilyFriendSchema = z.object({
     .string()
     .max(30, "Food type must not exceed 30 characters.")
     .optional(),
+
   mobile: z
     .string()
-    .max(20, "Mobile number must not exceed 20 characters.") // Allow space for country code and mobile number
-    .refine(
-      (val) =>
-        val === "" ||
-        /^[+]?[0-9]{1,4}[-\s]?[0-9]{6,15}$/.test(val) ||
-        /^[6-9]\d{9}$/.test(val),
-      {
-        message:
-          "Mobile number must be a valid number (with or without country code).",
-      }
-    )
-    .optional(),
+    .optional()
+    .refine((val) => /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
   email: z
     .string()
     .refine(
@@ -95,8 +91,11 @@ const FamilyFriendSchema = z.object({
 const FormSchema = z.object({
   clientName: z
     .string()
-    .min(1, "Client name is required.")
-    .max(100, "Client name must not exceed 100 characters."),
+    .min(1, "Client Name cannot be left blank.") // Ensuring minimum length of 2
+    .max(100, "Client Name must not exceed 100 characters.")
+    .refine((val) => /^[A-Za-z\s\u0900-\u097F]+$/.test(val), {
+      message: "Client Name can only contain letters.",
+    }),
   gender: z
     .string()
     .max(20, "Gender must not exceed 20 characters.")
@@ -113,39 +112,25 @@ const FormSchema = z.object({
     .string()
     .max(30, "refer by must not exceed 30 characters.")
     .optional(),
-  address1: z.string().max(255, "Address line 1 too long").optional(),
-  address2: z.string().max(255, "Address line 2 too long").optional(),
+  address1: z.string().max(2000, "Address line 1 too long").optional(),
+  address2: z.string().max(2000, "Address line 2 too long").optional(),
   stateId: z.string().optional(),
   cityId: z.string().optional(),
-  pincode: z.string().optional(),
+  pincode: z.string().refine((val) => val === "" || /^\d{6}$/.test(val), {
+    message: "Pincode must be of 6 digits.",
+  }),
   mobile1: z
     .string()
-    .max(20, "Mobile number must not exceed 20 characters.") // Allow space for country code and mobile number
-    .refine(
-      (val) =>
-        val === "" ||
-        /^[+]?[0-9]{1,4}[-\s]?[0-9]{6,15}$/.test(val) ||
-        /^[6-9]\d{9}$/.test(val),
-      {
-        message:
-          "Mobile number must be a valid number (with or without country code).",
-      }
-    )
-    .optional(),
+    .optional()
+    .refine((val) => /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
   mobile2: z
     .string()
-    .max(20, "Mobile number must not exceed 20 characters.") // Allow space for country code and mobile number
-    .refine(
-      (val) =>
-        val === "" ||
-        /^[+]?[0-9]{1,4}[-\s]?[0-9]{6,15}$/.test(val) ||
-        /^[6-9]\d{9}$/.test(val),
-      {
-        message:
-          "Mobile number must be a valid number (with or without country code).",
-      }
-    )
-    .optional(),
+    .optional()
+    .refine((val) => val === "" || /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
   gstin: z
     .string()
     .refine(
@@ -157,7 +142,12 @@ const FormSchema = z.object({
       { message: "Invalid GSTIN format." }
     )
     .optional(),
-  passportNo: z.string().optional(),
+
+  passportNo: z
+    .string()
+    .refine((val) => val === "" || /^[A-PR-WYa-pr-wy][0-9]{7}$/.test(val), {
+      message: "Invalid Indian passport number format. Example: A1234567.",
+    }),
   panNo: z
     .string()
     .refine((val) => val === "" || /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(val), {
@@ -184,6 +174,27 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const defaultValues = {
+    clientName: "", // Empty string as default
+    gender: "", // Empty string as default
+    email: "", // Empty string as default
+    dateOfBirth: "", // Empty string as default
+    marriageDate: "", // Empty string as default
+    referBy: "", // Empty string as default
+    address1: "", // Empty string as default
+    address2: "", // Empty string as default
+    stateId: "", // Empty string as default
+    cityId: "", // Empty string as default
+    pincode: "", // Empty string as default
+    mobile1: "", // Empty string as default
+    mobile2: "", // Empty string as default
+    gstin: "", // Empty string as default
+    passportNo: "", // Empty string as default
+    panNo: "", // Empty string as default
+    aadharNo: "", // Empty string as default
+    familyFriends: [], // Default empty array with a single empty family friend object
+  };
+
   const {
     register,
     handleSubmit,
@@ -195,6 +206,7 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
     formState: { errors },
   } = useForm<FormInputs>({
     resolver: zodResolver(FormSchema),
+    defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -325,6 +337,15 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
 
   return (
     <>
+      {Object.entries(errors).map(([field, error]) => (
+        <div key={field}>
+          <p className="text-red-500 text-sm">
+            {/* Accessing the error message for the field */}
+            {error?.message}
+          </p>
+        </div>
+      ))}
+
       {/* JSX Code for HotelForm.tsx */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card className="mx-auto mt-10 min-w-5xl">
@@ -571,6 +592,7 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <Input
                   id="pincode"
                   {...register("pincode")}
+                  maxLength={6}
                   placeholder="Enter pincode"
                 />
                 {errors.pincode && (
@@ -592,11 +614,12 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                   htmlFor="mobile1"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Mobile 1
+                  Mobile 1 <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="mobile1"
                   {...register("mobile1")}
+                  maxLength={10}
                   placeholder="Enter primary mobile number"
                 />
                 {errors.mobile1 && (
@@ -617,6 +640,7 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                 <Input
                   id="mobile2"
                   {...register("mobile2")}
+                  maxLength={10}
                   placeholder="Enter secondary mobile number"
                 />
                 {errors.mobile2 && (
@@ -855,6 +879,7 @@ const ClientForm = ({ mode }: { mode: "create" | "edit" }) => {
                           </Label>
                           <Input
                             id={`familyFriends.${index}.mobile`}
+                            maxLength={10}
                             {...register(`familyFriends.${index}.mobile`)}
                             placeholder="Enter mobile"
                           />

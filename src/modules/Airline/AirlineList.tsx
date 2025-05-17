@@ -108,8 +108,12 @@ const AirlineList = () => {
       toast.success("Airline deleted successfully");
       queryClient.invalidateQueries(["airlines"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Airline");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Airline");
+      }
     },
   });
 

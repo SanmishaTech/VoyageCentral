@@ -130,8 +130,12 @@ const AccommodationList = () => {
       toast.success("Accommodation deleted successfully");
       queryClient.invalidateQueries(["accommodations"]);
     },
-    onError: () => {
-      toast.error("Failed to delete accommodation");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete accommodation");
+      }
     },
   });
 

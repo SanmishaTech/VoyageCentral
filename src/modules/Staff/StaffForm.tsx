@@ -38,7 +38,13 @@ import Validate from "@/lib/Handlevalidation";
 import { ROLES, ROLE_LABELS, Role } from "@/config/roles";
 
 const staffFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z
+    .string()
+    .min(1, "Name cannot be left blank.")
+    .max(100, "Name must not exceed 100 characters.")
+    .refine((val) => /^[A-Za-z\s\u0900-\u097F]+$/.test(val), {
+      message: "Name can only contain letters.",
+    }),
   email: z.string().email("Invalid email address"),
   communicationEmail: z
     .string()
@@ -47,14 +53,16 @@ const staffFormSchema = z.object({
     .nullable(),
   mobile1: z
     .string()
-    .length(10, "Mobile number must be 10 digits")
     .optional()
-    .nullable(),
+    .refine((val) => /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
   mobile2: z
     .string()
-    .length(10, "Mobile number must be 10 digits")
     .optional()
-    .nullable(),
+    .refine((val) => val === "" || /^\d{10}$/.test(val), {
+      message: "Mobile number must be exactly 10 digits.",
+    }),
   password: z
     .string()
     .min(6, "Password must be at least 6 characters long")
@@ -63,7 +71,7 @@ const staffFormSchema = z.object({
     errorMap: () => ({ message: "Role is required" }),
   }),
   active: z.boolean().optional(),
-  branchId: z.number().optional(),
+  branchId: z.string().min(1, "Branch field is required"),
 });
 
 type StaffFormInputs = z.infer<typeof staffFormSchema>;
@@ -89,10 +97,22 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
     enabled: mode === "edit" && !!staffId,
     refetchOnMount: true,
   });
+  const defaultValues = {
+    name: "",
+    email: "",
+    communicationEmail: null,
+    mobile1: "",
+    mobile2: "",
+    password: "",
+    role: ROLES.USER, // or ROLES.ADMIN if that's the default
+    active: true,
+    branchId: "", // empty string for select
+  };
 
   // Initialize form after data is available
   const form = useForm<StaffFormInputs>({
     resolver: zodResolver(staffFormSchema),
+    defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
   });
 
   useEffect(() => {
@@ -105,7 +125,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
         mobile2: staffData.mobile2 || "",
         role: staffData.role?.toLowerCase() || "",
         active: staffData.active ?? true,
-        branchId: staffData.branchId,
+        branchId: String(staffData.branchId),
       });
 
       // setTimeout(() => {
@@ -120,8 +140,8 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
   const { data: branchesData } = useQuery({
     queryKey: ["branches"],
     queryFn: async () => {
-      const response = await get("/branches");
-      return response.branches || []; // Access the branches array from response
+      const response = await get("/branches/all");
+      return response || []; // Access the branches array from response
     },
   });
 
@@ -241,6 +261,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
               id="mobile1"
               placeholder="Enter mobile number"
               {...form.register("mobile1")}
+              maxLength={10}
             />
             {form.formState.errors.mobile1 && (
               <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
@@ -255,6 +276,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
               id="mobile2"
               placeholder="Enter alternate mobile"
               {...form.register("mobile2")}
+              maxLength={10}
             />
             {form.formState.errors.mobile2 && (
               <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
@@ -319,7 +341,7 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
           {/* Branch Combobox */}
           <div className="grid gap-2 relative">
             <Label htmlFor="branchId">Branch</Label>
-            <Popover open={open} onOpenChange={setOpen}>
+            {/* <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -363,7 +385,35 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
                   </CommandGroup>
                 </Command>
               </PopoverContent>
-            </Popover>
+            </Popover> */}
+            <Controller
+              name="branchId"
+              control={form.control}
+              render={({ field }) => (
+                <Select
+                  key={field.value} // <-- forces re-render
+                  value={field.value ?? ""}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branchesData && branchesData.length > 0 ? (
+                      branchesData.map((branch) => (
+                        <SelectItem key={branch.id} value={String(branch.id)}>
+                          {branch.branchName}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-sm text-muted-foreground">
+                        No branches available
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
+            />
             {form.formState.errors.branchId && (
               <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
                 {form.formState.errors.branchId.message}

@@ -99,8 +99,12 @@ const BankList = () => {
       toast.success("Bank deleted successfully");
       queryClient.invalidateQueries(["banks"]);
     },
-    onError: () => {
-      toast.error("Failed to delete Bank");
+    onError: (error) => {
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to delete Bank");
+      }
     },
   });
 
