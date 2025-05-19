@@ -9,6 +9,7 @@ import {
   tourTypeOptions,
   statusOptions,
   destinationOptions,
+  noOfNightOptions,
 } from "@/config/data";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -121,6 +122,7 @@ const FormSchema = z.object({
     .string()
     .min(1, "destination is required.")
     .max(100, "destination must not exceed 100 characters."),
+  numberOfNights: z.string().optional(),
   status: z
     .string()
     .min(1, "Status is required.")
@@ -149,6 +151,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     status: "",
     notes: "",
     sectorId: "", // Optional, so can be empty
+    numberOfNights: "",
     itineraries: [], // Optional array
   };
 
@@ -225,6 +228,9 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
         destination: editTourData.destination || "",
         status: editTourData.status || "",
         notes: editTourData.notes || "",
+        numberOfNights: editTourData.numberOfNights
+          ? String(editTourData.numberOfNights)
+          : "",
         sectorId: editTourData.sectorId ? String(editTourData.sectorId) : "",
         // attachment: editTourData.attachment || "",
         itineraries: itinerariesData, // ✅ include this
@@ -355,6 +361,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     formData.append("status", data.status);
     formData.append("notes", data.notes || "");
     formData.append("sectorId", data.sectorId || "");
+    formData.append("numberOfNights", data.numberOfNights || "");
 
     // Append attachment if it exists
     if (data.attachment instanceof File) {
@@ -568,6 +575,50 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                 {errors.notes && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.notes.message}
+                  </p>
+                )}
+              </div>
+              {/* numbr of nights */}
+              <div className="col-span-2 lg:col-span-1">
+                <Label
+                  htmlFor="no"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  No. Of Nights
+                </Label>
+                <Controller
+                  name="numberOfNights"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      key={field.value}
+                      onValueChange={(value) =>
+                        setValue(
+                          "numberOfNights",
+                          value === "none" ? "" : value
+                        )
+                      }
+                      value={watch("numberOfNights")}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {noOfNightOptions.map((option) => (
+                          <SelectItem
+                            key={option.value}
+                            value={String(option.value)}
+                          >
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.numberOfNights && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.numberOfNights.message}
                   </p>
                 )}
               </div>

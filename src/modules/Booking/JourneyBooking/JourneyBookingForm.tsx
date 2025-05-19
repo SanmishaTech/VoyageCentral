@@ -117,6 +117,7 @@ const FormSchema = z.object({
     .max(180, "PNR No. field must not exceed 100 characters.")
     .optional(),
   airlineId: z.coerce.number().nullable().optional(),
+  vehicleId: z.coerce.number().nullable().optional(),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
@@ -139,6 +140,7 @@ const defaultValues: FormInputs = {
   airlineClass: "",
   pnrNumber: "",
   airlineId: null,
+  vehicleId: null,
 };
 
 const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
@@ -147,6 +149,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     journeyBookingId: string;
   }>();
   const [openAirlineId, setOpenAirlineId] = useState<boolean>(false);
+  const [openVehicleId, setOpenVehicleId] = useState<boolean>(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   dayjs.extend(utc);
@@ -177,6 +180,20 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const airlineOptions = [
     { id: "none", airlineName: "---" }, // The 'unselect' option
     ...(airlines ?? []),
+  ];
+
+  // airlines
+  const { data: vehicles, isLoading: isVehicleLoading } = useQuery({
+    queryKey: ["vehicles"],
+    queryFn: async () => {
+      const response = await get(`/vehicles/all`);
+      return response; // API returns the sector object directly
+    },
+  });
+
+  const vehicleOptions = [
+    { id: "none", vehicleName: "---" }, // The 'unselect' option
+    ...(vehicles ?? []),
   ];
 
   const { data: editJourneyBookingData, isLoading: editJourneyBookingLoading } =
@@ -253,6 +270,9 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         billDescription: editJourneyBookingData.billDescription || "",
         airlineId: editJourneyBookingData.airlineId
           ? editJourneyBookingData.airlineId
+          : "",
+        vehicleId: editJourneyBookingData.vehicleId
+          ? editJourneyBookingData.vehicleId
           : "",
       });
     }
@@ -336,6 +356,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         flightClass: "",
         airlineId: null,
         flightNumber: "",
+        vehicleId: null,
       };
     }
 
@@ -345,6 +366,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         busName: "",
         trainName: "",
         trainNumber: "",
+        vehicleId: null,
         trainClass: "",
       };
     }
@@ -358,7 +380,22 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         trainClass: "",
         flightClass: "",
         airlineId: null,
+        vehicleId: null,
         flightNumber: "",
+      };
+    }
+
+    if (cleanedData.mode === "Car") {
+      cleanedData = {
+        ...cleanedData,
+        trainName: "",
+        trainNumber: "",
+        pnrNumber: "",
+        trainClass: "",
+        flightClass: "",
+        airlineId: null,
+        flightNumber: "",
+        busName: "",
       };
     }
 
@@ -592,6 +629,99 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     {errors.busName && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors.busName.message}
+                      </p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                ""
+              )}
+
+              {modeValue === "Car" ? (
+                <>
+                  <div className="col-span-2 md:col-span-1">
+                    <Label
+                      htmlFor="vehicleId"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Car Name
+                    </Label>
+                    <Controller
+                      name="vehicleId"
+                      control={control}
+                      render={({ field }) => (
+                        <Popover
+                          open={openVehicleId}
+                          onOpenChange={setOpenVehicleId}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openVehicleId ? "true" : "false"} // This should depend on the popover state
+                              className=" w-[300px] justify-between mt-1"
+                              onClick={() => setOpenVehicleId((prev) => !prev)} // Toggle popover on button click
+                            >
+                              {field.value
+                                ? vehicleOptions &&
+                                  vehicleOptions.find(
+                                    (vehicle) => vehicle.id === field.value
+                                  )?.vehicleName
+                                : "Select vehicle"}
+                              <ChevronsUpDown className="opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[325px] p-0">
+                            <Command>
+                              <CommandInput
+                                placeholder="Search vehicle..."
+                                className="h-9"
+                              />
+                              <CommandList>
+                                <CommandEmpty>No vehicle found.</CommandEmpty>
+                                <CommandGroup>
+                                  {vehicleOptions &&
+                                    vehicleOptions.map((vehicle) => (
+                                      <CommandItem
+                                        key={vehicle.id}
+                                        // value={String(vehicle.id)}
+                                        value={
+                                          vehicle?.vehicleName
+                                            ? vehicle.vehicleName.toLowerCase()
+                                            : ""
+                                        } // 👈 Use airline name for filtering
+                                        onSelect={(currentValue) => {
+                                          if (vehicle.id === "none") {
+                                            setValue("vehicleId", null); // Clear the value
+                                          } else {
+                                            setValue("vehicleId", vehicle.id);
+                                          }
+                                          // handleTourSelectChange(airline);
+                                          setOpenVehicleId(false);
+                                          // Close popover after selection
+                                        }}
+                                      >
+                                        {vehicle.vehicleName}
+                                        <Check
+                                          className={cn(
+                                            "ml-auto",
+                                            vehicle.id === field.value
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                      </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                    />
+                    {errors.vehicleId && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.vehicleId.message}
                       </p>
                     )}
                   </div>

@@ -38,19 +38,18 @@ const initialData = {
     super_admin: {
       projects: [
         {
-          name: "Manage Users",
-          url: "/users",
+          name: "Packages",
+          url: "/packages",
           icon: UsersRound,
         },
-
         {
           name: "Agencies",
           url: "/agencies",
           icon: UsersRound,
         },
         {
-          name: "Packages",
-          url: "/packages",
+          name: "Manage Users",
+          url: "/users",
           icon: UsersRound,
         },
       ],
@@ -101,11 +100,90 @@ const initialData = {
           isActive: false,
           items: [
             { title: "Tours", url: "/tours" },
+            { title: "All Tour Booking", url: "/bookings" },
+            { title: "Tour Enquiries", url: "/tours/enquiries" },
+          ],
+        },
+      ],
+    },
+    // branch start
+    branch_admin: {
+      projects: [],
+      navMain: [
+        {
+          title: "Masters",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: false,
+          items: [
+            { title: "Country", url: "/countries" },
+            { title: "State", url: "./states" },
+            { title: "City", url: "/cities" },
+            { title: "Sector", url: "/sectors" },
+            { title: "Branches", url: "/branches" },
+            { title: "Staff", url: "/staff" },
+            { title: "Accommodation", url: "/accommodations" },
+            { title: "Vehicle", url: "/vehicles" },
+            { title: "Airline", url: "/airlines" },
+            { title: "Banks", url: "/banks" },
+            { title: "Hotels", url: "/hotels" },
+            { title: "Agents", url: "/agents" },
+            { title: "Clients", url: "/clients" },
+            { title: "Fairs", url: "/fairs" },
+          ],
+        },
+        {
+          title: "Tours",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: false,
+          items: [
+            { title: "Tours", url: "/tours" },
             { title: "Tour Enquiries", url: "/bookings" },
           ],
         },
       ],
     },
+    // branch end
+    // user start
+    user: {
+      projects: [],
+      navMain: [
+        {
+          title: "Masters",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: false,
+          items: [
+            { title: "Country", url: "/countries" },
+            { title: "State", url: "./states" },
+            { title: "City", url: "/cities" },
+            { title: "Sector", url: "/sectors" },
+            { title: "Branches", url: "/branches" },
+            { title: "Staff", url: "/staff" },
+            { title: "Accommodation", url: "/accommodations" },
+            { title: "Vehicle", url: "/vehicles" },
+            { title: "Airline", url: "/airlines" },
+            { title: "Banks", url: "/banks" },
+            { title: "Hotels", url: "/hotels" },
+            { title: "Agents", url: "/agents" },
+            { title: "Clients", url: "/clients" },
+            { title: "Fairs", url: "/fairs" },
+          ],
+        },
+        {
+          title: "Tours",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: false,
+          items: [
+            { title: "Tours", url: "/tours" },
+            { title: "Tour Enquiries", url: "/bookings" },
+          ],
+        },
+      ],
+    },
+    // user end
   },
   user: {
     name: "",

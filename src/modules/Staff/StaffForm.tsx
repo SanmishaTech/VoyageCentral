@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/popover";
 import Validate from "@/lib/Handlevalidation";
 import { ROLES, ROLE_LABELS, Role } from "@/config/roles";
+import { bloodGroupOptions, genderOptions } from "@/config/data";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const staffFormSchema = z.object({
   name: z
@@ -46,6 +48,16 @@ const staffFormSchema = z.object({
       message: "Name can only contain letters.",
     }),
   email: z.string().email("Invalid email address"),
+  dateOfBirth: z.string().optional(),
+  address: z
+    .string()
+    .max(2000, "address must not exceed 2000 characters")
+    .optional(),
+  bloodGroup: z.string().optional(),
+  gender: z
+    .string()
+    .min(1, "Gender field is required")
+    .max(100, "gender field must not exceed 100 characters"),
   communicationEmail: z
     .string()
     .email("Invalid email address")
@@ -107,6 +119,10 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
     role: ROLES.USER, // or ROLES.ADMIN if that's the default
     active: true,
     branchId: "", // empty string for select
+    address: "",
+    gender: "",
+    dateOfBirth: "",
+    bloodGroup: "",
   };
 
   // Initialize form after data is available
@@ -126,6 +142,12 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
         role: staffData.role?.toLowerCase() || "",
         active: staffData.active ?? true,
         branchId: String(staffData.branchId),
+        address: staffData.address || "",
+        gender: staffData.gender || "",
+        bloodGroup: staffData.bloodGroup || "",
+        dateOfBirth: staffData.dateOfBirth
+          ? new Date(staffData.dateOfBirth).toISOString().split("T")[0]
+          : "",
       });
 
       // setTimeout(() => {
@@ -201,147 +223,252 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
   // Remove the Card wrapper conditional and always use the dialog form style
   return (
     <div className={className}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-7">
-        {/* Name Field */}
-        <div className="grid gap-2 relative">
-          <Label htmlFor="name">Full Name</Label>
-          <Input
-            id="name"
-            type="text"
-            placeholder="John Doe"
-            {...form.register("name")}
-          />
-          {form.formState.errors.name && (
-            <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
-              {form.formState.errors.name.message}
-            </span>
-          )}
-        </div>
-
-        {/* Email Fields Side by Side */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* Primary Email */}
+      <ScrollArea className="max-h-[80vh] overflow-y-auto">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-7">
+          {/* Name Field */}
           <div className="grid gap-2 relative">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="name">Full Name</Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              {...form.register("email")}
+              id="name"
+              type="text"
+              placeholder="John Doe"
+              {...form.register("name")}
             />
-            {form.formState.errors.email && (
+            {form.formState.errors.name && (
               <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
-                {form.formState.errors.email.message}
+                {form.formState.errors.name.message}
               </span>
             )}
           </div>
 
-          {/* Communication Email */}
-          <div className="grid gap-2 relative">
-            <Label htmlFor="communicationEmail">Communication Email</Label>
-            <Input
-              id="communicationEmail"
-              type="email"
-              placeholder="communication@example.com"
-              {...form.register("communicationEmail")}
-            />
-            {form.formState.errors.communicationEmail && (
-              <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
-                {form.formState.errors.communicationEmail.message}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Numbers */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="grid gap-2 relative">
-            <Label htmlFor="mobile1">Mobile 1</Label>
-            <Input
-              id="mobile1"
-              placeholder="Enter mobile number"
-              {...form.register("mobile1")}
-              maxLength={10}
-            />
-            {form.formState.errors.mobile1 && (
-              <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
-                {form.formState.errors.mobile1.message}
-              </span>
-            )}
-          </div>
-
-          <div className="grid gap-2 relative">
-            <Label htmlFor="mobile2">Mobile 2</Label>
-            <Input
-              id="mobile2"
-              placeholder="Enter alternate mobile"
-              {...form.register("mobile2")}
-              maxLength={10}
-            />
-            {form.formState.errors.mobile2 && (
-              <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
-                {form.formState.errors.mobile2.message}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Password Field (Only for Create Mode) */}
-        {mode === "create" && (
-          <div className="grid gap-2 relative">
-            <Label htmlFor="password">Password</Label>
-            <PasswordInput
-              id="password"
-              placeholder="Enter a secure password"
-              {...form.register("password")}
-            />
-            {form.formState.errors.password && (
-              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
-                {form.formState.errors.password.message}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Role, Branch and Active Fields in the Same Row */}
-        <div className="grid gap-4 md:grid-cols-3">
-          {/* Role Dropdown */}
-          <div className="grid gap-2 relative">
-            <Label htmlFor="role">Role</Label>
-            <Controller
-              name="role"
-              control={form.control}
-              render={({ field }) => (
-                <Select
-                  key={field.value} // <-- forces re-render
-                  value={field.value ?? ""}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {/* Email Fields Side by Side */}
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Primary Email */}
+            <div className="grid gap-2 relative">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                {...form.register("email")}
+              />
+              {form.formState.errors.email && (
+                <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.email.message}
+                </span>
               )}
-            />
+            </div>
 
-            {form.formState.errors.role && (
-              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
-                {form.formState.errors.role.message}
-              </span>
-            )}
+            {/* Communication Email */}
+            <div className="grid gap-2 relative">
+              <Label htmlFor="communicationEmail">Communication Email</Label>
+              <Input
+                id="communicationEmail"
+                type="email"
+                placeholder="communication@example.com"
+                {...form.register("communicationEmail")}
+              />
+              {form.formState.errors.communicationEmail && (
+                <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.communicationEmail.message}
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Branch Combobox */}
-          <div className="grid gap-2 relative">
-            <Label htmlFor="branchId">Branch</Label>
-            {/* <Popover open={open} onOpenChange={setOpen}>
+          {/* Mobile Numbers */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2 relative">
+              <Label htmlFor="mobile1">Mobile 1</Label>
+              <Input
+                id="mobile1"
+                placeholder="Enter mobile number"
+                {...form.register("mobile1")}
+                maxLength={10}
+              />
+              {form.formState.errors.mobile1 && (
+                <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.mobile1.message}
+                </span>
+              )}
+            </div>
+
+            <div className="grid gap-2 relative">
+              <Label htmlFor="mobile2">Mobile 2</Label>
+              <Input
+                id="mobile2"
+                placeholder="Enter alternate mobile"
+                {...form.register("mobile2")}
+                maxLength={10}
+              />
+              {form.formState.errors.mobile2 && (
+                <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.mobile2.message}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2 relative">
+              <Label htmlFor="gender">Gender</Label>
+              <Controller
+                name="gender"
+                control={form.control}
+                render={({ field }) => (
+                  <Select
+                    key={field.value}
+                    onValueChange={(value) => form.setValue("gender", value)}
+                    value={form.watch("gender")}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select tour type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {genderOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {form.formState.errors.gender && (
+                <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.gender.message}
+                </span>
+              )}
+            </div>
+
+            <div className="grid gap-2 relative">
+              <Label htmlFor="dateOfBirth">Date Of Birth</Label>
+              <Input
+                id="dateOfBirth"
+                placeholder="Enter date of birth"
+                type="date"
+                {...form.register("dateOfBirth")}
+                maxLength={10}
+              />
+              {form.formState.errors.dateOfBirth && (
+                <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.dateOfBirth.message}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid col-span-2 gap-2 relative">
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                placeholder="Enter address"
+                {...form.register("address")}
+              />
+              {form.formState.errors.address && (
+                <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.address.message}
+                </span>
+              )}
+            </div>
+
+            <div className="grid gap-2 relative">
+              <Label htmlFor="bloodGroup">Blood Group</Label>
+              {/* <Input
+              id="bloodGroup"
+              placeholder="Enter blood Group"
+              {...form.register("bloodGroup")}
+              maxLength={10}
+            /> */}
+              <Controller
+                name="bloodGroup"
+                control={form.control}
+                render={({ field }) => (
+                  <Select
+                    key={field.value}
+                    onValueChange={(value) =>
+                      form.setValue("bloodGroup", value)
+                    }
+                    value={form.watch("bloodGroup")}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select tour type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bloodGroupOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {form.formState.errors.bloodGroup && (
+                <span className="text-red-500 text-[11px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.bloodGroup.message}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Password Field (Only for Create Mode) */}
+          {mode === "create" && (
+            <div className="grid gap-2 relative">
+              <Label htmlFor="password">Password</Label>
+              <PasswordInput
+                id="password"
+                placeholder="Enter a secure password"
+                {...form.register("password")}
+              />
+              {form.formState.errors.password && (
+                <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.password.message}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Role, Branch and Active Fields in the Same Row */}
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* Role Dropdown */}
+            <div className="grid gap-2 relative">
+              <Label htmlFor="role">Role</Label>
+              <Controller
+                name="role"
+                control={form.control}
+                render={({ field }) => (
+                  <Select
+                    key={field.value} // <-- forces re-render
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+
+              {form.formState.errors.role && (
+                <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.role.message}
+                </span>
+              )}
+            </div>
+
+            {/* Branch Combobox */}
+            <div className="grid gap-2 relative">
+              <Label htmlFor="branchId">Branch</Label>
+              {/* <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -386,77 +513,79 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
                 </Command>
               </PopoverContent>
             </Popover> */}
-            <Controller
-              name="branchId"
-              control={form.control}
-              render={({ field }) => (
-                <Select
-                  key={field.value} // <-- forces re-render
-                  value={field.value ?? ""}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branchesData && branchesData.length > 0 ? (
-                      branchesData.map((branch) => (
-                        <SelectItem key={branch.id} value={String(branch.id)}>
-                          {branch.branchName}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <div className="px-4 py-2 text-sm text-muted-foreground">
-                        No branches available
-                      </div>
-                    )}
-                  </SelectContent>
-                </Select>
+              <Controller
+                name="branchId"
+                control={form.control}
+                render={({ field }) => (
+                  <Select
+                    key={field.value} // <-- forces re-render
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branchesData && branchesData.length > 0 ? (
+                        branchesData.map((branch) => (
+                          <SelectItem key={branch.id} value={String(branch.id)}>
+                            {branch.branchName}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-sm text-muted-foreground">
+                          No branches available
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {form.formState.errors.branchId && (
+                <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
+                  {form.formState.errors.branchId.message}
+                </span>
               )}
-            />
-            {form.formState.errors.branchId && (
-              <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
-                {form.formState.errors.branchId.message}
-              </span>
-            )}
+            </div>
+
+            {/* Active Toggle */}
+            <div className="flex items-center gap-2">
+              <Label htmlFor="active">Active</Label>
+              <Switch
+                id="active"
+                checked={form.watch("active")}
+                onCheckedChange={(checked) => form.setValue("active", checked)}
+              />
+            </div>
           </div>
 
-          {/* Active Toggle */}
-          <div className="flex items-center gap-2">
-            <Label htmlFor="active">Active</Label>
-            <Switch
-              id="active"
-              checked={form.watch("active")}
-              onCheckedChange={(checked) => form.setValue("active", checked)}
-            />
+          {/* Submit and Cancel Buttons */}
+          <div className="justify-end flex gap-4">
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={
+                createStaffMutation.isLoading || updateStaffMutation.isLoading
+              }
+              className="flex items-center justify-center gap-2"
+            >
+              {createStaffMutation.isLoading ||
+              updateStaffMutation.isLoading ? (
+                <>
+                  <LoaderCircle className="animate-spin h-4 w-4" />
+                  Saving...
+                </>
+              ) : mode === "create" ? (
+                "Create"
+              ) : (
+                "Update"
+              )}
+            </Button>
           </div>
-        </div>
-
-        {/* Submit and Cancel Buttons */}
-        <div className="justify-end flex gap-4">
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={
-              createStaffMutation.isLoading || updateStaffMutation.isLoading
-            }
-            className="flex items-center justify-center gap-2"
-          >
-            {createStaffMutation.isLoading || updateStaffMutation.isLoading ? (
-              <>
-                <LoaderCircle className="animate-spin h-4 w-4" />
-                Saving...
-              </>
-            ) : mode === "create" ? (
-              "Create"
-            ) : (
-              "Update"
-            )}
-          </Button>
-        </div>
-      </form>
+        </form>
+      </ScrollArea>
     </div>
   );
 };

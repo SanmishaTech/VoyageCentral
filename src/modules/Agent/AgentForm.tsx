@@ -37,6 +37,7 @@ import { get } from "@/services/apiService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 import { set } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const FormSchema = z.object({
   agentName: z
@@ -58,6 +59,9 @@ const FormSchema = z.object({
     .string()
     .max(2000, "Address Line 3 cannot exceed 2000 characters.")
     .optional(),
+  isVehicle: z.boolean().optional(),
+  isAirline: z.boolean().optional(),
+  isTrain: z.boolean().optional(),
 
   countryId: z.union([
     z.number().min(1, { message: "Country field is required." }),
@@ -217,7 +221,9 @@ const AgentForm = ({ mode }: { mode: "create" | "edit" }) => {
     stateId: "",
     cityId: "",
     pincode: "",
-
+    isVehicle: false,
+    isAirline: false,
+    isTrain: false,
     contactPersonName: "",
     mobile1: "",
     mobile2: "",
@@ -389,6 +395,9 @@ const AgentForm = ({ mode }: { mode: "create" | "edit" }) => {
         countryId: editAgentData.countryId ? editAgentData.countryId : "",
         stateId: editAgentData.stateId ? editAgentData.stateId : "",
         cityId: editAgentData.cityId ? editAgentData.cityId : "",
+        isAirline: editAgentData.isAirline,
+        isVehicle: editAgentData.isVehicle,
+        isTrain: editAgentData.isTrain,
       });
     }
   }, [editAgentData, reset]);
@@ -794,6 +803,68 @@ const AgentForm = ({ mode }: { mode: "create" | "edit" }) => {
                       {errors.pincode.message}
                     </p>
                   )}
+                </div>
+                <div className="flex justify-around items-center">
+                  <div className="mt-4 flex items-center space-x-2 ">
+                    <Controller
+                      name="isVehicle"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="isVehicle"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border border-2"
+                        />
+                      )}
+                    />
+                    <Label
+                      htmlFor="isVehicle"
+                      className="text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      Vehicle
+                    </Label>
+                  </div>
+                  <div className="mt-4 flex items-center space-x-2 ">
+                    <Controller
+                      name="isAirline"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="isAirline"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border border-2"
+                        />
+                      )}
+                    />
+                    <Label
+                      htmlFor="isAirline"
+                      className="text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      Airline
+                    </Label>
+                  </div>
+                  <div className="mt-4 flex items-center space-x-2 ">
+                    <Controller
+                      name="isTrain"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="isTrain"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border border-2"
+                        />
+                      )}
+                    />
+                    <Label
+                      htmlFor="isTrain"
+                      className="text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      Train
+                    </Label>
+                  </div>
                 </div>
               </div>
             </div>

@@ -1,28 +1,35 @@
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  LoaderCircle,
+  Trash2,
+  PlusCircle,
+  Check,
+  ChevronsUpDown,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { PlusCircle } from "lucide-react";
-import { post } from "@/services/apiService"; // Adjust import as needed
+import { useForm } from "react-hook-form";
+import { post } from "@/services/apiService";
+import { Label } from "@/components/ui/label";
 
 const AddClient = ({ onClientAdded }) => {
   const [open, setOpen] = useState(false);
 
+  // Initialize react-hook-form
   const {
     register,
     reset,
-    handleSubmit,
     formState: { errors },
+    getValues,
   } = useForm({
     defaultValues: {
       clientName: "",
@@ -30,21 +37,41 @@ const AddClient = ({ onClientAdded }) => {
     },
   });
 
-  const onSubmit = async (data) => {
+  const handleAddClient = async () => {
+    const data = getValues(); // Get form values manually
+
+    if (!data.clientName.trim()) {
+      toast.error("Client name is required.");
+      return;
+    }
+
+    if (!data.mobile1.trim()) {
+      toast.error("Client name is required.");
+      return;
+    }
+
     try {
-      await post("/clients", data);
+      // Call API to add client
+      const newClient = await post("/clients", data);
+
       toast.success("Client added successfully!");
+      console.log("new CLient data", newClient);
+      // Notify parent component about the new client
+      if (onClientAdded) {
+        onClientAdded(newClient);
+      }
+
+      // Reset form and close dialog
       reset();
       setOpen(false);
-      if (onClientAdded) onClientAdded();
     } catch (error) {
       toast.error(error.message || "Failed to add client.");
     }
   };
 
   const handleCancel = () => {
-    reset();
-    setOpen(false);
+    reset(); // Reset the form
+    setOpen(false); // Close the dialog
   };
 
   return (
@@ -61,26 +88,15 @@ const AddClient = ({ onClientAdded }) => {
         <div className="space-y-4">
           <div>
             <Label
-              htmlFor="clientName"
+              htmlFor="mobile1"
               className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Client Name <span className="text-red-500">*</span>
+              Name <span className="text-red-500">*</span>
             </Label>
             <Input
               id="clientName"
               {...register("clientName", {
                 required: "Client name is required.",
-                minLength: {
-                  value: 1,
-                  message: "Name cannot be left blank.",
-                },
-                maxLength: {
-                  value: 100,
-                  message: "Name must not exceed 100 characters.",
-                },
-                validate: (val) =>
-                  /^[A-Za-z\s\u0900-\u097F]+$/.test(val) ||
-                  "Name can only contain letters.",
               })}
               placeholder="Enter client name"
             />
@@ -99,13 +115,13 @@ const AddClient = ({ onClientAdded }) => {
             </Label>
             <Input
               id="mobile1"
-              maxLength={10}
               {...register("mobile1", {
                 required: "Mobile number is required.",
                 validate: (val) =>
                   /^\d{10}$/.test(val) ||
                   "Mobile number must be exactly 10 digits.",
               })}
+              maxLength={10}
               placeholder="Enter primary mobile number"
             />
             {errors.mobile1 && (
@@ -114,15 +130,13 @@ const AddClient = ({ onClientAdded }) => {
               </p>
             )}
           </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddClient}>Add</Button>
+          </DialogFooter>
         </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleSubmit(onSubmit)}>
-            Add Client
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

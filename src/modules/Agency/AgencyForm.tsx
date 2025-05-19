@@ -14,6 +14,13 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { PasswordInput } from "@/components/ui/password-input";
 import AddSubscription from "./AddSubcription"; // Corrected component name casing
 import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -38,6 +45,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import Validate from "@/lib/Handlevalidation";
+import { paymentModeOptions, tourTypeOptions } from "@/config/data";
 
 // --- Configuration ---
 // Define your backend base URL. Use environment variables in a real app.
@@ -60,6 +68,20 @@ interface Subscription {
   endDate: string;
   package: Package | null; // Allow null if package data might be missing
   cost: string | number;
+  cgstPercent?: number;
+  cgstAmount?: string | number;
+  sgstPercent?: number;
+  sgstAmount?: string | number;
+  igstPercent?: number;
+  igstAmount?: string | number;
+  totalAmount: string | number;
+  paymentDate: string; // ISO string
+  paymentMode: string;
+  utrNumber?: string;
+  neftImpfNumber?: string;
+  chequeNumber?: string;
+  chequeDate?: string; // ISO string
+  bankName?: string;
 }
 
 interface User {
@@ -144,7 +166,7 @@ const baseAgencySchema = z.object({
     .length(15, "GSTIN must be exactly 15 characters long")
     .or(z.literal(""))
     .or(z.null())
-    .optional(), 
+    .optional(),
   addressLine1: z.string().min(1, "Address Line 1 is required"),
   addressLine2: z.string().or(z.literal("")).or(z.null()).optional(), // Allow empty or null
   cityId: z.union([
@@ -205,13 +227,156 @@ const createAgencySchema = baseAgencySchema.extend({
       .min(1, "User Email is required"),
     password: z.string().min(5, "Password must be at least 5 characters long"),
   }),
-  subscription: z.object({
-    packageId: z.number({
-      required_error: "Package is required",
-      invalid_type_error: "Package is required",
+  subscription: z
+    .object({
+      packageId: z.number({
+        required_error: "Package is required",
+        invalid_type_error: "Package is required",
+      }),
+      startDate: z.string().min(1, "Start date is required"), // Basic validation, refine if needed
+      // amont statr
+      cgstPercent: z
+        .union([z.string(), z.number()])
+        .optional()
+        .transform((val) =>
+          val === "" || val == null ? undefined : parseFloat(val)
+        )
+        .refine(
+          (val) => val === undefined || (!isNaN(val) && val >= 0 && val <= 100),
+          {
+            message: "CGST percent must be between 0 and 100",
+          }
+        ),
+
+      cgstAmount: z
+        .union([z.string(), z.number()])
+        .optional()
+        .transform((val) =>
+          val === "" || val == null ? undefined : parseFloat(val)
+        )
+        .refine((val) => val === undefined || (!isNaN(val) && val >= 0), {
+          message: "CGST amount must be a positive number",
+        }),
+
+      sgstPercent: z
+        .union([z.string(), z.number()])
+        .optional()
+        .transform((val) =>
+          val === "" || val == null ? undefined : parseFloat(val)
+        )
+        .refine(
+          (val) => val === undefined || (!isNaN(val) && val >= 0 && val <= 100),
+          {
+            message: "SGST percent must be between 0 and 100",
+          }
+        ),
+
+      sgstAmount: z
+        .union([z.string(), z.number()])
+        .optional()
+        .transform((val) =>
+          val === "" || val == null ? undefined : parseFloat(val)
+        )
+        .refine((val) => val === undefined || (!isNaN(val) && val >= 0), {
+          message: "SGST amount must be a positive number",
+        }),
+
+      igstPercent: z
+        .union([z.string(), z.number()])
+        .optional()
+        .transform((val) =>
+          val === "" || val == null ? undefined : parseFloat(val)
+        )
+        .refine(
+          (val) => val === undefined || (!isNaN(val) && val >= 0 && val <= 100),
+          {
+            message: "IGST percent must be between 0 and 100",
+          }
+        ),
+
+      igstAmount: z
+        .union([z.string(), z.number()])
+        .optional()
+        .transform((val) => {
+          if (val === "" || val == null) return undefined;
+          return typeof val === "number" ? val : parseFloat(val);
+        })
+        .refine((val) => val === undefined || (!isNaN(val) && val >= 0), {
+          message: "IGST amount must be a positive number",
+        }),
+
+      totalAmount: z
+        .union([z.string(), z.number()])
+        .transform((val) => parseFloat(val))
+        .refine((val) => !isNaN(val) && val >= 0, {
+          message: "Total amount must be a positive number",
+        }),
+
+      paymentDate: z.string().min(1, "Payment date is required"),
+
+      paymentMode: z.string().min(1, "Payment mode is required"),
+
+      utrNumber: z
+        .string()
+        .optional()
+        .refine((val) => !val || /^[A-Za-z0-9]{12,22}$/.test(val), {
+          message: "UTR number must be 12 to 22 alphanumeric characters",
+        }),
+      neftImpfNumber: z
+        .string()
+        .optional()
+        .refine((val) => !val || /^[A-Za-z0-9]{12,22}$/.test(val), {
+          message: "NEFT/IMPS number must be 12 to 22 alphanumeric characters",
+        }),
+      chequeNumber: z
+        .string()
+        .optional()
+        .refine((val) => !val || /^[0-9]{6,12}$/.test(val), {
+          message: "Cheque number must be 6 to 12 digits",
+        }),
+      chequeDate: z.string().optional(),
+      bankName: z.string().optional(),
+      // amount end
+    })
+    .superRefine((data, ctx) => {
+      if (data.paymentMode === "UPI" && !data.utrNumber) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["utrNumber"],
+          message: "UTR Number is required for UPI payment",
+        });
+      }
+      if (data.paymentMode === "Net Banking" && !data.neftImpfNumber) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["neftImpfNumber"],
+          message: "NEFT/IMPS Number is required for Net Banking payment",
+        });
+      }
+      if (data.paymentMode === "Cheque") {
+        if (!data.chequeNumber) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["chequeNumber"],
+            message: "Cheque Number is required for Cheque payment",
+          });
+        }
+        if (!data.chequeDate) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["chequeDate"],
+            message: "Cheque Date is required for Cheque payment",
+          });
+        }
+        if (!data.bankName) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["bankName"],
+            message: "Bank Name is required for Cheque payment",
+          });
+        }
+      }
     }),
-    startDate: z.string().min(1, "Start date is required"), // Basic validation, refine if needed
-  }),
 });
 
 // Schema for updating (user/subscription not directly editable here)
@@ -277,6 +442,20 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
             subscription: {
               packageId: undefined,
               startDate: new Date().toISOString().split("T")[0],
+              cgstPercent: undefined,
+              cgstAmount: undefined,
+              sgstPercent: undefined,
+              sgstAmount: undefined,
+              igstPercent: undefined,
+              igstAmount: undefined,
+              totalAmount: undefined,
+              paymentDate: new Date().toISOString().split("T")[0],
+              paymentMode: "",
+              utrNumber: "",
+              neftImpfNumber: "",
+              chequeNumber: "",
+              chequeDate: "",
+              bankName: "",
             },
             // end
           }
@@ -492,6 +671,95 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     if (name === "letterHead") setLetterHeadPreview(null);
   };
 
+  // gst calculation  start
+  // const stateId = watch("stateId");
+  const selectedState = stateOptions.find((s) => s.id === Number(stateId));
+  const isMaharashtra =
+    selectedState?.stateName?.toLowerCase() === "maharashtra";
+  // const selectedPackage = watch("subscription.packageId")
+  //   ? packages.find((p) => p.id === watch("subscription.packageId"))
+  //   : null;
+
+  // Watch percent fields
+  const cgstPercent = watch("subscription.cgstPercent");
+  const sgstPercent = watch("subscription.sgstPercent");
+  const igstPercent = watch("subscription.igstPercent");
+
+  // Calculate amounts
+  useEffect(() => {
+    if (!selectedPackage) return;
+
+    const cost = Number(selectedPackage.cost) || 0;
+
+    if (isMaharashtra) {
+      // Maharashtra: CGST/SGST
+      const cgst = ((Number(cgstPercent) || 0) / 100) * cost;
+      const sgst = ((Number(sgstPercent) || 0) / 100) * cost;
+      setValue("subscription.cgstAmount", cgst.toFixed(2));
+      setValue("subscription.sgstAmount", sgst.toFixed(2));
+      setValue("subscription.igstAmount", "0.00");
+      setValue("subscription.totalAmount", (cost + cgst + sgst).toFixed(2));
+    } else {
+      // Other: IGST
+      const igst = ((Number(igstPercent) || 0) / 100) * cost;
+      setValue("subscription.igstAmount", igst.toFixed(2));
+      setValue("subscription.cgstAmount", "0.00");
+      setValue("subscription.sgstAmount", "0.00");
+      setValue("subscription.totalAmount", (cost + igst).toFixed(2));
+    }
+  }, [
+    stateId,
+    selectedPackage,
+    cgstPercent,
+    sgstPercent,
+    igstPercent,
+    setValue,
+  ]);
+
+  // Set default percents when state or package changes
+  useEffect(() => {
+    if (!selectedPackage) return;
+    if (isMaharashtra) {
+      setValue("subscription.cgstPercent", 9);
+      setValue("subscription.sgstPercent", 9);
+      setValue("subscription.igstPercent", 0);
+    } else {
+      setValue("subscription.cgstPercent", 0);
+      setValue("subscription.sgstPercent", 0);
+      setValue("subscription.igstPercent", 18);
+    }
+  }, [stateId, selectedPackage, setValue]);
+
+  // ...rest of your form
+
+  //gst calclation end
+
+  // payment mode
+  useEffect(() => {
+    const paymentMode = watch("subscription.paymentMode");
+    if (paymentMode === "Cash") {
+      setValue("subscription.utrNumber", "");
+      setValue("subscription.neftImpfNumber", "");
+      setValue("subscription.chequeNumber", "");
+      setValue("subscription.chequeDate", "");
+      setValue("subscription.bankName", "");
+    } else if (paymentMode === "UPI") {
+      setValue("subscription.neftImpfNumber", "");
+      setValue("subscription.chequeNumber", "");
+      setValue("subscription.chequeDate", "");
+      setValue("subscription.bankName", "");
+    } else if (paymentMode === "Net Banking") {
+      setValue("subscription.utrNumber", "");
+      setValue("subscription.chequeNumber", "");
+      setValue("subscription.chequeDate", "");
+      setValue("subscription.bankName", "");
+    } else if (paymentMode === "Cheque") {
+      setValue("subscription.utrNumber", "");
+      setValue("subscription.neftImpfNumber", "");
+    }
+  }, [watch("subscription.paymentMode"), setValue]);
+  // payment mode
+
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     const formData = new FormData();
 
@@ -568,6 +836,11 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     <>
       {/* --- Form --- */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {Object.entries(errors).map(([field, error]) => (
+          <p key={field} className="text-red-500 text-sm">
+            {error?.message as string}
+          </p>
+        ))}
         <Card className="mx-auto mt-10">
           {" "}
           {/* Constrain width */}
@@ -1189,7 +1462,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                       )}
                     </div>
                     {/* Selected Package Details Display */}
-                    {selectedPackage && (
+                    {/* {selectedPackage && (
                       <div className="md:col-span-2 mt-2 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                         <h4 className="font-medium mb-2 text-sm text-gray-800 dark:text-gray-200">
                           Selected Package Details
@@ -1221,9 +1494,314 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                           </dd>
                         </dl>
                       </div>
+                    )} */}
+                  </div>
+                </div>
+
+                {/* --- Subscription Type start --- */}
+                {/* In your JSX, conditionally render the fields: */}
+
+                {/* GST/IGST Percent Inputs (editable) */}
+                {selectedPackage && (
+                  <div className="grid grid-cols-1 mt-3 md:grid-cols-2 gap-4">
+                    {isMaharashtra ? (
+                      <>
+                        <div>
+                          <Label>CGST %</Label>
+                          <Input
+                            type="number"
+                            className="mt-1"
+                            {...register("subscription.cgstPercent")}
+                          />
+                          {errors.subscription?.cgstPercent && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {
+                                errors.subscription.cgstPercent
+                                  .message as string
+                              }
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <Label>SGST %</Label>
+                          <Input
+                            type="number"
+                            className="mt-1"
+                            {...register("subscription.sgstPercent")}
+                          />
+                          {errors.subscription?.sgstPercent && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {
+                                errors.subscription.sgstPercent
+                                  .message as string
+                              }
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="md:col-span-2 mt-3">
+                        <Label>IGST %</Label>
+                        <Input
+                          type="number"
+                          className="mt-1"
+                          {...register("subscription.igstPercent")}
+                        />
+                        {errors.subscription?.igstPercent && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.subscription.igstPercent.message as string}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedPackage && (
+                  <div className="md:col-span-2 mt-2 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-medium mb-2 text-sm text-gray-800 dark:text-gray-200">
+                      Selected Package Details
+                    </h4>
+
+                    <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                      <dt className="text-gray-600 dark:text-gray-400">
+                        Branches:
+                      </dt>
+                      <dd className="text-gray-900 dark:text-gray-100">
+                        {selectedPackage.numberOfBranches}
+                      </dd>
+
+                      <dt className="text-gray-600 dark:text-gray-400">
+                        Users/Branch:
+                      </dt>
+                      <dd className="text-gray-900 dark:text-gray-100">
+                        {selectedPackage.usersPerBranch}
+                      </dd>
+
+                      <dt className="text-gray-600 dark:text-gray-400">
+                        Duration:
+                      </dt>
+                      <dd className="text-gray-900 dark:text-gray-100">
+                        {selectedPackage.periodInMonths} months
+                      </dd>
+
+                      <dt className="text-gray-600 dark:text-gray-400">
+                        Cost:
+                      </dt>
+                      <dd className="text-gray-900 dark:text-gray-100">
+                        ₹{Number(selectedPackage.cost).toLocaleString()}
+                      </dd>
+
+                      {/* 👇 GST Preview - inside the same <dl> */}
+                      <dt className="col-span-2 mt-2 text-gray-800 dark:text-gray-200 font-medium">
+                        Subscription Tax & Total Preview
+                      </dt>
+
+                      {isMaharashtra ? (
+                        <>
+                          <dt className="text-gray-600 dark:text-gray-400">
+                            CGST Amount:
+                          </dt>
+                          <dd className="text-gray-900 dark:text-gray-100">
+                            ₹{watch("subscription.cgstAmount") || "0.00"}
+                          </dd>
+
+                          <dt className="text-gray-600 dark:text-gray-400">
+                            SGST Amount:
+                          </dt>
+                          <dd className="text-gray-900 dark:text-gray-100">
+                            ₹{watch("subscription.sgstAmount") || "0.00"}
+                          </dd>
+                        </>
+                      ) : (
+                        <>
+                          <dt className="text-gray-600 dark:text-gray-400">
+                            IGST Amount:
+                          </dt>
+                          <dd className="text-gray-900 dark:text-gray-100">
+                            ₹{watch("subscription.igstAmount") || "0.00"}
+                          </dd>
+                        </>
+                      )}
+
+                      <dt className="text-gray-600 dark:text-gray-400">
+                        Total Amount:
+                      </dt>
+                      <dd className="text-gray-900 dark:text-gray-100 font-semibold">
+                        ₹{watch("subscription.totalAmount") || "0.00"}
+                      </dd>
+                    </dl>
+                  </div>
+                )}
+
+                {/* --- Subscription Type end--- */}
+
+                {/* payment details start*/}
+                <hr className="my-6 border-gray-200 dark:border-gray-700" />
+
+                {/* Payment Details Heading */}
+                <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                  Payment Details
+                </CardTitle>
+
+                {/* Payment Mode and Payment Date in 1 row */}
+                <div className="grid mt-5 grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="subscription.paymentMode">
+                      Payment Mode
+                    </Label>
+                    {/* <select
+                      id="subscription.paymentMode"
+                      {...register("subscription.paymentMode")}
+                      className="w-full mt-1"
+                      defaultValue="UPI"
+                    >
+                      <option value="">Select Payment Mode</option>
+                      <option value="UPI">UPI</option>
+                      <option value="Net Banking">Net Banking</option>
+                      <option value="Cheque">Cheque</option>
+                    </select> */}
+                    <Controller
+                      name="tourType"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          key={field.value}
+                          onValueChange={(value) =>
+                            setValue("subscription.paymentMode", value)
+                          }
+                          value={watch("subscription.paymentMode")}
+                        >
+                          <SelectTrigger className="w-full mt-1">
+                            <SelectValue placeholder="Select payment mode" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {paymentModeOptions.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.subscription?.paymentMode && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.subscription.paymentMode.message as string}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="subscription.paymentDate">
+                      Payment Date
+                    </Label>
+                    <Input
+                      id="subscription.paymentDate"
+                      type="date"
+                      {...register("subscription.paymentDate")}
+                      className="w-full mt-1"
+                      defaultValue={new Date().toISOString().split("T")[0]}
+                    />
+                    {errors.subscription?.paymentDate && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.subscription.paymentDate.message as string}
+                      </p>
                     )}
                   </div>
                 </div>
+
+                {/* Conditional fields based on payment mode */}
+                {watch("subscription.paymentMode") === "UPI" && (
+                  <div className="mt-4">
+                    <Label htmlFor="subscription.utrNumber">UTR Number</Label>
+                    <Input
+                      id="subscription.utrNumber"
+                      {...register("subscription.utrNumber")}
+                      placeholder="Enter UTR Number"
+                      className="w-full mt-1"
+                    />
+                    {errors.subscription?.utrNumber && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.subscription.utrNumber.message as string}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {watch("subscription.paymentMode") === "Net Banking" && (
+                  <div className="mt-4">
+                    <Label htmlFor="subscription.neftImpfNumber">
+                      NEFT/IMPS Number
+                    </Label>
+                    <Input
+                      id="subscription.neftImpfNumber"
+                      {...register("subscription.neftImpfNumber")}
+                      placeholder="Enter NEFT/IMPS Number"
+                      className="w-full mt-1"
+                    />
+                    {errors.subscription?.neftImpfNumber && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.subscription.neftImpfNumber.message as string}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {watch("subscription.paymentMode") === "Cheque" && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div>
+                      <Label htmlFor="subscription.chequeNumber">
+                        Cheque Number
+                      </Label>
+                      <Input
+                        id="subscription.chequeNumber"
+                        {...register("subscription.chequeNumber")}
+                        placeholder="Enter Cheque Number"
+                        className="w-full mt-1"
+                      />
+                      {errors.subscription?.chequeNumber && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.subscription.chequeNumber.message as string}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="subscription.chequeDate">
+                        Cheque Date
+                      </Label>
+                      <Input
+                        id="subscription.chequeDate"
+                        type="date"
+                        {...register("subscription.chequeDate")}
+                        placeholder="Enter Cheque Date"
+                        className="w-full mt-1"
+                      />
+                      {errors.subscription?.chequeDate && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.subscription.chequeDate.message as string}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="subscription.bankName">Bank Name</Label>
+                      <Input
+                        id="subscription.bankName"
+                        {...register("subscription.bankName")}
+                        placeholder="Enter Bank Name"
+                        className="w-full mt-1"
+                      />
+                      {errors.subscription?.bankName && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.subscription.bankName.message as string}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {/* payment details end */}
 
                 <hr className="my-6 border-gray-200 dark:border-gray-700" />
 
