@@ -33,29 +33,38 @@ export const budgetFieldOptions = [
   { label: "Premium", value: "Premium" },
 ];
 
+export const paymentModeOptions = [
+  { label: "Cash", value: "Cash" },
+  { label: "Cheque", value: "Cheque" },
+  { label: "Net Banking", value: "Net Banking" },
+  { label: "UPI", value: "UPI" },
+];
+
+export const bloodGroupOptions = [
+  { label: "A+", value: "A+" },
+  { label: "A-", value: "A-" },
+  { label: "B+", value: "B+" },
+  { label: "B-", value: "B-" },
+  { label: "AB+", value: "AB+" },
+  { label: "AB-", value: "AB-" },
+  { label: "O+", value: "O+" },
+  { label: "O-", value: "O-" },
+];
+
+export const noOfNightOptions = [
+  { label: "---", value: "none" },
+  ...Array.from({ length: 61 }, (_, i) => ({
+    label: `${i}`,
+    value: `${i}`,
+  })),
+];
+
 export const noOfAdultsOptions = [
   { label: "---", value: "none" },
-  { label: "0", value: "0" },
-  { label: "1", value: "1" },
-  { label: "2", value: "2" },
-  { label: "3", value: "3" },
-  { label: "4", value: "4" },
-  { label: "5", value: "5" },
-  { label: "6", value: "6" },
-  { label: "7", value: "7" },
-  { label: "8", value: "8" },
-  { label: "9", value: "9" },
-  { label: "10", value: "10" },
-  { label: "11", value: "11" },
-  { label: "12", value: "12" },
-  { label: "13", value: "13" },
-  { label: "14", value: "14" },
-  { label: "15", value: "15" },
-  { label: "16", value: "16" },
-  { label: "17", value: "17" },
-  { label: "18", value: "18" },
-  { label: "19", value: "19" },
-  { label: "20", value: "20" },
+  ...Array.from({ length: 21 }, (_, i) => ({
+    label: `${i}`,
+    value: `${i}`,
+  })),
 ];
 
 export const noOfChildrens5To11Options = [
@@ -81,6 +90,11 @@ export const noOfChildrens5To11Options = [
   { label: "18", value: "18" },
   { label: "19", value: "19" },
   { label: "20", value: "20" },
+];
+
+export const bookingTypeOptions = [
+  { label: "Confirm", value: "Confirm" },
+  { label: "Enquiry", value: "Enquiry" },
 ];
 
 export const noOfChildrensBelow5Options = [
@@ -112,6 +126,7 @@ export const modeOptions = [
   { label: "Train", value: "Train" },
   { label: "Bus", value: "Bus" },
   { label: "Flight", value: "Flight" },
+  { label: "Car", value: "Car" },
 ];
 
 export const trainClassOptions = [

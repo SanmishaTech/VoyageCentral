@@ -10,6 +10,8 @@ import {
   noOfAdultsOptions,
   noOfChildrens5To11Options,
   noOfChildrensBelow5Options,
+  noOfNightOptions,
+  bookingTypeOptions,
 } from "@/config/data";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -82,7 +84,7 @@ const BookingFormSchema = z.object({
   description: z
     .string()
     .min(1, "Description is required.")
-    .max(190, "Description must not exceed 190 characters."),
+    .max(2000, "Description must not exceed 2000 characters."),
   date: z
     .string()
     .min(1, "Date is required.")
@@ -114,10 +116,12 @@ const FormSchema = z.object({
     z.number().min(1, "Client Field is required"),
   ]),
   numberOfAdults: z.string().optional(),
+  // numberOfNights: z.string().optional(),
   numberOfChildren5To11: z.string().optional(),
   numberOfChildrenUnder5: z.string().optional(),
   branchId: z
     .string()
+    .min(1, "Branch field is required.")
     .max(100, "number of adults must not exceed 100 characters.")
     .optional(),
   tourId: z
@@ -126,6 +130,7 @@ const FormSchema = z.object({
       z.number(),
     ])
     .optional(),
+  bookingType: z.string().min(1, "Booking type is required"),
   isJourney: z.coerce.number().min(0, " required"),
   isHotel: z.coerce.number().min(0, " required"),
   isVehicle: z.coerce.number().min(0, " required"),
@@ -162,6 +167,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     budgetField: "",
     clientId: "",
     numberOfAdults: "",
+    // numberOfNights: "",
     numberOfChildren5To11: "",
     numberOfChildrenUnder5: "",
     branchId: "",
@@ -172,6 +178,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     isPackage: 0,
     bookingDetail: "",
     enquiryStatus: "",
+    bookingType: "",
     bookingDetails: [], // Empty array for booking details
   };
 
@@ -315,6 +322,10 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         isPackage: Number(editBookingData.isPackage),
         enquiryStatus: editBookingData.enquiryStatus || "",
         bookingDetails: tourBookingDetailsData, // ✅ include this
+        numberOfNights: editBookingData.numberOfNights
+          ? String(editBookingData.numberOfNights)
+          : "",
+        bookingType: editBookingData.bookingType || "", // ✅ include this
       });
     }
   }, [editBookingData, reset, setValue]);
@@ -693,7 +704,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                       htmlFor="branchId"
                       className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
-                      Branch
+                      Branch <span className="text-red-500">*</span>
                     </Label>
                     <Controller
                       name="branchId"
@@ -944,6 +955,50 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     </p>
                   )}
                 </div>
+                {/* numbr of nights */}
+                {/* <div className="col-span-2 lg:col-span-1">
+                  <Label
+                    htmlFor="no"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    No. Of Nights
+                  </Label>
+                  <Controller
+                    name="numberOfNights"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        key={field.value}
+                        onValueChange={(value) =>
+                          setValue(
+                            "numberOfNights",
+                            value === "none" ? "" : value
+                          )
+                        }
+                        value={watch("numberOfNights")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {noOfNightOptions.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={String(option.value)}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.numberOfNights && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.numberOfNights.message}
+                    </p>
+                  )}
+                </div> */}
 
                 {/* Booking Details */}
                 <div className="col-span-2">
@@ -1220,6 +1275,53 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                 Add
               </Button>
             </div>
+
+            <div className="w-full  mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
+                {/* booking Type */}
+                <div className="col-span-2 lg:col-span-1">
+                  <Label
+                    htmlFor="no"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Booking Type <span className="text-red-500">*</span>
+                  </Label>
+                  <Controller
+                    name="bookingType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        key={field.value}
+                        onValueChange={(value) =>
+                          setValue("bookingType", value === "none" ? "" : value)
+                        }
+                        value={watch("bookingType")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {bookingTypeOptions.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={String(option.value)}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.bookingType && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.bookingType.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* end */}
           </CardContent>
 

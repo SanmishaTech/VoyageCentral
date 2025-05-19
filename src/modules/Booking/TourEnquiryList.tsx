@@ -67,12 +67,12 @@ const fetchBookings = async (
   recordsPerPage: number
 ) => {
   const response = await get(
-    `/bookings?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&fromBookingDate=${fromBookingDate}&toBookingDate=${toBookingDate}&tourTitle=${tourTitle}&clientName=${clientName}&limit=${recordsPerPage}`
+    `/bookings/enquiries?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&fromBookingDate=${fromBookingDate}&toBookingDate=${toBookingDate}&tourTitle=${tourTitle}&clientName=${clientName}&limit=${recordsPerPage}`
   );
   return response;
 };
 
-const BookingList = () => {
+const TourEnquiryList = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10); // Add recordsPerPage state
@@ -197,7 +197,7 @@ const BookingList = () => {
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
         {/* Booking Management */}
-        All Tour Booking
+        Tour Enquiries
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>
@@ -598,4 +598,4 @@ const BookingList = () => {
   );
 };
 
-export default BookingList;
+export default TourEnquiryList;

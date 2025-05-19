@@ -343,7 +343,9 @@ const VehicleBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     },
   });
 
-  const agentOptions = [{ id: "none", agentName: "---" }, ...(agents ?? [])];
+  const vehicleAgents =
+    agents?.filter((agent: any) => agent.isVehicle === true) ?? [];
+  const agentOptions = [{ id: "none", agentName: "---" }, ...vehicleAgents];
 
   const { data: editVehicleBookingData, isLoading: editVehicleBookingLoading } =
     useQuery({

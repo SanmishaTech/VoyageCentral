@@ -70,6 +70,7 @@ import BankList from "@/modules/Bank/BankList";
 import FairList from "@/modules/Fair/FairList";
 import StaffList from "./modules/Staff/StaffList";
 import EditTourMember from "./modules/Booking/TourMembers/EditTourMember";
+import TourEnquiryList from "./modules/Booking/TourEnquiryList";
 
 const App = () => {
   useEffect(() => {
@@ -303,6 +304,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <TourList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tours/enquiries"
+              element={
+                <ProtectedRoute>
+                  <TourEnquiryList />
                 </ProtectedRoute>
               }
             />
