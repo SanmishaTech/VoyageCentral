@@ -78,7 +78,7 @@ const FormSchema = z.object({
   remarks: z
     .string()
     .min(1, "Remark field is required.")
-    .max(180, "Remark field must not exceed 180 characters."),
+    .max(2000, "Remark field must not exceed 2000 characters."),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;

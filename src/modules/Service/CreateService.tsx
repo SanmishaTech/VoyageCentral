@@ -1,5 +1,5 @@
 import React from "react";
-import FairForm from "./FairForm";
+import ServiceForm from "./ServiceForm";
 import {
   Dialog,
   DialogContent,
@@ -7,21 +7,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface CreateFairDialogProps {
+interface CreateServiceDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const CreateFair = ({ isOpen, onClose }: CreateFairDialogProps) => {
+const CreateService = ({ isOpen, onClose }: CreateServiceDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create Fair</DialogTitle>
+          <DialogTitle>Create Service</DialogTitle>
         </DialogHeader>
-        <FairForm mode="create" onSuccess={onClose} className="mt-4" />
+        <ServiceForm mode="create" onSuccess={onClose} className="mt-4" />
       </DialogContent>
     </Dialog>
   );
 };
-export default CreateFair;
+export default CreateService;

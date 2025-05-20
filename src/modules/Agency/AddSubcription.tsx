@@ -274,9 +274,9 @@ const AddSubscription: React.FC<AddSubscriptionProps> = ({ agencyId }) => {
   }, [packageId, packages]);
 
   useEffect(() => {
-    if (agencyData?.state?.stateName) {
+    if (agencyData?.stateName) {
       setIsMaharashtra(
-        agencyData.state.stateName.trim().toLowerCase() === "maharashtra"
+        agencyData.stateName.trim().toLowerCase() === "maharashtra"
       );
     } else {
       setIsMaharashtra(false);

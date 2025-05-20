@@ -31,7 +31,8 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { appName } from "@/config";
-
+const UserData = JSON.parse(localStorage.getItem("user") || "{}");
+const agencyDetailsId = UserData?.agency?.id;
 // This is sample data.
 const initialData = {
   roles: {
@@ -53,19 +54,19 @@ const initialData = {
           icon: UsersRound,
         },
       ],
-      navMain: [
-        {
-          title: "Masters",
-          url: "#",
-          icon: SquareTerminal,
-          isActive: true,
-          items: [
-            { title: "Country", url: "/countries" },
-            { title: "State", url: "./states" },
-            { title: "City", url: "/cities" },
-          ],
-        },
-      ],
+      //   navMain: [
+      //     {
+      //       title: "Masters",
+      //       url: "#",
+      //       icon: SquareTerminal,
+      //       isActive: true,
+      //       items: [
+      //         { title: "Country", url: "/countries" },
+      //         { title: "State", url: "./states" },
+      //         { title: "City", url: "/cities" },
+      //       ],
+      //     },
+      //   ],
     },
     admin: {
       projects: [],
@@ -90,7 +91,8 @@ const initialData = {
             { title: "Hotels", url: "/hotels" },
             { title: "Agents", url: "/agents" },
             { title: "Clients", url: "/clients" },
-            { title: "Fairs", url: "/fairs" },
+            { title: "Services", url: "/services" },
+            { title: "Agency", url: `/agencies/profile/${agencyDetailsId}` },
           ],
         },
         {
@@ -100,8 +102,8 @@ const initialData = {
           isActive: false,
           items: [
             { title: "Tours", url: "/tours" },
-            { title: "All Tour Booking", url: "/bookings" },
             { title: "Tour Enquiries", url: "/tours/enquiries" },
+            { title: "Tour Booking", url: "/bookings" },
           ],
         },
       ],
@@ -129,7 +131,7 @@ const initialData = {
             { title: "Hotels", url: "/hotels" },
             { title: "Agents", url: "/agents" },
             { title: "Clients", url: "/clients" },
-            { title: "Fairs", url: "/fairs" },
+            { title: "Services", url: "/services" },
           ],
         },
         {
@@ -139,7 +141,8 @@ const initialData = {
           isActive: false,
           items: [
             { title: "Tours", url: "/tours" },
-            { title: "Tour Enquiries", url: "/bookings" },
+            { title: "Tour Enquiries", url: "/tours/enquiries" },
+            { title: "Tour Booking", url: "/bookings" },
           ],
         },
       ],
@@ -168,7 +171,7 @@ const initialData = {
             { title: "Hotels", url: "/hotels" },
             { title: "Agents", url: "/agents" },
             { title: "Clients", url: "/clients" },
-            { title: "Fairs", url: "/fairs" },
+            { title: "Services", url: "/services" },
           ],
         },
         {
@@ -178,7 +181,8 @@ const initialData = {
           isActive: false,
           items: [
             { title: "Tours", url: "/tours" },
-            { title: "Tour Enquiries", url: "/bookings" },
+            { title: "Tour Enquiries", url: "/tours/enquiries" },
+            { title: "Tour Booking", url: "/bookings" },
           ],
         },
       ],

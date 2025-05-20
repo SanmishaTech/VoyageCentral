@@ -85,6 +85,7 @@ import ServiceBookingList from "./ServiceBooking/ServiceBookingList";
 import { Separator } from "@radix-ui/react-separator";
 import VehicleBookingList from "./VehicleBooking/VehicleBookingList";
 import TravelDocumentList from "./TravelDocument/TravelDocumentList";
+import BookingReceiptList from "./BookingReceipt/BookingReceiptList";
 import TourMemberList from "./TourMembers/TourMemberList";
 const BookingDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -120,20 +121,38 @@ const BookingDetails = () => {
             {/* --- Tabs Start --- */}
             <div className=" mt-5 w-full">
               <Tabs defaultValue="JourneyBooking" className="w-full">
-                <TabsList className="grid grid-cols-1 md:grid-cols-6 w-full mb-44 md:mb-4">
-                  <TabsTrigger value="JourneyBooking">
-                    Journey Booking
-                  </TabsTrigger>
-                  <TabsTrigger value="HotelBooking">Hotel Booking</TabsTrigger>
+                <TabsList className="grid grid-cols-1 md:grid-cols-7 w-full mb-44 md:mb-4">
+                  {editBookingData?.isJourney ? (
+                    <>
+                      <TabsTrigger value="JourneyBooking">
+                        Journey Booking
+                      </TabsTrigger>
+                    </>
+                  ) : null}
+                  {editBookingData?.isHotel ? (
+                    <>
+                      <TabsTrigger value="HotelBooking">
+                        Hotel Booking
+                      </TabsTrigger>
+                    </>
+                  ) : null}
+                  {editBookingData?.isVehicle ? (
+                    <>
+                      <TabsTrigger value="VehicleBooking">
+                        Vehicle Booking
+                      </TabsTrigger>
+                    </>
+                  ) : null}
                   <TabsTrigger value="ServiceBooking">
                     Service Booking
                   </TabsTrigger>
-                  <TabsTrigger value="VehicleBooking">
-                    Vehicle Booking
-                  </TabsTrigger>
+
                   <TabsTrigger value="TourMembers">Tour Members</TabsTrigger>
                   <TabsTrigger value="TravelDocument">
                     Travel Documents
+                  </TabsTrigger>
+                  <TabsTrigger value="BookingReceipt">
+                    Booking Receipt
                   </TabsTrigger>
                 </TabsList>
 
@@ -154,6 +173,9 @@ const BookingDetails = () => {
                 </TabsContent>
                 <TabsContent value="TravelDocument">
                   <TravelDocumentList bookingId={id} />
+                </TabsContent>
+                <TabsContent value="BookingReceipt">
+                  <BookingReceiptList bookingId={id} />
                 </TabsContent>
               </Tabs>
             </div>

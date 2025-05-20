@@ -21,7 +21,7 @@ import UserList from "@/modules/User/UserList";
 import AgencyList from "@/modules/Agency/AgencyList";
 import CreateAgency from "@/modules/Agency/CreateAgency";
 import EditAgency from "@/modules/Agency/EditAgency";
-
+import AgencyProfile from "@/modules/Agency/AgencyProfile";
 import HotelList from "@/modules/Hotel/HotelList";
 import CreateHotel from "@/modules/Hotel/CreateHotel";
 import EditHotel from "@/modules/Hotel/EditHotel";
@@ -50,7 +50,8 @@ import UpdateVehicleBooking from "@/modules/Booking/VehicleBooking/EditVehicleBo
 import CreateTravelDocument from "@/modules/Booking/TravelDocument/CreateTravelDocument";
 import UpdateTravelDocument from "@/modules/Booking/TravelDocument/EditTravelDocument";
 import CreateTourMember from "@/modules/Booking/TourMembers/CreateTourMember";
-
+import CreateBookingReceipt from "@/modules/Booking/BookingReceipt/CreateBookingReceipt";
+import UpdateBookingReceipt from "@/modules/Booking/BookingReceipt/EditBookingReceipt";
 import BranchList from "@/modules/Branch/BranchList";
 import TourList from "@/modules/Tour/TourList";
 import CreateTour from "@/modules/Tour/CreateTour";
@@ -67,7 +68,7 @@ import Accommodation from "./modules/Accommodation/AccommodationList";
 import VehicleList from "@/modules/Vehicle/VehicleList";
 import AirlineList from "@/modules/Airline/AirlineList";
 import BankList from "@/modules/Bank/BankList";
-import FairList from "@/modules/Fair/FairList";
+import ServiceList from "@/modules/Service/ServiceList";
 import StaffList from "./modules/Staff/StaffList";
 import EditTourMember from "./modules/Booking/TourMembers/EditTourMember";
 import TourEnquiryList from "./modules/Booking/TourEnquiryList";
@@ -163,6 +164,15 @@ const App = () => {
             />
 
             <Route
+              path="/agencies/profile/:agencyId"
+              element={
+                <ProtectedRoute>
+                  <AgencyProfile />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="/countries"
               element={
                 <ProtectedRoute>
@@ -240,10 +250,10 @@ const App = () => {
               }
             />
             <Route
-              path="/fairs"
+              path="/services"
               element={
                 <ProtectedRoute>
-                  <FairList />
+                  <ServiceList />
                 </ProtectedRoute>
               }
             />
@@ -501,6 +511,22 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <EditTourMember />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id/bookingReceipt/create"
+              element={
+                <ProtectedRoute>
+                  <CreateBookingReceipt />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bookings/:id/bookingReceipt/:bookingReceiptId/edit"
+              element={
+                <ProtectedRoute>
+                  <UpdateBookingReceipt />
                 </ProtectedRoute>
               }
             />

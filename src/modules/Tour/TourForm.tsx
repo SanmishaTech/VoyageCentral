@@ -350,6 +350,11 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     console.log("After remove and recalculate:", updatedFields);
   };
 
+  // number of nights
+  useEffect(() => {
+    setValue("numberOfNights", String(fields.length));
+  }, [fields.length, setValue]);
+
   // start
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     const formData = new FormData();
@@ -586,7 +591,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                 >
                   No. Of Nights
                 </Label>
-                <Controller
+                {/* <Controller
                   name="numberOfNights"
                   control={control}
                   render={({ field }) => (
@@ -614,6 +619,19 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                         ))}
                       </SelectContent>
                     </Select>
+                  )}
+                /> */}
+                <Controller
+                  name="numberOfNights"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      value={String(fields.length)} // fields is your itinerary field array
+                      readOnly
+                      className="w-full"
+                      placeholder="Number of nights"
+                    />
                   )}
                 />
                 {errors.numberOfNights && (
