@@ -100,7 +100,7 @@ const CreateState: React.FC<CreateStateProps> = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent modal={false}>
         <DialogHeader>
           <DialogTitle>Add</DialogTitle>
         </DialogHeader>

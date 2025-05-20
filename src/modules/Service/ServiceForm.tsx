@@ -1,22 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import React, { useEffect } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import Validate from "@/lib/Handlevalidation";
-
-import { LoaderCircle } from "lucide-react"; // Import the LoaderCircle icon
+import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { get } from "@/services/apiService";
@@ -24,22 +14,22 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 
 const FormSchema = z.object({
-  fairName: z
+  serviceName: z
     .string()
-    .min(1, "Fair Name cannot be left blank.") // Ensuring minimum length of 2
-    .max(100, "Fair Name must not exceed 100 characters."),
+    .min(1, "Service Name cannot be left blank.")
+    .max(100, "Service Name must not exceed 100 characters."),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
 
 interface FormProps {
   mode: "create" | "edit";
-  fairId?: string;
+  serviceId?: string;
   onSuccess?: () => void;
   className?: string;
 }
 
-const FairForm = ({ mode, fairId, onSuccess, className }: FormProps) => {
+const ServiceForm = ({ mode, serviceId, onSuccess, className }: FormProps) => {
   const { id: paramId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -57,57 +47,57 @@ const FairForm = ({ mode, fairId, onSuccess, className }: FormProps) => {
     resolver: zodResolver(FormSchema),
   });
 
-  const { data: editFairData, isLoading: editFairLoading } = useQuery({
-    queryKey: ["editFair", fairId],
+  const { data: editServiceData, isLoading: editServiceLoading } = useQuery({
+    queryKey: ["editService", serviceId],
     queryFn: async () => {
-      const response = await get(`/fairs/${fairId}`);
-      return response; // API returns the sector object directly
+      const response = await get(`/services/${serviceId}`);
+      return response;
     },
-    enabled: !!fairId && mode === "edit",
+    enabled: !!serviceId && mode === "edit",
   });
 
   useEffect(() => {
-    if (editFairData) {
+    if (editServiceData) {
       reset({
-        fairName: editFairData.fairName, // Access the sectorName directly from response
+        serviceName: editServiceData.serviceName,
       });
     }
-  }, [editFairData, reset]);
+  }, [editServiceData, reset]);
 
-  // Mutation for creating a user
+  // Mutation for creating a service
   const createMutation = useMutation({
-    mutationFn: (data: FormInputs) => post("/fairs", data),
+    mutationFn: (data: FormInputs) => post("/services", data),
     onSuccess: () => {
-      toast.success("Fair created successfully");
-      queryClient.invalidateQueries(["fairs"]); // Refetch the users list
-      onSuccess?.(); // Call onSuccess callback if provided
+      toast.success("Service created successfully");
+      queryClient.invalidateQueries(["services"]);
+      onSuccess?.();
     },
     onError: (error: any) => {
       Validate(error, setError);
-      toast.error(error.response?.data?.message || "Failed to create Fair");
+      toast.error(error.response?.data?.message || "Failed to create Service");
     },
   });
 
-  // Mutation for updating a user
+  // Mutation for updating a service
   const updateMutation = useMutation({
-    mutationFn: (data: FormInputs) => put(`/fairs/${fairId}`, data),
+    mutationFn: (data: FormInputs) => put(`/services/${serviceId}`, data),
     onSuccess: () => {
-      toast.success("Fair updated successfully");
-      queryClient.invalidateQueries(["fairs"]);
-      onSuccess?.(); // Call onSuccess instead of navigating
+      toast.success("Service updated successfully");
+      queryClient.invalidateQueries(["services"]);
+      onSuccess?.();
     },
     onError: (error: any) => {
       Validate(error, setError);
-      toast.error(error.response?.data?.message || "Failed to create fair");
+      toast.error(error.response?.data?.message || "Failed to update Service");
     },
   });
 
   // Handle form submission
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     if (mode === "create") {
-      createMutation.mutate(data); // Trigger create mutation
+      createMutation.mutate(data);
     } else {
-      updateMutation.mutate(data); // Trigger update mutation
+      updateMutation.mutate(data);
     }
   };
 
@@ -117,28 +107,21 @@ const FairForm = ({ mode, fairId, onSuccess, className }: FormProps) => {
     }
   };
 
-  // Remove the Card wrapper conditional and always use the dialog form style
   return (
     <div className={className}>
-      <FormContent />
-    </div>
-  );
-
-  function FormContent() {
-    return (
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
         {/* Name Field */}
         <div className="grid gap-2 relative">
-          <Label htmlFor="fairName">Fair Name</Label>
+          <Label htmlFor="serviceName">Service Name</Label>
           <Input
-            id="fairName"
+            id="serviceName"
             type="text"
-            placeholder="Enter bank Name"
-            {...register("fairName")}
+            placeholder="Enter service name"
+            {...register("serviceName")}
           />
-          {errors.fairName && (
+          {errors.serviceName && (
             <span className="text-red-500 text-sm absolute bottom-0 translate-y-[110%]">
-              {errors.fairName.message}
+              {errors.serviceName.message}
             </span>
           )}
         </div>
@@ -166,8 +149,8 @@ const FairForm = ({ mode, fairId, onSuccess, className }: FormProps) => {
           </Button>
         </div>
       </form>
-    );
-  }
+    </div>
+  );
 };
 
-export default FairForm;
+export default ServiceForm;

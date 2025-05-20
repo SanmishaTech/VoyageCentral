@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Button, Input } from "@/components/ui";
-// Import MultipleSelector from common folder
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -26,10 +25,10 @@ import {
 } from "lucide-react";
 import ConfirmDialog from "@/components/common/confirm-dialog";
 
-import CreateFair from "./CreateFair"; // Import CreateUser component
-import EditFair from "./EditFair"; // Add this import
+import CreateService from "./CreateService";
+import EditService from "./EditService";
 
-const fetchFairs = async (
+const fetchServices = async (
   page: number,
   sortBy: string,
   sortOrder: string,
@@ -37,42 +36,49 @@ const fetchFairs = async (
   recordsPerPage: number
 ) => {
   const response = await get(
-    `/fairs?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&limit=${recordsPerPage}`
+    `/services?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&limit=${recordsPerPage}`
   );
   return response;
 };
 
-const FairList = () => {
+const ServiceList = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
-  const [recordsPerPage, setRecordsPerPage] = useState(10); // Add recordsPerPage state
-  const [sortBy, setSortBy] = useState("fairName"); // Default sort column
-  const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
-  const [search, setSearch] = useState(""); // Search query
-  const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
-  const [fairToDelete, setFairToDelete] = useState<number | null>(null); // Track the user ID to delete
-  const [showCreateDialog, setShowCreateDialog] = useState(false); // Add state for create user dialog
+  const [recordsPerPage, setRecordsPerPage] = useState(10);
+  const [sortBy, setSortBy] = useState("serviceName");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [search, setSearch] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<number | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedFairId, setSelectedFairId] = useState<string | null>(null);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
+    null
+  );
   const navigate = useNavigate();
 
-  // Fetch branches using react-query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["fairs", currentPage, sortBy, sortOrder, search, recordsPerPage],
+    queryKey: [
+      "services",
+      currentPage,
+      sortBy,
+      sortOrder,
+      search,
+      recordsPerPage,
+    ],
     queryFn: () =>
-      fetchFairs(currentPage, sortBy, sortOrder, search, recordsPerPage),
+      fetchServices(currentPage, sortBy, sortOrder, search, recordsPerPage),
   });
 
-  const fairs = data?.fairs || [];
+  const services = data?.services || [];
   const totalPages = data?.totalPages || 1;
-  const total = data?.totalFairs || 0;
+  const total = data?.totalServices || 0;
 
-  // Mutation for deleting a user
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => del(`/fairs/${id}`),
+    mutationFn: (id: number) => del(`/services/${id}`),
     onSuccess: () => {
-      toast.success("Fair deleted successfully");
-      queryClient.invalidateQueries(["fairs"]);
+      toast.success("Service deleted successfully");
+      queryClient.invalidateQueries(["services"]);
     },
     onError: (error) => {
       if (error?.message) {
@@ -84,50 +90,46 @@ const FairList = () => {
   });
 
   const confirmDelete = (id: number) => {
-    setFairToDelete(id);
+    setServiceToDelete(id);
     setShowConfirmation(true);
   };
 
   const handleDelete = () => {
-    if (fairToDelete) {
-      deleteMutation.mutate(fairToDelete);
+    if (serviceToDelete) {
+      deleteMutation.mutate(serviceToDelete);
       setShowConfirmation(false);
-      setFairToDelete(null);
+      setServiceToDelete(null);
     }
   };
 
-  // Handle sorting
   const handleSort = (column: string) => {
     if (sortBy === column) {
-      // Toggle sort order if the same column is clicked
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
-      // Set new column and default to ascending order
       setSortBy(column);
       setSortOrder("asc");
     }
   };
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-    setCurrentPage(1); // Reset to the first page
+    setCurrentPage(1);
   };
 
-  const handleEdit = (fairId: string) => {
-    setSelectedFairId(fairId);
+  const handleEdit = (serviceId: string) => {
+    setSelectedServiceId(serviceId);
     setShowEditDialog(true);
   };
 
   const handleCloseEditDialog = () => {
     setShowEditDialog(false);
-    setSelectedFairId(null);
+    setSelectedServiceId(null);
   };
 
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Fair Management
+        Service Management
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>
@@ -136,11 +138,10 @@ const FairList = () => {
             {/* Search Input */}
             <div className="flex-grow">
               <Input
-                placeholder="Search fairs..."
+                placeholder="Search services..."
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
-                // icon={<Search className="h-4 w-4" />}
               />
             </div>
 
@@ -151,7 +152,7 @@ const FairList = () => {
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add Fair
+                Add Service
               </Button>
             </div>
           </div>
@@ -165,20 +166,20 @@ const FairList = () => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load fairs.
+              Failed to load services.
             </div>
-          ) : fairs.length > 0 ? (
+          ) : services.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead
-                      onClick={() => handleSort("fairName")}
+                      onClick={() => handleSort("serviceName")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>Fair Name</span>
-                        {sortBy === "fairName" && (
+                        <span>Service Name</span>
+                        {sortBy === "serviceName" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -194,16 +195,16 @@ const FairList = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {fairs.map((fair) => (
-                    <TableRow key={fair.id}>
-                      <TableCell>{fair.fairName}</TableCell>
+                  {services.map((service) => (
+                    <TableRow key={service.id}>
+                      <TableCell>{service.serviceName}</TableCell>
 
                       <TableCell>
                         <div className=" justify-end flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleEdit(fair.id.toString())}
+                            onClick={() => handleEdit(service.id.toString())}
                           >
                             <Edit size={16} />
                           </Button>
@@ -211,7 +212,7 @@ const FairList = () => {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => confirmDelete(fair.id)}
+                            onClick={() => confirmDelete(service.id)}
                           >
                             <Trash2 size={16} />
                           </Button>
@@ -226,15 +227,15 @@ const FairList = () => {
                 totalPages={totalPages}
                 totalRecords={total}
                 recordsPerPage={recordsPerPage}
-                onPageChange={setCurrentPage} // Pass setCurrentPage directly
+                onPageChange={setCurrentPage}
                 onRecordsPerPageChange={(newRecordsPerPage) => {
                   setRecordsPerPage(newRecordsPerPage);
-                  setCurrentPage(1); // Reset to the first page when records per page changes
+                  setCurrentPage(1);
                 }}
               />
             </div>
           ) : (
-            <div className="text-center">No Fair found.</div>
+            <div className="text-center">No Service found.</div>
           )}
         </CardContent>
       </Card>
@@ -242,30 +243,28 @@ const FairList = () => {
       <ConfirmDialog
         isOpen={showConfirmation}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this Fair? This action cannot be undone."
+        description="Are you sure you want to delete this Service? This action cannot be undone."
         onCancel={() => {
           setShowConfirmation(false);
-          setFairToDelete(null);
+          setServiceToDelete(null);
         }}
         onConfirm={handleDelete}
       />
 
-      {/* Add CreateUser dialog */}
-      <CreateFair
+      <CreateService
         isOpen={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
       />
 
-      {/* Add EditUser dialog */}
-      {selectedFairId && (
-        <EditFair
+      {selectedServiceId && (
+        <EditService
           isOpen={showEditDialog}
           onClose={handleCloseEditDialog}
-          fairId={selectedFairId}
+          serviceId={selectedServiceId}
         />
       )}
     </div>
   );
 };
 
-export default FairList;
+export default ServiceList;

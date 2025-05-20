@@ -50,10 +50,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
-import EditState from "./EditState";
-import CreateState from "./CreateState";
+import EditCity from "./EditCity";
+import CreateCity from "./CreateCity";
 
-const fetchState = async (
+const fetchCity = async (
   page: number,
   sortBy: string,
   sortOrder: string,
@@ -64,7 +64,7 @@ const fetchState = async (
 ) => {
   const rolesQuery = roles.length > 0 ? `&roles=${roles.join(",")}` : "";
   const response = await get(
-    `/states?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&active=${active}${rolesQuery}&limit=${recordsPerPage}`
+    `/cities?page=${page}&sortBy=${sortBy}&sortOrder=${sortOrder}&search=${search}&active=${active}${rolesQuery}&limit=${recordsPerPage}`
   );
   return response;
 };
@@ -73,7 +73,7 @@ const UserList = () => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10); // Add recordsPerPage state
-  const [sortBy, setSortBy] = useState("stateName"); // Default sort column
+  const [sortBy, setSortBy] = useState("cityName"); // Default sort column
   const [sortOrder, setSortOrder] = useState("asc"); // Default sort order
   const [search, setSearch] = useState(""); // Search query
   const [active, setActive] = useState("all"); // Active filter (all, true, false)
@@ -86,13 +86,13 @@ const UserList = () => {
   const [userToDelete, setUserToDelete] = useState<number | null>(null); // Track the user ID to delete
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
+  const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
   const navigate = useNavigate();
 
-  // Fetch state using react-query
+  // Fetch city using react-query
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [
-      "states",
+      "cities",
       currentPage,
       sortBy,
       sortOrder,
@@ -102,7 +102,7 @@ const UserList = () => {
       recordsPerPage,
     ],
     queryFn: () =>
-      fetchState(
+      fetchCity(
         currentPage,
         sortBy,
         sortOrder,
@@ -113,22 +113,22 @@ const UserList = () => {
       ),
   });
 
-  const states = data?.states || [];
+  const cities = data?.cities || [];
   const totalPages = data?.totalPages || 1;
-  const totalState = data?.totalState || 0;
+  const totalCity = data?.totalCity || 0;
 
   // Mutation for deleting a user
   const deleteUserMutation = useMutation({
-    mutationFn: (id: number) => del(`/states/${id}`),
+    mutationFn: (id: number) => del(`/cities/${id}`),
     onSuccess: () => {
       toast.success("User deleted successfully");
-      queryClient.invalidateQueries(["states"]);
+      queryClient.invalidateQueries(["cities"]);
     },
     onError: (error) => {
       if (error?.message) {
         toast.error(error.message);
       } else {
-        toast.error("Failed to delete State");
+        toast.error("Failed to delete City");
       }
     },
   });
@@ -186,8 +186,8 @@ const UserList = () => {
     setShowChangePassword(false); // Hide the ChangePassword dialog
   };
 
-  const handleEdit = (stateId: number) => {
-    setSelectedStateId(stateId);
+  const handleEdit = (cityId: number) => {
+    setSelectedCityId(cityId);
     setShowEditDialog(true);
   };
 
@@ -198,7 +198,7 @@ const UserList = () => {
   return (
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        State Management
+        City Management
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>
@@ -207,7 +207,7 @@ const UserList = () => {
             {/* Search Input */}
             <div className="flex-grow">
               <Input
-                placeholder="Search states..."
+                placeholder="Search cities..."
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
@@ -222,7 +222,7 @@ const UserList = () => {
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add State
+                Add City
               </Button>
             </div>
           </div>
@@ -236,20 +236,20 @@ const UserList = () => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load states.
+              Failed to load cities.
             </div>
-          ) : states.length > 0 ? (
+          ) : cities?.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead
-                      onClick={() => handleSort("stateName")}
+                      onClick={() => handleSort("cityName")}
                       className="cursor-pointer"
                     >
                       <div className="flex items-center">
-                        <span>State Name</span>
-                        {sortBy === "stateName" && (
+                        <span>City Name</span>
+                        {sortBy === "cityName" && (
                           <span className="ml-1">
                             {sortOrder === "asc" ? (
                               <ChevronUp size={16} />
@@ -262,7 +262,7 @@ const UserList = () => {
                     </TableHead>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>Country Name</span>
+                        <span>State Name</span>
                       </div>
                     </TableHead>
 
@@ -270,17 +270,17 @@ const UserList = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {states.map((state) => (
-                    <TableRow key={state.id}>
-                      <TableCell>{state.stateName}</TableCell>
-                      <TableCell>{state.country.countryName}</TableCell>
+                  {cities.map((city) => (
+                    <TableRow key={city.id}>
+                      <TableCell>{city.cityName}</TableCell>
+                      <TableCell>{city.state.stateName}</TableCell>
 
                       <TableCell>
                         <div className="justify-end flex gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleEdit(state.id)}
+                            onClick={() => handleEdit(city.id)}
                           >
                             <Edit size={16} />
                           </Button>
@@ -288,7 +288,7 @@ const UserList = () => {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => confirmDelete(state.id)}
+                            onClick={() => confirmDelete(city.id)}
                           >
                             <Trash2 size={16} />
                           </Button>
@@ -301,7 +301,7 @@ const UserList = () => {
               <CustomPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                totalRecords={totalState}
+                totalRecords={totalCity}
                 recordsPerPage={recordsPerPage}
                 onPageChange={setCurrentPage} // Pass setCurrentPage directly
                 onRecordsPerPageChange={(newRecordsPerPage) => {
@@ -311,7 +311,7 @@ const UserList = () => {
               />
             </div>
           ) : (
-            <div className="text-center">No State Found.</div>
+            <div className="text-center">No City Found.</div>
           )}
         </CardContent>
       </Card>
@@ -327,16 +327,16 @@ const UserList = () => {
         onConfirm={handleDelete}
       />
 
-      <EditState
-        stateId={selectedStateId}
+      <EditCity
+        cityId={selectedCityId}
         isOpen={showEditDialog}
         onClose={() => {
           setShowEditDialog(false);
-          setSelectedStateId(null);
+          setSelectedCityId(null);
         }}
       />
 
-      <CreateState
+      <CreateCity
         isOpen={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
       />

@@ -501,6 +501,14 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <Input
                     id="bookingDate"
                     type="date"
+                    min={new Date().toISOString().split("T")[0]} // Prevent past dates
+                    max={
+                      new Date(
+                        new Date().setFullYear(new Date().getFullYear() + 2)
+                      )
+                        .toISOString()
+                        .split("T")[0]
+                    } // Today + 2 years
                     {...register("bookingDate")}
                   />
                   {errors.bookingDate && (
@@ -521,6 +529,14 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <Input
                     id="departureDate"
                     type="date"
+                    min={new Date().toISOString().split("T")[0]} // Prevent past dates
+                    max={
+                      new Date(
+                        new Date().setFullYear(new Date().getFullYear() + 2)
+                      )
+                        .toISOString()
+                        .split("T")[0]
+                    } // Today + 2 years
                     {...register("departureDate")}
                   />
                   {errors.departureDate && (
@@ -541,6 +557,14 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <Input
                     id="journeyDate"
                     type="date"
+                    min={new Date().toISOString().split("T")[0]} // Prevent past dates
+                    max={
+                      new Date(
+                        new Date().setFullYear(new Date().getFullYear() + 2)
+                      )
+                        .toISOString()
+                        .split("T")[0]
+                    } // Today + 2 years
                     {...register("journeyDate")}
                   />
                   {errors.journeyDate && (

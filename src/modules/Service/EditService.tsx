@@ -1,5 +1,5 @@
 import React from "react";
-import FairForm from "./FairForm";
+import ServiceForm from "./ServiceForm";
 import {
   Dialog,
   DialogContent,
@@ -7,22 +7,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface EditFairDialogProps {
+interface EditServiceDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  fairId: string;
+  serviceId: string;
 }
 
-const EditFair = ({ isOpen, onClose, fairId }: EditFairDialogProps) => {
+const EditService = ({
+  isOpen,
+  onClose,
+  serviceId,
+}: EditServiceDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Edit Fair</DialogTitle>
+          <DialogTitle>Edit Service</DialogTitle>
         </DialogHeader>
-        <FairForm
+        <ServiceForm
           mode="edit"
-          fairId={fairId}
+          serviceId={serviceId}
           onSuccess={onClose}
           className="mt-4"
         />
@@ -31,4 +35,4 @@ const EditFair = ({ isOpen, onClose, fairId }: EditFairDialogProps) => {
   );
 };
 
-export default EditFair;
+export default EditService;

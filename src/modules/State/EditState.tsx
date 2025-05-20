@@ -129,7 +129,7 @@ const EditState = ({ stateId, isOpen, onClose }: EditStateProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent modal={false}>
         <DialogHeader>
           <DialogTitle>Edit State</DialogTitle>
         </DialogHeader>
