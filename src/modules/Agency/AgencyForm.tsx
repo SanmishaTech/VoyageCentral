@@ -787,6 +787,36 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
   const isLoading =
     createAgencyMutation.isPending || updateAgencyMutation.isPending;
 
+  const handleSubscriptionInvoice = async (subscriptionId) => {
+    try {
+      const response = await get(
+        `/subscriptions/invoice/${subscriptionId}`,
+        {},
+        { responseType: "blob" } // must be in config
+      );
+
+      if (response.status === 200) {
+        const blob = new Blob([response.data], { type: "application/pdf" });
+
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `invoice-${subscriptionId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error("Failed to generate invoice");
+        alert("Failed to generate invoice");
+      }
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      alert("Failed to download invoice");
+    }
+  };
   return (
     <>
       {/* --- Form --- */}
@@ -1808,6 +1838,7 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <TableHead>Start Date</TableHead>
                     <TableHead>End Date</TableHead>
                     <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1838,6 +1869,17 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
                             >
                               {isActive ? "Active" : "Expired"}
                             </Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                // variant="ghost"
+                                size="sm"
+                                onClick={() => handleSubscriptionInvoice(s.id)}
+                              >
+                                invoice
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
