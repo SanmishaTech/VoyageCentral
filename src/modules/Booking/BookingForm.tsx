@@ -524,7 +524,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     htmlFor="departureDate"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Departure Date
+                    Client Departure Date
                   </Label>
                   <Input
                     id="departureDate"
@@ -552,7 +552,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     htmlFor="journeyDate"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Journey Date
+                    Journey Start Date
                   </Label>
                   <Input
                     id="journeyDate"

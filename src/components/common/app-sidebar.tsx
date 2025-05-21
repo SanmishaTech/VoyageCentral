@@ -78,6 +78,7 @@ const initialData = {
           icon: SquareTerminal,
           isActive: false,
           items: [
+            { title: "Agency", url: `/agencies/profile/${agencyDetailsId}` },
             { title: "Country", url: "/countries" },
             { title: "State", url: "./states" },
             { title: "City", url: "/cities" },
@@ -92,7 +93,6 @@ const initialData = {
             { title: "Agents", url: "/agents" },
             { title: "Clients", url: "/clients" },
             { title: "Services", url: "/services" },
-            { title: "Agency", url: `/agencies/profile/${agencyDetailsId}` },
           ],
         },
         {

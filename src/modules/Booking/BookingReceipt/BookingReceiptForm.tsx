@@ -81,8 +81,8 @@ const FormSchema = z
     amount: z
       .union([z.string(), z.number()])
       .transform((val) => parseFloat(val))
-      .refine((val) => !isNaN(val) && val >= 0, {
-        message: " amount must be a positive number",
+      .refine((val) => !isNaN(val) && val > 0, {
+        message: " Amount must be a number greater than 0",
       }),
     // Optional bank-related fields
     bankId: z.union([z.string(), z.number()]).optional().nullable(),
@@ -96,6 +96,7 @@ const FormSchema = z
       .refine((val) => !val || /^[A-Za-z0-9]{12,22}$/.test(val), {
         message: "UTR number must be 12 to 22 alphanumeric characters",
       }),
+    description: z.string().min(1, "Description is required"),
     neftImpfNumber: z
       .string()
       .optional()
@@ -120,7 +121,7 @@ const FormSchema = z
           message: "CGST percent must be between 0 and 100",
         }
       ),
-
+    paymentDate: z.string().min(1, "Payment date is required"),
     cgstAmount: z
       .union([z.string(), z.number()])
       .optional()
@@ -181,8 +182,8 @@ const FormSchema = z
     totalAmount: z
       .union([z.string(), z.number()])
       .transform((val) => parseFloat(val))
-      .refine((val) => !isNaN(val) && val >= 0, {
-        message: "Total amount must be a positive number",
+      .refine((val) => !isNaN(val) && val > 0, {
+        message: "Total amount must be greater than 0",
       }),
   })
   .superRefine((data, ctx) => {
@@ -244,6 +245,8 @@ const defaultValues: FormInputs = {
   igstPercent: undefined,
   igstAmount: undefined,
   totalAmount: 0,
+  paymentDate: "",
+  description: "",
 };
 
 const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
@@ -251,6 +254,9 @@ const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
     id: string;
     bookingReceiptId: string;
   }>();
+
+  const UserData = JSON.parse(localStorage.getItem("user") || "{}");
+  const agencyDetailsId = UserData?.agency?.id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [openBankId, setOpenBankId] = useState<boolean>(false);
@@ -268,6 +274,79 @@ const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
     resolver: zodResolver(FormSchema),
     defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
   });
+
+  const { data: editAgencyData, isLoading: editAgencyLoading } = useQuery({
+    queryKey: ["editAgency", agencyDetailsId],
+    queryFn: async () => {
+      const response = await get(`/agencies/${agencyDetailsId}`);
+      return response;
+    },
+  });
+
+  // gst calculate start
+  const isGstinValid = editAgencyData?.gstin?.length > 4;
+  const isMaharashtra =
+    editAgencyData?.stateName?.toLowerCase() === "maharashtra";
+  const cgstPercent = watch("cgstPercent");
+  const sgstPercent = watch("sgstPercent");
+  const igstPercent = watch("igstPercent");
+  const amount = Number(watch("amount") || 0);
+
+  useEffect(() => {
+    if (!editAgencyData) return;
+    const isMaharashtra =
+      editAgencyData?.stateName.toLowerCase() === "maharashtra";
+    const isGstinValid = editAgencyData.gstin?.length > 4;
+    const baseAmount = Number(amount) || 0;
+
+    if (!isGstinValid) {
+      setValue("cgstAmount", "0.00");
+      setValue("sgstAmount", "0.00");
+      setValue("igstAmount", "0.00");
+      setValue("totalAmount", baseAmount.toFixed(2));
+      return;
+    }
+
+    if (isMaharashtra) {
+      const cgst = ((Number(cgstPercent) || 0) / 100) * baseAmount;
+      const sgst = ((Number(sgstPercent) || 0) / 100) * baseAmount;
+      setValue("cgstAmount", cgst.toFixed(2));
+      setValue("sgstAmount", sgst.toFixed(2));
+      setValue("igstAmount", "0.00");
+      setValue("totalAmount", (baseAmount + cgst + sgst).toFixed(2));
+    } else {
+      const igst = ((Number(igstPercent) || 0) / 100) * baseAmount;
+      setValue("igstAmount", igst.toFixed(2));
+      setValue("cgstAmount", "0.00");
+      setValue("sgstAmount", "0.00");
+      setValue("totalAmount", (baseAmount + igst).toFixed(2));
+    }
+  }, [cgstPercent, sgstPercent, igstPercent, amount, editAgencyData, setValue]);
+
+  // Set default percents when state or package changes
+  useEffect(() => {
+    if (!editAgencyData) return;
+    const isGstinValid = editAgencyData.gstin?.length > 4;
+    const isMaharashtra =
+      editAgencyData?.stateName.toLowerCase() === "maharashtra";
+    if (isGstinValid) {
+      if (isMaharashtra) {
+        setValue("cgstPercent", 9);
+        setValue("sgstPercent", 9);
+        setValue("igstPercent", 0);
+      } else {
+        setValue("cgstPercent", 0);
+        setValue("sgstPercent", 0);
+        setValue("igstPercent", 18);
+      }
+    } else {
+      setValue("cgstPercent", 0);
+      setValue("sgstPercent", 0);
+      setValue("igstPercent", 0);
+    }
+  }, [editAgencyData, setValue]);
+
+  // gst calculation end
 
   const { data: editBookingReceiptData, isLoading: editBookingReceiptLoading } =
     useQuery({
@@ -328,6 +407,7 @@ const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
         chequeNumber: editBookingReceiptData?.chequeNumber ?? "",
         utrNumber: editBookingReceiptData?.utrNumber ?? "",
         neftImpfNumber: editBookingReceiptData?.neftImpfNumber ?? "",
+        description: editBookingReceiptData?.description ?? "",
       });
     }
   }, [editBookingReceiptData, reset]);
@@ -465,59 +545,109 @@ const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
                   </p>
                 )}
               </div>
-              <div>
-                <Label
-                  htmlFor="paymentMode"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Payment mode <span className="text-red-500">*</span>
-                </Label>
-                <Controller
-                  name="paymentMode"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      key={field.value}
-                      onValueChange={(value) => setValue("paymentMode", value)}
-                      value={watch("paymentMode")}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select payment mode" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {paymentModeOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              <div className="col-span-2">
+                {/* Description */}
+                <div className="">
+                  <Label
+                    htmlFor="description"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Description <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="description"
+                    {...register("description")}
+                    placeholder="description"
+                  />
+                  {errors.description && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.description.message}
+                    </p>
                   )}
-                />
-                {errors.paymentMode && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.paymentMode.message as string}
-                  </p>
-                )}
+                </div>
               </div>
-              <div>
-                <Label
-                  htmlFor="amount"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Amount <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  {...register("amount")}
-                />
-                {errors.amount && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.amount.message}
-                  </p>
-                )}
+
+              <div className="col-span-2">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                  <div>
+                    <Label
+                      htmlFor="paymentMode"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Payment mode <span className="text-red-500">*</span>
+                    </Label>
+                    <Controller
+                      name="paymentMode"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          key={field.value}
+                          onValueChange={(value) =>
+                            setValue("paymentMode", value)
+                          }
+                          value={watch("paymentMode")}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select payment mode" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {paymentModeOptions.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.paymentMode && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.paymentMode.message as string}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="paymentDate"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Payment Date <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="paymentDate"
+                      type="date"
+                      placeholder="Enter paymentDate"
+                      {...register("paymentDate")}
+                    />
+                    {errors.paymentDate && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.paymentDate.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="amount"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Amount <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="Enter amount"
+                      {...register("amount")}
+                    />
+                    {errors.amount && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.amount.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Conditional fields based on payment mode */}
@@ -687,6 +817,104 @@ const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
                 </div>
               )}
               {/* payment details end */}
+
+              {/* --- Subscription Type start --- */}
+              {/* In your JSX, conditionally render the fields: */}
+
+              {/* GST/IGST Percent Inputs (editable) */}
+              {isGstinValid && (
+                <div className="grid grid-cols-1 mt-3 md:grid-cols-2 gap-4">
+                  {isMaharashtra ? (
+                    <>
+                      <div>
+                        <Label>CGST %</Label>
+                        <Input
+                          type="number"
+                          className="mt-1"
+                          {...register("cgstPercent")}
+                        />
+                        {errors.cgstPercent && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.cgstPercent.message as string}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>SGST %</Label>
+                        <Input
+                          type="number"
+                          className="mt-1"
+                          {...register("sgstPercent")}
+                        />
+                        {errors.sgstPercent && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.sgstPercent.message as string}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="md:col-span-2 mt-3">
+                      <Label>IGST %</Label>
+                      <Input
+                        type="number"
+                        className="mt-1"
+                        {...register("igstPercent")}
+                      />
+                      {errors.igstPercent && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.igstPercent.message as string}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {isGstinValid && (
+                <div className="md:col-span-2 mt-2 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                    <dt className="col-span-2 mt-2 text-gray-800 dark:text-gray-200 font-medium">
+                      Total Preview
+                    </dt>
+
+                    {isMaharashtra ? (
+                      <>
+                        <dt className="text-gray-600 dark:text-gray-400">
+                          CGST Amount:
+                        </dt>
+                        <dd className="text-gray-900 dark:text-gray-100">
+                          ₹{watch("cgstAmount") || "0.00"}
+                        </dd>
+                        <dt className="text-gray-600 dark:text-gray-400">
+                          SGST Amount:
+                        </dt>
+                        <dd className="text-gray-900 dark:text-gray-100">
+                          ₹{watch("sgstAmount") || "0.00"}
+                        </dd>
+                      </>
+                    ) : (
+                      <>
+                        <dt className="text-gray-600 dark:text-gray-400">
+                          IGST Amount:
+                        </dt>
+                        <dd className="text-gray-900 dark:text-gray-100">
+                          ₹{watch("igstAmount") || "0.00"}
+                        </dd>
+                      </>
+                    )}
+
+                    <dt className="text-gray-600 dark:text-gray-400">
+                      Total Amount:
+                    </dt>
+                    <dd className="text-gray-900 dark:text-gray-100 font-semibold">
+                      ₹{watch("totalAmount") || "0.00"}
+                    </dd>
+                  </dl>
+                </div>
+              )}
+
+              {/* --- Subscription Type end--- */}
             </div>
           </CardContent>
 

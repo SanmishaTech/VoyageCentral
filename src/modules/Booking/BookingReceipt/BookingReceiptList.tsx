@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Input } from "@/components/ui";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatter.js";
-
+import axios from "axios";
 import {
   Select,
   SelectTrigger,
@@ -93,13 +93,44 @@ const BookingReceiptList = ({ bookingId }) => {
     },
   });
 
+  const handleGenerateInvoice = async (receiptId) => {
+    try {
+      const response = await get(
+        `/booking-receipts/invoice/${receiptId}`,
+        {},
+        { responseType: "blob" } // must be in config
+      );
+
+      if (response.status === 200) {
+        const blob = new Blob([response.data], { type: "application/pdf" });
+
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `invoice-${receiptId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error("Failed to generate invoice");
+        alert("Failed to generate invoice");
+      }
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      alert("Failed to download invoice");
+    }
+  };
+
   const confirmDelete = (id: number) => {
     setBookingReceiptToDelete(id);
     setShowConfirmation(true);
   };
 
   const handleDelete = () => {
-    if (BookingReceiptToDelete) {
+    if (bookingReceiptToDelete) {
       deleteMutation.mutate(bookingReceiptToDelete);
       setShowConfirmation(false);
       setBookingReceiptToDelete(null);
@@ -147,12 +178,17 @@ const BookingReceiptList = ({ bookingId }) => {
                     </TableHead>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
+                        <span>Description</span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer">
+                      <div className="flex items-center">
                         <span>Receipt Date</span>
                       </div>
                     </TableHead>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>Amount</span>
+                        <span>Total Amount</span>
                       </div>
                     </TableHead>
 
@@ -167,27 +203,28 @@ const BookingReceiptList = ({ bookingId }) => {
                       <TableCell className="max-w-[600px] px-1 whitespace-normal break-words">
                         {receipt?.receiptNumber}
                       </TableCell>
+                      <TableCell className="max-w-[500px] px-1 whitespace-normal break-words">
+                        {receipt?.description}
+                      </TableCell>
                       <TableCell className="max-w-[600px] px-1 whitespace-normal break-words">
                         {receipt?.receiptDate
                           ? dayjs(receipt?.receiptDate).format("DD/MM/YYYY")
                           : "N/A"}
                       </TableCell>
-                      <TableCell> {formatCurrency(receipt?.amount)}</TableCell>
+                      <TableCell>
+                        {" "}
+                        {formatCurrency(receipt?.totalAmount)}
+                      </TableCell>
 
                       <TableCell className="20">
                         <div className="flex justify-end gap-2">
                           <Button
-                            variant="outline"
+                            // variant="ghost"
                             size="sm"
-                            onClick={() =>
-                              navigate(
-                                `/bookings/${bookingId}/bookingReceipt/${receipt.id}/edit`
-                              )
-                            }
+                            onClick={() => handleGenerateInvoice(receipt.id)}
                           >
-                            <Edit size={16} />
+                            invoice
                           </Button>
-
                           <Button
                             variant="destructive"
                             size="sm"

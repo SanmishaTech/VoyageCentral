@@ -206,7 +206,7 @@ const TourEnquiryList = () => {
             {/* Search Input */}
             <div className="flex-grow">
               <Input
-                placeholder="Search bookings..."
+                placeholder="Search tour enquiries..."
                 value={search}
                 onChange={handleSearchChange}
                 className="w-full"
@@ -227,7 +227,7 @@ const TourEnquiryList = () => {
                 className="bg-primary hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <PlusCircle className="mr-2 h-5 w-5" />
-                Add Booking
+                Add Enquiry
               </Button>
             </div>
           </div>
@@ -239,7 +239,7 @@ const TourEnquiryList = () => {
                 {/* From Booking Date */}
                 <div>
                   <label className="text-sm font-medium mb-1 block">
-                    From Booking Date
+                    From Tour Enquiry Date
                   </label>
                   <Input
                     type="date"
@@ -252,7 +252,7 @@ const TourEnquiryList = () => {
                 {/* To Booking Date */}
                 <div>
                   <label className="text-sm font-medium mb-1 block">
-                    To Booking Date
+                    To Tour Enquiry Date
                   </label>
                   <Input
                     type="date"
@@ -511,7 +511,7 @@ const TourEnquiryList = () => {
                           >
                             <Trash2 size={16} />
                           </Button> */}
-                          <Button
+                          {/* <Button
                             variant="outline"
                             size="sm"
                             onClick={() =>
@@ -519,7 +519,7 @@ const TourEnquiryList = () => {
                             }
                           >
                             Booking
-                          </Button>
+                          </Button> */}
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -579,7 +579,7 @@ const TourEnquiryList = () => {
               />
             </div>
           ) : (
-            <div className="text-center">No Bookings Found.</div>
+            <div className="text-center">No Tour Enquiries Found.</div>
           )}
         </CardContent>
       </Card>

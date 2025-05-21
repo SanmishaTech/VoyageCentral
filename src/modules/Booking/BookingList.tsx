@@ -197,7 +197,7 @@ const BookingList = () => {
     <div className="mt-2 p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
         {/* Booking Management */}
-        All Tour Booking
+        Tour Booking
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">
         <CardContent>

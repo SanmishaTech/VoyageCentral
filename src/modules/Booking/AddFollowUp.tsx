@@ -168,6 +168,14 @@ const AddFollowUp = () => {
                     <Input
                       id="followUpDate"
                       type="date"
+                      min={new Date().toISOString().split("T")[0]} // Prevent past dates
+                      max={
+                        new Date(
+                          new Date().setFullYear(new Date().getFullYear() + 2)
+                        )
+                          .toISOString()
+                          .split("T")[0]
+                      } // Today + 2 years
                       {...register("followUpDate")}
                     />
                     {errors.followUpDate && (
@@ -188,6 +196,14 @@ const AddFollowUp = () => {
                     <Input
                       id="nextFollowUpDate"
                       type="date"
+                      min={new Date().toISOString().split("T")[0]} // Prevent past dates
+                      max={
+                        new Date(
+                          new Date().setFullYear(new Date().getFullYear() + 2)
+                        )
+                          .toISOString()
+                          .split("T")[0]
+                      } // Today + 2 years
                       {...register("nextFollowUpDate")}
                     />
                     {errors.nextFollowUpDate && (
