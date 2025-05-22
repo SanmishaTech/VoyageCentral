@@ -112,12 +112,33 @@ const FormSchema = z.object({
     .string()
     .max(180, "Class field must not exceed 100 characters.")
     .optional(),
+  // pnrNumber: z
+  //   .string()
+  //   .max(180, "PNR No. field must not exceed 100 characters.")
+  //   .optional(),
   pnrNumber: z
     .string()
-    .max(180, "PNR No. field must not exceed 100 characters.")
-    .optional(),
+    .refine(
+      (val) => val === "" || /^[1-9][0-9]{9}$/.test(val),
+      "PNR must be a 10-digit number."
+    ),
   airlineId: z.coerce.number().nullable().optional(),
   vehicleId: z.coerce.number().nullable().optional(),
+  amount: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        const parsed = parseFloat(val);
+        return isNaN(parsed) ? val : parsed;
+      }
+      return val;
+    },
+    z
+      .number({
+        invalid_type_error: "Amount must be a number",
+        required_error: "Amount is required",
+      })
+      .min(1, "Amount must be greater than 0")
+  ),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
@@ -141,6 +162,7 @@ const defaultValues: FormInputs = {
   pnrNumber: "",
   airlineId: null,
   vehicleId: null,
+  amount: "",
 };
 
 const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
@@ -273,6 +295,9 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
           : "",
         vehicleId: editJourneyBookingData.vehicleId
           ? editJourneyBookingData.vehicleId
+          : "",
+        amount: editJourneyBookingData.amount
+          ? parseFloat(editJourneyBookingData.amount).toFixed(2)
           : "",
       });
     }
@@ -1028,6 +1053,26 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                 {errors.billDescription && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.billDescription.message}
+                  </p>
+                )}
+              </div>
+              <div className="col-span-2 md:col-span-1 md:col-start-3">
+                <Label
+                  htmlFor="amount"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Amount <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="amount"
+                  {...register("amount")}
+                  step="0.01"
+                  type="number"
+                  placeholder="Enter amount"
+                />
+                {errors.amount && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.amount.message}
                   </p>
                 )}
               </div>

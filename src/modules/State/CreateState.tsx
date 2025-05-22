@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Validate from "@/lib/Handlevalidation";
 
 interface Country {
   id: number;
@@ -45,7 +46,7 @@ interface CountriesResponse {
 
 const statesSchema = z.object({
   stateName: z.string().min(1, "State name is required"),
-  countryId: z.number().min(1, "Country is required"),
+  countryId: z.coerce.number().min(1, "Country is required"),
 });
 
 type StateFormData = z.infer<typeof statesSchema>;
@@ -73,11 +74,12 @@ const CreateState: React.FC<CreateStateProps> = ({ isOpen, onClose }) => {
     reset,
     setValue,
     watch,
+    setError,
   } = useForm<StateFormData>({
     resolver: zodResolver(statesSchema),
     defaultValues: {
       stateName: "",
-      countryId: undefined,
+      countryId: "",
     },
   });
 
@@ -89,7 +91,8 @@ const CreateState: React.FC<CreateStateProps> = ({ isOpen, onClose }) => {
       reset();
       onClose();
     },
-    onError: () => {
+    onError: (error) => {
+      Validate(error, setError);
       toast.error("Failed to create states");
     },
   });

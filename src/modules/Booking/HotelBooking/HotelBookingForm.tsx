@@ -149,6 +149,36 @@ const FormSchema = z.object({
     .string()
     .max(100, "Bill description must not exceed 100 characters.")
     .optional(),
+  amount: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        const parsed = parseFloat(val);
+        return isNaN(parsed) ? val : parsed;
+      }
+      return val;
+    },
+    z
+      .number({
+        invalid_type_error: "Amount must be a number",
+        required_error: "Amount is required",
+      })
+      .min(1, "Amount must be greater than 0")
+  ),
+  totalAmount: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        const parsed = parseFloat(val);
+        return isNaN(parsed) ? val : parsed;
+      }
+      return val;
+    },
+    z
+      .number({
+        invalid_type_error: "Total Amount must be a number",
+        required_error: "Total Amount is required",
+      })
+      .min(1, "Total Amount must be greater than 0")
+  ),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
@@ -185,6 +215,8 @@ const defaultValues: FormInputs = {
   specialRequirement: "",
   notes: "",
   billDescription: "",
+  amount: "",
+  totalAmount: "",
 };
 
 const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
@@ -212,6 +244,28 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     resolver: zodResolver(FormSchema),
     defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
   });
+
+  // Watch values
+  const isBed = watch("extraBed");
+  const bedCost = watch("extraBedCost");
+  const amount = watch("amount");
+
+  // Real-time totalAmount calculation
+  useEffect(() => {
+    const parsedBedCost = isBed ? parseFloat(bedCost) || 0 : 0;
+    const parsedAmount = parseFloat(amount) || 0;
+    const total = parsedBedCost + parsedAmount;
+
+    setValue("totalAmount", total.toFixed(2));
+  }, [bedCost, amount, isBed, setValue]);
+
+  // Clear bedCost if isBed is false
+  useEffect(() => {
+    if (!isBed) {
+      setValue("extraBedCost", null);
+      setValue("beds", "");
+    }
+  }, [isBed, setValue]);
 
   // cities
   const { data: cities, isLoading: isCityLoading } = useQuery({
@@ -352,6 +406,12 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         notes: editHotelBookingData.notes ? editHotelBookingData.notes : "",
         billDescription: editHotelBookingData.billDescription
           ? editHotelBookingData.billDescription
+          : "",
+        amount: editHotelBookingData.amount
+          ? parseFloat(editHotelBookingData.amount).toFixed(2)
+          : "",
+        totalAmount: editHotelBookingData.totalAmount
+          ? parseFloat(editHotelBookingData.totalAmount).toFixed(2)
           : "",
       });
     }
@@ -1033,6 +1093,7 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <Input
                       id="extraBedCost"
                       type="number"
+                      step="0.01"
                       placeholder="Enter cost"
                       {...register("extraBedCost")}
                     />
@@ -1168,7 +1229,7 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
               </div>
 
               {/* Bill Description */}
-              <div>
+              <div className="md:col-span-2">
                 <Label
                   htmlFor="billDescription"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -1184,6 +1245,48 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                 {errors.billDescription && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.billDescription.message}
+                  </p>
+                )}
+              </div>
+              <div className=" md:col-start-2">
+                <Label
+                  htmlFor="amount"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Amount <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="amount"
+                  {...register("amount")}
+                  step="0.01"
+                  type="number"
+                  placeholder="Enter amount"
+                />
+                {errors.amount && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.amount.message}
+                  </p>
+                )}
+              </div>
+              <div className=" md:col-start-3">
+                <Label
+                  htmlFor="totalAmount"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Total Amount <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="totalAmount"
+                  {...register("totalAmount")}
+                  readOnly
+                  type="number"
+                  step="0.01"
+                  className="bg-gray-100"
+                  placeholder="Total amount"
+                />
+                {errors.totalAmount && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.totalAmount.message}
                   </p>
                 )}
               </div>

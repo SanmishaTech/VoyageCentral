@@ -170,6 +170,21 @@ const FormSchema = z.object({
     .optional(),
   vehicleItineraries: z.array(vehicleItineraryFormSchema).optional(),
   vehicleHotelBookings: z.array(vehicleHotelFormSchema).optional(),
+  amount: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        const parsed = parseFloat(val);
+        return isNaN(parsed) ? val : parsed;
+      }
+      return val;
+    },
+    z
+      .number({
+        invalid_type_error: "Amount must be a number",
+        required_error: "Amount is required",
+      })
+      .min(1, "Amount must be greater than 0")
+  ),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
@@ -193,6 +208,7 @@ const defaultValues: FormInputs = {
   vehicleHrvNumber: "",
   vehicleItineraries: [],
   vehicleHotelBookings: [],
+  amount: "",
 };
 
 const defaultHotelBooking = {
@@ -506,6 +522,9 @@ const VehicleBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         pickupPlace: editVehicleBookingData.pickupPlace || "",
 
         terms: editVehicleBookingData.terms || "",
+        amount: editVehicleBookingData.amount
+          ? parseFloat(editVehicleBookingData.amount).toFixed(2)
+          : "",
 
         specialRequest: editVehicleBookingData.specialRequest || "",
 
@@ -1624,6 +1643,26 @@ const VehicleBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                 {errors.billDescription && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.billDescription.message}
+                  </p>
+                )}
+              </div>
+              <div className=" md:col-start-3">
+                <Label
+                  htmlFor="amount"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Amount <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="amount"
+                  {...register("amount")}
+                  step="0.01"
+                  type="number"
+                  placeholder="Enter amount"
+                />
+                {errors.amount && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.amount.message}
                   </p>
                 )}
               </div>

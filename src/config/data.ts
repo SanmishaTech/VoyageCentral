@@ -8,7 +8,7 @@ export const genderOptions = [
 export const foodTypeOptions = [
   { label: "Veg", value: "Veg" },
   { label: "Non Veg", value: "Non Veg" },
-  { label: "Hindu Non Veg", value: "Hindu Non Veg" },
+  // { label: "Hindu Non Veg", value: "Hindu Non Veg" },
 ];
 
 export const tourTypeOptions = [

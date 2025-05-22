@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Validate from "@/lib/Handlevalidation";
 
 const citiesSchema = z.object({
   cityName: z.string().min(1, "City name is required"),
@@ -83,6 +84,7 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
     formState: { errors },
     reset,
     setValue,
+    setError,
     watch,
   } = useForm<CityFormData>({
     resolver: zodResolver(citiesSchema),
@@ -113,7 +115,8 @@ const CreateCity: React.FC<CreateCityProps> = ({ isOpen, onClose }) => {
       reset();
       onClose();
     },
-    onError: () => {
+    onError: (error) => {
+      Validate(error, setError);
       toast.error("Failed to create cities");
     },
   });

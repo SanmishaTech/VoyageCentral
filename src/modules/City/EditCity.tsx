@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Validate from "@/lib/Handlevalidation";
 
 const citySchema = z.object({
   cityName: z.string().min(1, "City name is required"),
@@ -89,6 +90,7 @@ const EditCity = ({ cityId, isOpen, onClose }: EditCityProps) => {
     formState: { errors },
     reset,
     setValue,
+    setError,
     watch,
   } = useForm<CityFormData>({
     resolver: zodResolver(citySchema),
@@ -165,7 +167,8 @@ const EditCity = ({ cityId, isOpen, onClose }: EditCityProps) => {
       queryClient.invalidateQueries(["cities"]);
       onClose();
     },
-    onError: () => {
+    onError: (error) => {
+      Validate(error, setError);
       toast.error("Failed to update city");
     },
   });

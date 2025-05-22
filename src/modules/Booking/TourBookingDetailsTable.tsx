@@ -76,7 +76,7 @@ const TourBookingDetailsTable = ({
           </div>
           <div className="text-sm text-gray-800 dark:text-gray-300">
             <span className="font-medium">Branch:</span>{" "}
-            {editBookingData?.branchId ?? "N/A"}
+            {editBookingData?.branch?.branchName ?? "N/A"}
           </div>
           <div className="text-sm text-gray-800 dark:text-gray-300">
             <span className="font-medium">Tour Name:</span>{" "}
