@@ -121,7 +121,7 @@ const UserList = () => {
   const deleteUserMutation = useMutation({
     mutationFn: (id: number) => del(`/cities/${id}`),
     onSuccess: () => {
-      toast.success("User deleted successfully");
+      toast.success("City deleted successfully");
       queryClient.invalidateQueries(["cities"]);
     },
     onError: (error) => {
@@ -319,7 +319,7 @@ const UserList = () => {
       <ConfirmDialog
         isOpen={showConfirmation}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this user? This action cannot be undone."
+        description="Are you sure you want to delete this city? This action cannot be undone."
         onCancel={() => {
           setShowConfirmation(false);
           setUserToDelete(null);
