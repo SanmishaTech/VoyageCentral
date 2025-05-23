@@ -1,11 +1,11 @@
 export const ROLES = {
-  ADMIN: "admin",
+  // ADMIN: "admin",
   BRANCH_ADMIN: "branch_admin",
   USER: "user",
 } as const;
 
 export const ROLE_LABELS = {
-  [ROLES.ADMIN]: "Admin",
+  // [ROLES.ADMIN]: "Admin",
   [ROLES.BRANCH_ADMIN]: "Branch Admin",
   [ROLES.USER]: "User",
 } as const;

@@ -121,7 +121,7 @@ const FormSchema = z.object({
   numberOfChildrenUnder5: z.string().optional(),
   branchId: z
     .string()
-    .min(1, "Branch field is required.")
+    // .min(1, "Branch field is required.")
     .max(100, "number of adults must not exceed 100 characters.")
     .optional(),
   tourId: z
