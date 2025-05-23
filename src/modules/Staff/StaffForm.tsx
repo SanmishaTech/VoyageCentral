@@ -79,11 +79,11 @@ const staffFormSchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters long")
     .optional(),
-  role: z.enum([ROLES.ADMIN, ROLES.BRANCH_ADMIN, ROLES.USER], {
+  role: z.enum([ROLES.BRANCH_ADMIN, ROLES.USER], {
     errorMap: () => ({ message: "Role is required" }),
   }),
   active: z.boolean().optional(),
-  branchId: z.string().min(1, "Branch field is required"),
+  branchId: z.string().optional(),
 });
 
 type StaffFormInputs = z.infer<typeof staffFormSchema>;
@@ -98,7 +98,9 @@ interface StaffFormProps {
 const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-
+  const storedUser = localStorage.getItem("user");
+  const parsedUser = JSON.parse(storedUser);
+  const role = parsedUser.role;
   // First, fetch the staff data
   const { data: staffData, isLoading: isLoadingStaff } = useQuery({
     queryKey: ["staff", staffId],
@@ -466,9 +468,10 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
             </div>
 
             {/* Branch Combobox */}
-            <div className="grid gap-2 relative">
-              <Label htmlFor="branchId">Branch</Label>
-              {/* <Popover open={open} onOpenChange={setOpen}>
+            {parsedUser.role === "admin" && (
+              <div className="grid gap-2 relative">
+                <Label htmlFor="branchId">Branch</Label>
+                {/* <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -513,40 +516,44 @@ const StaffForm = ({ mode, staffId, onSuccess, className }: StaffFormProps) => {
                 </Command>
               </PopoverContent>
             </Popover> */}
-              <Controller
-                name="branchId"
-                control={form.control}
-                render={({ field }) => (
-                  <Select
-                    key={field.value} // <-- forces re-render
-                    value={field.value ?? ""}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a branch" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branchesData && branchesData.length > 0 ? (
-                        branchesData.map((branch) => (
-                          <SelectItem key={branch.id} value={String(branch.id)}>
-                            {branch.branchName}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="px-4 py-2 text-sm text-muted-foreground">
-                          No branches available
-                        </div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                <Controller
+                  name="branchId"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Select
+                      key={field.value} // <-- forces re-render
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branchesData && branchesData.length > 0 ? (
+                          branchesData.map((branch) => (
+                            <SelectItem
+                              key={branch.id}
+                              value={String(branch.id)}
+                            >
+                              {branch.branchName}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <div className="px-4 py-2 text-sm text-muted-foreground">
+                            No branches available
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {form.formState.errors.branchId && (
+                  <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
+                    {form.formState.errors.branchId.message}
+                  </span>
                 )}
-              />
-              {form.formState.errors.branchId && (
-                <span className="text-red-500 text-[10px] absolute bottom-0 translate-y-[105%]">
-                  {form.formState.errors.branchId.message}
-                </span>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Active Toggle */}
             <div className="flex items-center gap-2">
