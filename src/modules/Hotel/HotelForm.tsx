@@ -329,6 +329,8 @@ const HotelForm = ({ mode }: { mode: "create" | "edit" }) => {
   } = useForm<FormInputs>({
     resolver: zodResolver(FormSchema),
     defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
+    mode: "onChange", // 👈 triggers validation on each change
+    reValidateMode: "onChange", // 👈 re-validate on every change
   });
 
   const { data: editHotelData, isLoading: editHotelLoading } = useQuery({

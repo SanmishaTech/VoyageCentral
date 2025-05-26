@@ -561,7 +561,9 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <Input
                     id="journeyDate"
                     type="date"
-                    min={new Date().toISOString().split("T")[0]} // Prevent past dates
+                    {...(mode !== "edit" && {
+                      min: new Date().toISOString().split("T")[0], // Set min only if not edit mode
+                    })}
                     max={
                       new Date(
                         new Date().setFullYear(new Date().getFullYear() + 2)

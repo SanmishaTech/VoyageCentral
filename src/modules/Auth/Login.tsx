@@ -13,7 +13,7 @@ import { appName, allowRegistration } from "@/config";
 import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ZodError, ZodIssue } from "zod";
-import { handleApiValidationErrors } from "@/lib/Handlevalidation";
+import Validate, { handleApiValidationErrors } from "@/lib/Handlevalidation";
 
 //
 // 1. Define the shape of what your backend is returning
@@ -133,6 +133,11 @@ const Login = () => {
       Validate(error, setError);
       // console.log(error);
       // throwAsZodError(error);
+      if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Internal Server Error");
+      }
       console.error("Login error details:", error);
     },
   });

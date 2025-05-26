@@ -262,6 +262,8 @@ const AgentForm = ({ mode }: { mode: "create" | "edit" }) => {
   } = useForm<FormInputs>({
     resolver: zodResolver(FormSchema),
     defaultValues: mode === "create" ? defaultValues : undefined, // Use default values in create mode
+    mode: "onChange", // 👈 triggers validation on each change
+    reValidateMode: "onChange", // 👈 re-validate on every change
   });
 
   const { data: editAgentData, isLoading: editAgentLoading } = useQuery({
@@ -295,10 +297,11 @@ const AgentForm = ({ mode }: { mode: "create" | "edit" }) => {
       return response; // API returns the sector object directly
     },
   });
+  const safeCountries = Array.isArray(countries) ? countries : [];
 
   const countryOptions = [
     { id: "none", countryName: "---" }, // The 'unselect' option
-    ...(countries ?? []),
+    ...(safeCountries ?? []),
   ];
 
   //  states

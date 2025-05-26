@@ -124,34 +124,57 @@ const BookingDetails = () => {
                 <TabsList className="grid grid-cols-1 md:grid-cols-7 w-full mb-44 md:mb-4">
                   {editBookingData?.isJourney ? (
                     <>
-                      <TabsTrigger value="JourneyBooking">
+                      <TabsTrigger
+                        value="JourneyBooking"
+                        className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                      >
                         Journey Booking
                       </TabsTrigger>
                     </>
                   ) : null}
                   {editBookingData?.isHotel ? (
                     <>
-                      <TabsTrigger value="HotelBooking">
+                      <TabsTrigger
+                        value="HotelBooking"
+                        className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                      >
                         Hotel Booking
                       </TabsTrigger>
                     </>
                   ) : null}
                   {editBookingData?.isVehicle ? (
                     <>
-                      <TabsTrigger value="VehicleBooking">
+                      <TabsTrigger
+                        value="VehicleBooking"
+                        className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2e5d] data-[state=active]:text-white"
+                      >
                         Vehicle Booking
                       </TabsTrigger>
                     </>
                   ) : null}
-                  <TabsTrigger value="ServiceBooking">
+                  <TabsTrigger
+                    value="ServiceBooking"
+                    className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                  >
                     Service Booking
                   </TabsTrigger>
 
-                  <TabsTrigger value="TourMembers">Tour Members</TabsTrigger>
-                  <TabsTrigger value="TravelDocument">
+                  <TabsTrigger
+                    value="TourMembers"
+                    className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                  >
+                    Tour Members
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="TravelDocument"
+                    className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                  >
                     Travel Documents
                   </TabsTrigger>
-                  <TabsTrigger value="BookingReceipt">
+                  <TabsTrigger
+                    value="BookingReceipt"
+                    className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                  >
                     Booking Receipt
                   </TabsTrigger>
                 </TabsList>

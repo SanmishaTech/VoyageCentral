@@ -90,7 +90,7 @@ const TourBookingDetailsTable = ({
       </div>
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="item-1">
-          <AccordionTrigger className="bg-slate-100 p-2 border">
+          <AccordionTrigger className="bg-slate-100 dark:text-white dark:bg-gray-900 p-2 border">
             Tour Booking Details
           </AccordionTrigger>
           <AccordionContent>

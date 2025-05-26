@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "@/services/apiService";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -63,6 +64,7 @@ const AdminDashboard = () => {
                       Next Follow-Up Date
                     </TableHead>
                     <TableHead className="px-6">Remarks</TableHead>
+                    <TableHead className="px-6">Added By</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -78,6 +80,9 @@ const AdminDashboard = () => {
                       </TableCell>
                       <TableCell className="max-w-[500px] px-1 whitespace-normal break-words">
                         {fu.remarks}
+                      </TableCell>
+                      <TableCell className="w-15 pr-6">
+                        <Button>{fu.userName}</Button>
                       </TableCell>
                     </TableRow>
                   ))}
