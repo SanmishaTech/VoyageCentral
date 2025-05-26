@@ -221,6 +221,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navMain: [],
   });
 
+  // React.useEffect(() => {
+  //   const storedUser = localStorage.getItem("user");
+  //   if (storedUser) {
+  //     try {
+  //       const parsedUser = JSON.parse(storedUser);
+  //       parsedUser.avatarName = parsedUser.name.charAt(0).toUpperCase();
+  //       const role = parsedUser.role || "admin";
+  //       const roleData = initialData.roles[role];
+
+  //       setData((prevData) => ({
+  //         ...prevData,
+  //         projects: roleData?.projects || [],
+  //         navMain: roleData?.navMain || [],
+  //         user: parsedUser,
+  //       }));
+  //     } catch (error) {
+  //       console.error("Failed to parse user from localStorage", error);
+  //     }
+  //   }
+  // }, []);
   React.useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -230,10 +250,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         const role = parsedUser.role || "admin";
         const roleData = initialData.roles[role];
 
+        // Extract agencyDetailsId safely here
+        const agencyDetailsId = parsedUser?.agency?.id || "";
+
+        // If navMain has URLs that depend on agencyDetailsId, you can replace them here
+        let navMainWithAgency =
+          roleData?.navMain?.map((section) => {
+            if (section.title === "Masters") {
+              return {
+                ...section,
+                items: section.items.map((item) => {
+                  if (item.title === "Agency") {
+                    return {
+                      ...item,
+                      url: `/agencies/profile/${agencyDetailsId}`,
+                    };
+                  }
+                  return item;
+                }),
+              };
+            }
+            return section;
+          }) || [];
+
         setData((prevData) => ({
           ...prevData,
           projects: roleData?.projects || [],
-          navMain: roleData?.navMain || [],
+          navMain: navMainWithAgency,
           user: parsedUser,
         }));
       } catch (error) {

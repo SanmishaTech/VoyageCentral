@@ -406,6 +406,8 @@ const UserForm = ({ mode }: { mode: "create" | "edit" }) => {
     formState: { errors },
   } = useForm<FormInputs>({
     resolver: zodResolver(currentSchema),
+    mode: "onChange", // 👈 triggers validation on each change
+    reValidateMode: "onChange", // 👈 re-validate on every change
     defaultValues:
       mode === "create"
         ? {
