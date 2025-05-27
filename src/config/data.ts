@@ -14,6 +14,7 @@ export const foodTypeOptions = [
 export const tourTypeOptions = [
   { label: "Tailormade Tour", value: "Tailormade Tour" },
   { label: "Honeymoon Tour", value: "Honeymoon Tour" },
+  { label: "Group Tour", value: "Group Tour" },
 ];
 
 export const destinationOptions = [
@@ -234,3 +235,13 @@ export const noOfVehiclesOptions = [
   { label: "19", value: "19" },
   { label: "20", value: "20" },
 ];
+
+export const noOfTravelers = [
+  { label: "---", value: "none" },
+  ...Array.from({ length: 40 }, (_, i) => {
+    const value = (i + 1).toString();
+    return { label: value, value };
+  }),
+];
+
+export const GROUP_TOUR = "Group Tour";

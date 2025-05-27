@@ -10,6 +10,8 @@ import {
   statusOptions,
   destinationOptions,
   noOfNightOptions,
+  noOfTravelers,
+  GROUP_TOUR,
 } from "@/config/data";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -109,33 +111,47 @@ const ItinerarySchema = z.object({
   cityId: z.string().optional(),
 });
 
-const FormSchema = z.object({
-  tourTitle: z
-    .string()
-    .min(1, "Tour title is required.")
-    .max(100, "Tour title must not exceed 100 characters."),
-  tourType: z
-    .string()
-    .min(1, "Tour type is required.")
-    .max(100, "tour type must not exceed 100 characters."),
-  destination: z
-    .string()
-    .min(1, "destination is required.")
-    .max(100, "destination must not exceed 100 characters."),
-  numberOfNights: z.string().optional(),
-  status: z
-    .string()
-    .min(1, "Status is required.")
-    .max(100, "Status must not exceed 100 characters."),
-  attachment: attachmentSchema,
-  notes: z
-    .string()
-    .max(2000, "Notes must not exceed 2000 characters.")
-    .optional(),
+const FormSchema = z
+  .object({
+    tourTitle: z
+      .string()
+      .min(1, "Tour title is required.")
+      .max(100, "Tour title must not exceed 100 characters."),
+    tourType: z
+      .string()
+      .min(1, "Tour type is required.")
+      .max(100, "tour type must not exceed 100 characters."),
+    destination: z
+      .string()
+      .min(1, "destination is required.")
+      .max(100, "destination must not exceed 100 characters."),
+    numberOfNights: z.string().optional(),
+    numberOfTravelers: z.string().optional(),
+    status: z
+      .string()
+      .min(1, "Status is required.")
+      .max(100, "Status must not exceed 100 characters."),
+    attachment: attachmentSchema,
+    notes: z
+      .string()
+      .max(2000, "Notes must not exceed 2000 characters.")
+      .optional(),
 
-  sectorId: z.string().optional(),
-  itineraries: z.array(ItinerarySchema).optional(),
-});
+    sectorId: z.string().optional(),
+    itineraries: z.array(ItinerarySchema).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.tourType === GROUP_TOUR &&
+      (!data.numberOfTravelers || data.numberOfTravelers === "none")
+    ) {
+      ctx.addIssue({
+        path: ["numberOfTravelers"],
+        code: z.ZodIssueCode.custom,
+        message: "Number of travelers is required for Group Tour.",
+      });
+    }
+  });
 
 type FormInputs = z.infer<typeof FormSchema>;
 
@@ -153,6 +169,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     sectorId: "", // Optional, so can be empty
     numberOfNights: "",
     itineraries: [], // Optional array
+    numberOfTravelers: "",
   };
 
   const {
@@ -208,6 +225,18 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     enabled: !!id && mode === "edit",
   });
 
+  // group Tour
+  const tourTypeWatch = watch("tourType");
+  const numberOfTravelersWatch = watch("numberOfTravelers");
+
+  useEffect(() => {
+    if (tourTypeWatch !== GROUP_TOUR && numberOfTravelersWatch !== "") {
+      setValue("numberOfTravelers", "");
+    }
+  }, [tourTypeWatch, numberOfTravelersWatch, setValue]);
+
+  // group Tour
+
   useEffect(() => {
     if (editTourData) {
       setAttachmentPreview(null);
@@ -230,6 +259,9 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
         notes: editTourData.notes || "",
         numberOfNights: editTourData.numberOfNights
           ? String(editTourData.numberOfNights)
+          : "",
+        numberOfTravelers: editTourData.numberOfTravelers
+          ? String(editTourData.numberOfTravelers)
           : "",
         sectorId: editTourData.sectorId ? String(editTourData.sectorId) : "",
         // attachment: editTourData.attachment || "",
@@ -367,6 +399,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     formData.append("notes", data.notes || "");
     formData.append("sectorId", data.sectorId || "");
     formData.append("numberOfNights", data.numberOfNights || "");
+    formData.append("numberOfTravelers", data.numberOfTravelers || "");
 
     // Append attachment if it exists
     if (data.attachment instanceof File) {
@@ -456,6 +489,51 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                   </p>
                 )}
               </div>
+              {watch("tourType") === GROUP_TOUR && (
+                <div className="col-span-2 lg:col-span-1">
+                  <Label
+                    htmlFor="numberOfTravelers"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    No. Of Travelers <span className="text-red-500">*</span>
+                  </Label>
+                  <Controller
+                    name="numberOfTravelers"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        key={field.value}
+                        onValueChange={(value) =>
+                          setValue(
+                            "numberOfTravelers",
+                            value === "none" ? "" : value
+                          )
+                        }
+                        value={watch("numberOfTravelers")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {noOfTravelers.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={String(option.value)}
+                            >
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.numberOfTravelers && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.numberOfTravelers.message}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* destination */}
               <div className="col-span-2 lg:col-span-1">
@@ -564,25 +642,6 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                   )}
                 />
               </div>
-              <div className="col-span-2 lg:col-span-3">
-                <Label
-                  htmlFor="notes"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Notes
-                </Label>
-                <Textarea
-                  id="notes"
-                  {...register("notes")}
-                  placeholder="Enter notes about the tour"
-                  rows={4} // Optional: control height
-                />
-                {errors.notes && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.notes.message}
-                  </p>
-                )}
-              </div>
               {/* numbr of nights */}
               <div className="col-span-2 lg:col-span-1">
                 <Label
@@ -591,36 +650,6 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                 >
                   No. Of Nights
                 </Label>
-                {/* <Controller
-                  name="numberOfNights"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      key={field.value}
-                      onValueChange={(value) =>
-                        setValue(
-                          "numberOfNights",
-                          value === "none" ? "" : value
-                        )
-                      }
-                      value={watch("numberOfNights")}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {noOfNightOptions.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            value={String(option.value)}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                /> */}
                 <Controller
                   name="numberOfNights"
                   control={control}
@@ -637,6 +666,25 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                 {errors.numberOfNights && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.numberOfNights.message}
+                  </p>
+                )}
+              </div>
+              <div className="col-span-2 lg:col-span-3">
+                <Label
+                  htmlFor="notes"
+                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Notes
+                </Label>
+                <Textarea
+                  id="notes"
+                  {...register("notes")}
+                  placeholder="Enter notes about the tour"
+                  rows={4} // Optional: control height
+                />
+                {errors.notes && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.notes.message}
                   </p>
                 )}
               </div>
