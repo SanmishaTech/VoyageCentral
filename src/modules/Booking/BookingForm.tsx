@@ -12,6 +12,8 @@ import {
   noOfChildrensBelow5Options,
   noOfNightOptions,
   bookingTypeOptions,
+  genderOptions,
+  foodTypeOptions,
 } from "@/config/data";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -65,6 +67,47 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { post, put } from "@/services/apiService";
 import { set } from "date-fns";
 import AddClient from "./AddClient";
+
+const GroupTourMemberSchema = z.object({
+  groupTourMemberId: z.string().optional(),
+  name: z
+    .string()
+    .min(1, "Name is required.")
+    .max(100, "Name must not exceed 100 characters."),
+  aadharNo: z
+    .string()
+    .max(12, "Aadhar number must be 12 digits.")
+    .refine((val) => val === "" || /^[2-9]{1}[0-9]{11}$/.test(val), {
+      message:
+        "Aadhar number must be exactly 12 digits and cannot start with 0 or 1.",
+    })
+    .optional(),
+  gender: z
+    .string()
+    .min(1, "Gender is required.")
+    .max(20, "Gender must not exceed 20 characters."),
+
+  relation: z
+    .string()
+    .min(1, "Relation is required.")
+    .max(100, "Relation must not exceed 50 characters."),
+  dateOfBirth: z.string().min(1, "Date of Birth is required."),
+
+  anniversaryDate: z.string().optional(),
+
+  foodType: z
+    .string()
+    .min(1, "Food Type is required.")
+    .max(100, "Food Type must not exceed 100 characters."),
+
+  mobile: z.string().regex(/^\d{10}$/, "Mobile must be a 10-digit number."),
+
+  email: z
+    .string()
+    .min(1, "Email is required.")
+    .email("Invalid email format.")
+    .max(100, "Email must not exceed 100 characters."),
+});
 
 const BookingFormSchema = z.object({
   bookingDetailId: z.string().optional(),
@@ -144,6 +187,7 @@ const FormSchema = z.object({
     .max(100, "Enquiry status must not exceed 100 characters.")
     .optional(),
   bookingDetails: z.array(BookingFormSchema).optional(),
+  groupTourMembers: z.array(GroupTourMemberSchema).optional(),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
@@ -152,6 +196,9 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id } = useParams<{ id: string }>();
   const [openTourId, setOpenTourId] = useState<boolean>(false);
   const [openClientId, setOpenClientId] = useState<boolean>(false);
+  const [isGroupTour, setIsGroupTour] = useState<boolean>(false);
+  const [selectedTourData, setSelectedTourData] = useState<any>(null);
+  const [selectedClientData, setSelectedClientData] = useState<any>(null);
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -167,7 +214,6 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     budgetField: "",
     clientId: "",
     numberOfAdults: "",
-    // numberOfNights: "",
     numberOfChildren5To11: "",
     numberOfChildrenUnder5: "",
     branchId: "",
@@ -180,6 +226,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     enquiryStatus: "",
     bookingType: "",
     bookingDetails: [], // Empty array for booking details
+    groupTourMembers: [], // Empty array for booking details
   };
 
   const {
@@ -199,6 +246,15 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "bookingDetails", // Name of the array in the form schema
+  });
+
+  const {
+    fields: groupTourMemberFields,
+    append: groupTourMemberAppend,
+    remove: groupTourMemberRemove,
+  } = useFieldArray({
+    control,
+    name: "groupTourMembers", // Name of the array in the form schema
   });
 
   const { data: editBookingData, isLoading: editBookingLoading } = useQuery({
@@ -268,6 +324,8 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       setValue("bookingDate", today);
     }
     if (editBookingData) {
+      setIsGroupTour(editBookingData?.tour?.isGroupTour);
+      setSelectedTourData(editBookingData?.tour);
       // ✅ Map familyFriends once
       const tourBookingDetailsData =
         editBookingData.bookingDetails?.map((tourBooking) => ({
@@ -278,6 +336,24 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
           date: tourBooking.date
             ? new Date(tourBooking.date).toISOString().split("T")[0]
             : "",
+        })) || [];
+
+      const groupTourMembersData =
+        editBookingData.groupTourMembers?.map((member) => ({
+          groupTourMemberId: member.id ? String(member.id) : "",
+          name: member.name || "",
+          gender: member.gender || "",
+          aadharNo: member.aadharNo || "",
+          relation: member.relation || "",
+          dateOfBirth: member.dateOfBirth
+            ? new Date(member.dateOfBirth).toISOString().split("T")[0]
+            : "",
+          anniversaryDate: member.anniversaryDate
+            ? new Date(member.anniversaryDate).toISOString().split("T")[0]
+            : "",
+          foodType: member.foodType || "",
+          mobile: member.mobile || "",
+          email: member.email || "",
         })) || [];
 
       // ✅ Reset full form including field array
@@ -321,15 +397,18 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         isVehicle: Number(editBookingData.isVehicle),
         isPackage: Number(editBookingData.isPackage),
         enquiryStatus: editBookingData.enquiryStatus || "",
-        bookingDetails: tourBookingDetailsData, // ✅ include this
         numberOfNights: editBookingData.numberOfNights
           ? String(editBookingData.numberOfNights)
           : "",
-        bookingType: editBookingData.bookingType || "", // ✅ include this
+        bookingType: editBookingData.bookingType || "",
+        bookingDetails: tourBookingDetailsData, // ✅ include this
+        groupTourMembers: groupTourMembersData, // ✅ include this
       });
     }
   }, [editBookingData, reset, setValue]);
+  console.log(editBookingData);
 
+  console.log(editBookingData?.tour?.numberOfTravelers);
   // Mutation for creating a user
   const createMutation = useMutation({
     mutationFn: (data: FormInputs) => post("/bookings", data),
@@ -358,6 +437,41 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       toast.error(error.response?.data?.message || "Failed to update Booking");
     },
   });
+
+  // data from client master
+  const prepareGroupTourMembers = (client) => {
+    // if (mode === "create") {
+    setIsGroupTour(selectedTourData?.isGroupTour);
+
+    if (selectedTourData?.isGroupTour) {
+      groupTourMemberRemove();
+      const clientFamilyFriendsData =
+        client?.familyFriends?.map((member) => ({
+          groupTourMemberId: "",
+          aadharNo: member.aadharNo ? String(member.aadharNo) : "",
+          name: member.name || "",
+          gender: member.gender || "",
+          relation: member.relation || "",
+          dateOfBirth: member.dateOfBirth
+            ? new Date(member.dateOfBirth).toISOString().split("T")[0]
+            : "",
+          anniversaryDate: member.anniversaryDate
+            ? new Date(member.anniversaryDate).toISOString().split("T")[0]
+            : "",
+          foodType: member.foodType || "",
+          mobile: member.mobile || "",
+          email: member.email || "",
+        })) || [];
+
+      const limitedClientData = clientFamilyFriendsData.slice(
+        0,
+        selectedTourData.numberOfTravelers - 1
+      );
+
+      groupTourMemberAppend(limitedClientData);
+    }
+    // }
+  };
 
   const handleTourSelectChange = (tour) => {
     const journeyDate = watch("journeyDate"); // Get the selected journeyDate from the form
@@ -388,6 +502,57 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       // Append the mapped itineraries to the tourBookingDetails field
       append(mappedItineraries);
     }
+    //  group tour member start
+    setIsGroupTour(tour.isGroupTour); // Set isGroupTour to true for condition jsx rendering
+    if (!tour.isGroupTour) {
+      groupTourMemberRemove();
+    }
+    if (mode === "edit") {
+      const allowedCount = editBookingData?.tour?.numberOfTravelers - 1 || 0;
+
+      if (groupTourMemberFields.length > allowedCount) {
+        // Create an array of indexes to remove
+        const indexesToRemove = groupTourMemberFields
+          .map((_, index) => index)
+          .filter((index) => index >= allowedCount);
+
+        // Remove from the last to first to avoid index shifting
+        indexesToRemove.reverse().forEach((index) => {
+          groupTourMemberRemove(index);
+        });
+      }
+    }
+    if (mode === "create") {
+      groupTourMemberRemove();
+      if (tour.isGroupTour && selectedClientData) {
+        console.log("Selected Client Data:", selectedClientData);
+        const clientFamilyFriendsData =
+          selectedClientData?.familyFriends?.map((member) => ({
+            groupTourMemberId: "",
+            aadharNo: member.aadharNo ? String(member.aadharNo) : "",
+            name: member.name || "",
+            gender: member.gender || "",
+            relation: member.relation || "",
+            dateOfBirth: member.dateOfBirth
+              ? new Date(member.dateOfBirth).toISOString().split("T")[0]
+              : "",
+            anniversaryDate: member.anniversaryDate
+              ? new Date(member.anniversaryDate).toISOString().split("T")[0]
+              : "",
+            foodType: member.foodType || "",
+            mobile: member.mobile || "",
+            email: member.email || "",
+          })) || [];
+
+        const limitedClientData = clientFamilyFriendsData.slice(
+          0,
+          tour.numberOfTravelers - 1
+        );
+
+        groupTourMemberAppend(limitedClientData);
+      }
+    }
+    //  group tour member end
   };
 
   const handleRemoveAndRecalculateDays = (index: number) => {
@@ -580,41 +745,85 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   )}
                 </div>
 
-                {/* Budget Field */}
+                {/* Tours Dropdown */}
                 <div className="col-span-2 lg:col-span-1">
                   <Label
-                    htmlFor="budgetField"
+                    htmlFor="tourId"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Budget Field
+                    Tour
                   </Label>
                   <Controller
-                    name="budgetField"
+                    name="tourId"
                     control={control}
                     render={({ field }) => (
-                      <Select
-                        key={field.value}
-                        onValueChange={(value) =>
-                          setValue("budgetField", value === "none" ? "" : value)
-                        }
-                        value={watch("budgetField")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select budget" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {budgetFieldOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover open={openTourId} onOpenChange={setOpenTourId}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={openTourId ? "true" : "false"} // This should depend on the popover state
+                            className="w-[325px] justify-between overflow-hidden mt-1"
+                            onClick={() => setOpenTourId((prev) => !prev)} // Toggle popover on button click
+                          >
+                            {field.value
+                              ? tourOptions &&
+                                tourOptions.find(
+                                  (tour) => tour.id === field.value
+                                )?.tourTitle
+                              : "Select tour"}
+                            <ChevronsUpDown className="opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[325px] p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search tour..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No tour found.</CommandEmpty>
+                              <CommandGroup>
+                                {tourOptions &&
+                                  tourOptions.map((tour) => (
+                                    <CommandItem
+                                      key={tour.id}
+                                      value={tour.tourTitle.toLowerCase()} // 👈 Use client name for filtering
+                                      onSelect={(currentValue) => {
+                                        if (tour.id === "none") {
+                                          setValue("tourId", "");
+                                          remove();
+                                        } else {
+                                          setValue("tourId", tour.id);
+                                        }
+
+                                        handleTourSelectChange(tour);
+                                        setSelectedTourData(tour);
+                                        setOpenTourId(false);
+                                        // Close popover after selection
+                                      }}
+                                    >
+                                      {tour.tourTitle}
+                                      <Check
+                                        className={cn(
+                                          "ml-auto",
+                                          tour.id === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     )}
                   />
-                  {errors.budgetField && (
+                  {errors.tourId && (
                     <p className="text-red-500 text-xs mt-1">
-                      {errors.budgetField.message}
+                      {errors.tourId.message}
                     </p>
                   )}
                 </div>
@@ -674,6 +883,8 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                                               setValue("clientId", ""); // Clear the value
                                             } else {
                                               setValue("clientId", client.id);
+                                              setSelectedClientData(client);
+                                              prepareGroupTourMembers(client); // Prepare group tour members if needed
                                             }
                                             // handleTourSelectChange(client);
                                             setOpenClientId(false);
@@ -859,6 +1070,45 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   )}
                 </div>
 
+                {/* Budget Field */}
+                <div className="col-span-2 lg:col-span-1">
+                  <Label
+                    htmlFor="budgetField"
+                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Budget Field
+                  </Label>
+                  <Controller
+                    name="budgetField"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        key={field.value}
+                        onValueChange={(value) =>
+                          setValue("budgetField", value === "none" ? "" : value)
+                        }
+                        value={watch("budgetField")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select budget" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {budgetFieldOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.budgetField && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.budgetField.message}
+                    </p>
+                  )}
+                </div>
+
                 {/* numberOfChildrenBelow5 */}
                 <div className="col-span-2 lg:col-span-1">
                   <Label
@@ -904,87 +1154,6 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   )}
                 </div>
 
-                {/* Tours Dropdown */}
-                <div className="col-span-2 lg:col-span-1">
-                  <Label
-                    htmlFor="tourId"
-                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Tour
-                  </Label>
-                  <Controller
-                    name="tourId"
-                    control={control}
-                    render={({ field }) => (
-                      <Popover open={openTourId} onOpenChange={setOpenTourId}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={openTourId ? "true" : "false"} // This should depend on the popover state
-                            className="w-[325px] justify-between overflow-hidden mt-1"
-                            onClick={() => setOpenTourId((prev) => !prev)} // Toggle popover on button click
-                          >
-                            {field.value
-                              ? tourOptions &&
-                                tourOptions.find(
-                                  (tour) => tour.id === field.value
-                                )?.tourTitle
-                              : "Select tour"}
-                            <ChevronsUpDown className="opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[325px] p-0">
-                          <Command>
-                            <CommandInput
-                              placeholder="Search tour..."
-                              className="h-9"
-                            />
-                            <CommandList>
-                              <CommandEmpty>No tour found.</CommandEmpty>
-                              <CommandGroup>
-                                {tourOptions &&
-                                  tourOptions.map((tour) => (
-                                    <CommandItem
-                                      key={tour.id}
-                                      value={tour.tourTitle.toLowerCase()} // 👈 Use client name for filtering
-                                      onSelect={(currentValue) => {
-                                        if (tour.id === "none") {
-                                          setValue("tourId", "");
-                                          remove();
-                                        } else {
-                                          setValue("tourId", tour.id);
-                                        }
-
-                                        handleTourSelectChange(tour);
-                                        setOpenTourId(false);
-                                        // Close popover after selection
-                                      }}
-                                    >
-                                      {tour.tourTitle}
-                                      <Check
-                                        className={cn(
-                                          "ml-auto",
-                                          tour.id === field.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
-                                    </CommandItem>
-                                  ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                  />
-                  {errors.tourId && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.tourId.message}
-                    </p>
-                  )}
-                </div>
                 {/* numbr of nights */}
                 {/* <div className="col-span-2 lg:col-span-1">
                   <Label
@@ -1114,6 +1283,294 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
             </div>
 
             {/* end code */}
+
+            {/* group tour members start */}
+            {isGroupTour && (
+              <>
+                <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-8">
+                  Members Traveling
+                </CardTitle>
+                <div className="mt-5">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Gender</TableHead>
+                        <TableHead>Relation</TableHead>
+                        <TableHead>Aadhar No</TableHead>
+                        <TableHead>Date of Birth</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {groupTourMemberFields.map((field, index) => (
+                        <TableRow key={field.id}>
+                          <TableCell>
+                            <Input
+                              {...register(`groupTourMembers.${index}.name`)}
+                              placeholder="Enter name"
+                            />
+                            {errors.groupTourMembers?.[index]?.name && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.groupTourMembers[index]?.name?.message}
+                              </p>
+                            )}
+                            <div className="mt-2">
+                              <Label
+                                htmlFor={`groupTourMembers.${index}.anniversaryDate`}
+                                className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                              >
+                                Anniversary Date
+                              </Label>
+                              <Input
+                                type="date"
+                                id={`groupTourMembers.${index}.anniversaryDate`}
+                                {...register(
+                                  `groupTourMembers.${index}.anniversaryDate`
+                                )}
+                              />
+                              {errors.groupTourMembers?.[index]
+                                ?.anniversaryDate && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {
+                                    errors.groupTourMembers[index]
+                                      ?.anniversaryDate?.message
+                                  }
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              onValueChange={(value) =>
+                                setValue(
+                                  `groupTourMembers.${index}.gender`,
+                                  value
+                                )
+                              }
+                              value={watch(`groupTourMembers.${index}.gender`)}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select gender" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {genderOptions.map((option) => (
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <div className="mt-2">
+                              <Label
+                                htmlFor={`groupTourMembers.${index}.foodType`}
+                                className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                              >
+                                Food Type
+                              </Label>
+                              <Select
+                                onValueChange={(value) =>
+                                  setValue(
+                                    `groupTourMembers.${index}.foodType`,
+                                    value
+                                  )
+                                }
+                                value={watch(
+                                  `groupTourMembers.${index}.foodType`
+                                )}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select foodType" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {foodTypeOptions.map((option) => (
+                                    <SelectItem
+                                      key={option.value}
+                                      value={option.value}
+                                    >
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              {...register(
+                                `groupTourMembers.${index}.relation`
+                              )}
+                              placeholder="Enter relation"
+                            />
+                            {errors.groupTourMembers?.[index]?.relation && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {
+                                  errors.groupTourMembers[index]?.relation
+                                    ?.message
+                                }
+                              </p>
+                            )}
+                            <div className="mt-2">
+                              <Label
+                                htmlFor={`groupTourMembers.${index}.mobile`}
+                                className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                              >
+                                Mobile
+                              </Label>
+                              <Input
+                                id={`groupTourMembers.${index}.mobile`}
+                                maxLength={10}
+                                {...register(
+                                  `groupTourMembers.${index}.mobile`
+                                )}
+                                placeholder="Enter mobile"
+                              />
+                              {errors.groupTourMembers?.[index]?.mobile && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {
+                                    errors.groupTourMembers[index]?.mobile
+                                      ?.message
+                                  }
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              {...register(
+                                `groupTourMembers.${index}.aadharNo`
+                              )}
+                              placeholder="Enter Aadhar No"
+                            />
+                            {errors.groupTourMembers?.[index]?.aadharNo && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {
+                                  errors.groupTourMembers[index]?.aadharNo
+                                    ?.message
+                                }
+                              </p>
+                            )}
+                            <div className="mt-2">
+                              <Label
+                                htmlFor={`groupTourMembers.${index}.email`}
+                                className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                              >
+                                Email
+                              </Label>
+                              <Input
+                                id={`groupTourMembers.${index}.email`}
+                                {...register(`groupTourMembers.${index}.email`)}
+                                placeholder="Enter email"
+                              />
+                              {errors.groupTourMembers?.[index]?.email && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {
+                                    errors.groupTourMembers[index]?.email
+                                      ?.message
+                                  }
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="align-top">
+                            <Input
+                              type="date"
+                              {...register(
+                                `groupTourMembers.${index}.dateOfBirth`
+                              )}
+                            />
+                            {errors.groupTourMembers?.[index]?.dateOfBirth && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {
+                                  errors.groupTourMembers[index]?.dateOfBirth
+                                    ?.message
+                                }
+                              </p>
+                            )}
+                          </TableCell>
+                          {/* group tour member id */}
+                          <Input
+                            type="hidden"
+                            {...register(
+                              `groupTourMembers.${index}.groupTourMemberId`
+                            )}
+                          />
+                          {errors.groupTourMembers?.[index]
+                            ?.groupTourMemberId && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {
+                                errors.groupTourMembers[index]
+                                  ?.groupTourMemberId?.message
+                              }
+                            </p>
+                          )}
+                          {/* group tour member id */}
+
+                          <TableCell>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              onClick={() => groupTourMemberRemove(index)}
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-4"
+                    // onClick={() =>
+                    //   groupTourMemberAppend({
+                    //     groupTourMemberId: "",
+                    //     name: "",
+                    //     gender: "",
+                    //     relation: "",
+                    //     aadharNo: "",
+                    //     dateOfBirth: "",
+                    //     anniversaryDate: "",
+                    //     foodType: "",
+                    //     mobile: "",
+                    //     email: "",
+                    //   })
+                    // }
+                    onClick={() => {
+                      if (
+                        groupTourMemberFields.length <
+                        selectedTourData?.numberOfTravelers - 1
+                      ) {
+                        groupTourMemberAppend({
+                          groupTourMemberId: "",
+                          name: "",
+                          gender: "",
+                          relation: "",
+                          aadharNo: "",
+                          dateOfBirth: "",
+                          anniversaryDate: "",
+                          foodType: "",
+                          mobile: "",
+                          email: "",
+                        });
+                      }
+                    }}
+                    disabled={
+                      groupTourMemberFields.length >=
+                      selectedTourData?.numberOfTravelers - 1
+                    }
+                  >
+                    <PlusCircle className="mr-2 h-5 w-5" />
+                    Add Member
+                  </Button>
+                </div>
+              </>
+            )}
+            {/* group tour members end */}
 
             {/* start */}
             <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-8">
