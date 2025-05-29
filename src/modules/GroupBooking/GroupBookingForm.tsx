@@ -68,8 +68,8 @@ import { post, put } from "@/services/apiService";
 import { set } from "date-fns";
 import AddClient from "./AddClient";
 
-const BookingFormSchema = z.object({
-  bookingDetailId: z.string().optional(),
+const GroupBookingFormSchema = z.object({
+  groupBookingDetailId: z.string().optional(),
   day: z
     .string()
     .refine((val) => !isNaN(Number(val)), {
@@ -95,32 +95,18 @@ const BookingFormSchema = z.object({
 });
 
 const FormSchema = z.object({
-  bookingNumber: z.string().optional(),
-  bookingDate: z
+  groupBookingNumber: z.string().optional(),
+  groupBookingDate: z
     .string()
     .min(1, "Booking Date is required.")
     .max(100, "Booking Date must not exceed 100 characters."),
-  departureDate: z
-    .string()
-    .max(100, "Departure Date must not exceed 100 characters.")
-    .optional(),
+
   journeyDate: z
     .string()
+    .min(1, "journey Date is required.")
     .max(100, "journey Date must not exceed 100 characters.")
     .optional(),
 
-  budgetField: z
-    .string()
-    .max(100, "Budge Field must not exceed 100 characters.")
-    .optional(),
-  clientId: z.union([
-    z.string().min(1, "Client field is required."),
-    z.number().min(1, "Client Field is required"),
-  ]),
-  numberOfAdults: z.string().optional(),
-  // numberOfNights: z.string().optional(),
-  numberOfChildren5To11: z.string().optional(),
-  numberOfChildrenUnder5: z.string().optional(),
   branchId: z
     .string()
     // .min(1, "Branch field is required.")
@@ -128,34 +114,30 @@ const FormSchema = z.object({
     .optional(),
   tourId: z
     .union([
-      z.string().max(100, "tour must not exceed 100 characters."),
-      z.number(),
+      z
+        .string()
+        .min(1, "Tour Field is required")
+        .max(100, "tour must not exceed 100 characters."),
+      z.number().min(1, "Tour Field is required"),
     ])
     .optional(),
   bookingType: z.string().min(1, "Booking type is required"),
   isJourney: z.coerce.number().min(0, " required"),
   isHotel: z.coerce.number().min(0, " required"),
   isVehicle: z.coerce.number().min(0, " required"),
-  isPackage: z.coerce.number().min(0, " required"),
   bookingDetail: z
     .string()
     .max(100, "Booking details must not exceed 100 characters.")
     .optional(),
-  enquiryStatus: z
-    .string()
-    .max(100, "Enquiry status must not exceed 100 characters.")
-    .optional(),
-  bookingDetails: z.array(BookingFormSchema).optional(),
+
+  groupBookingDetails: z.array(GroupBookingFormSchema).optional(),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
 
-const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
+const GroupBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id } = useParams<{ id: string }>();
   const [openTourId, setOpenTourId] = useState<boolean>(false);
-  const [openClientId, setOpenClientId] = useState<boolean>(false);
-  const [isGroupTour, setIsGroupTour] = useState<boolean>(false);
-
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const storedUser = localStorage.getItem("user");
@@ -163,25 +145,17 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const role = parsedUser.role;
 
   const defaultValues: FormInputs = {
-    bookingNumber: "",
-    bookingDate: new Date().toISOString().split("T")[0], // Today's date
-    departureDate: "",
+    groupBookingNumber: "",
+    groupBookingDate: new Date().toISOString().split("T")[0], // Today's date
     journeyDate: "",
-    budgetField: "",
-    clientId: "",
-    numberOfAdults: "",
-    numberOfChildren5To11: "",
-    numberOfChildrenUnder5: "",
     branchId: "",
     tourId: "",
     isJourney: 0,
     isHotel: 0,
     isVehicle: 0,
-    isPackage: 0,
     bookingDetail: "",
-    enquiryStatus: "",
     bookingType: "",
-    bookingDetails: [], // Empty array for booking details
+    groupBookingDetails: [], // Empty array for booking details
   };
 
   const {
@@ -200,31 +174,18 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "bookingDetails", // Name of the array in the form schema
+    name: "groupBookingDetails", // Name of the array in the form schema
   });
 
-  const { data: editBookingData, isLoading: editBookingLoading } = useQuery({
-    queryKey: ["editBooking", id],
-    queryFn: async () => {
-      const response = await get(`/bookings/${id}`);
-      return response; // API returns the sector object directly
-    },
-    enabled: !!id && mode === "edit",
-  });
-
-  // clients
-  const { data: clients, isLoading: isClientsLoading } = useQuery({
-    queryKey: ["cilents"],
-    queryFn: async () => {
-      const response = await get(`/clients/all`);
-      return response; // API returns the sector object directly
-    },
-  });
-
-  const clientOptions = [
-    { id: "none", clientName: "---" }, // The 'unselect' option
-    ...(clients ?? []),
-  ];
+  const { data: editGroupBookingData, isLoading: editGroupBookingLoading } =
+    useQuery({
+      queryKey: ["editGroupBooking", id],
+      queryFn: async () => {
+        const response = await get(`/group-bookings/${id}`);
+        return response; // API returns the sector object directly
+      },
+      enabled: !!id && mode === "edit",
+    });
 
   // branches
   const { data: branches, isLoading: isBranchesLoading } = useQuery({
@@ -236,17 +197,17 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   });
 
   // tours
-  const { data: tours, isLoading: isToursLoading } = useQuery({
-    queryKey: ["tours"],
+  const { data: groupTours, isLoading: isGroupToursLoading } = useQuery({
+    queryKey: ["groupTours"],
     queryFn: async () => {
-      const response = await get(`/tours/all`);
+      const response = await get(`/tours/allGroupTours`);
       return response; // API returns the sector object directly
     },
   });
 
   const tourOptions = [
     { id: "none", tourTitle: "---" }, // The 'unselect' option
-    ...(tours ?? []),
+    ...(groupTours ?? []),
   ];
 
   // cities
@@ -267,13 +228,13 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     if (mode === "create") {
       // Set today's date as the default booking date in "add" mode
       const today = new Date().toISOString().split("T")[0]; // Format as YYYY-MM-DD
-      setValue("bookingDate", today);
+      setValue("groupBookingDate", today);
     }
-    if (editBookingData) {
+    if (editGroupBookingData) {
       // ✅ Map familyFriends once
       const tourBookingDetailsData =
-        editBookingData.bookingDetails?.map((tourBooking) => ({
-          bookingDetailId: tourBooking.id ? String(tourBooking.id) : "",
+        editGroupBookingData.groupBookingDetails?.map((tourBooking) => ({
+          groupBookingDetailId: tourBooking.id ? String(tourBooking.id) : "",
           day: String(tourBooking.day) || "",
           description: tourBooking.description || "",
           cityId: tourBooking.cityId ? String(tourBooking.cityId) : "",
@@ -284,57 +245,39 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
 
       // ✅ Reset full form including field array
       reset({
-        bookingDate: editBookingData.bookingDate
-          ? new Date(editBookingData.bookingDate).toISOString().split("T")[0]
+        groupBookingDate: editGroupBookingData.groupBookingDate
+          ? new Date(editGroupBookingData.groupBookingDate)
+              .toISOString()
+              .split("T")[0]
           : "",
-        departureDate: editBookingData.departureDate
-          ? new Date(editBookingData.departureDate).toISOString().split("T")[0]
+
+        journeyDate: editGroupBookingData.journeyDate
+          ? new Date(editGroupBookingData.journeyDate)
+              .toISOString()
+              .split("T")[0]
           : "",
-        journeyDate: editBookingData.journeyDate
-          ? new Date(editBookingData.journeyDate).toISOString().split("T")[0]
+        groupBookingNumber: editGroupBookingData.groupBookingNumber || "",
+        bookingDetail: editGroupBookingData.bookingDetail || "",
+
+        branchId: editGroupBookingData.branchId
+          ? String(editGroupBookingData.branchId)
           : "",
-        bookingNumber: editBookingData.bookingNumber || "",
-        bookingDetail: editBookingData.bookingDetail || "",
-        budgetField: editBookingData.budgetField
-          ? editBookingData.budgetField
-          : "",
-        clientId: editBookingData.clientId ? editBookingData.clientId : "",
-        numberOfAdults:
-          editBookingData.numberOfAdults !== null &&
-          editBookingData.numberOfAdults !== undefined
-            ? String(editBookingData.numberOfAdults)
-            : "",
-        numberOfChildren5To11:
-          editBookingData.numberOfChildren5To11 !== null &&
-          editBookingData.numberOfChildren5To11 !== undefined
-            ? String(editBookingData.numberOfChildren5To11)
-            : "",
-        numberOfChildrenUnder5:
-          editBookingData.numberOfChildrenUnder5 !== null &&
-          editBookingData.numberOfChildrenUnder5 !== undefined
-            ? String(editBookingData.numberOfChildrenUnder5)
-            : "",
-        branchId: editBookingData.branchId
-          ? String(editBookingData.branchId)
-          : "",
-        tourId: editBookingData.tourId ? editBookingData.tourId : "",
-        isJourney: Number(editBookingData.isJourney),
-        isHotel: Number(editBookingData.isHotel),
-        isVehicle: Number(editBookingData.isVehicle),
-        isPackage: Number(editBookingData.isPackage),
-        enquiryStatus: editBookingData.enquiryStatus || "",
-        bookingType: editBookingData.bookingType || "",
-        bookingDetails: tourBookingDetailsData, // ✅ include this
+        tourId: editGroupBookingData.tourId ? editGroupBookingData.tourId : "",
+        isJourney: Number(editGroupBookingData.isJourney),
+        isHotel: Number(editGroupBookingData.isHotel),
+        isVehicle: Number(editGroupBookingData.isVehicle),
+        bookingType: editGroupBookingData.bookingType || "",
+        groupBookingDetails: tourBookingDetailsData, // ✅ include this
       });
     }
-  }, [editBookingData, reset, setValue]);
+  }, [editGroupBookingData, reset, setValue]);
   // Mutation for creating a user
   const createMutation = useMutation({
-    mutationFn: (data: FormInputs) => post("/bookings", data),
+    mutationFn: (data: FormInputs) => post("/group-bookings", data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["bookings"]); // Refetch the users list
-      toast.success("Booking created successfully");
-      navigate("/bookings"); // Navigate to the hotels page after successful creation
+      queryClient.invalidateQueries(["group-bookings"]); // Refetch the users list
+      toast.success("Group Booking created successfully");
+      navigate("/groupBookings"); // Navigate to the hotels page after successful creation
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -342,7 +285,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         toast.error(error.message);
       } else {
         toast.error(
-          error.response?.data?.message || "Failed to create Booking"
+          error.response?.data?.message || "Failed to create Group Booking"
         );
       }
     },
@@ -350,11 +293,11 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
 
   // Mutation for updating a user
   const updateMutation = useMutation({
-    mutationFn: (data: FormInputs) => put(`/bookings/${id}`, data),
+    mutationFn: (data: FormInputs) => put(`/group-bookings/${id}`, data),
     onSuccess: () => {
-      toast.success("Booking updated successfully");
-      queryClient.invalidateQueries(["bookings"]);
-      navigate("/bookings"); // Navigate to the hotels page after successful update
+      toast.success("Group Booking updated successfully");
+      queryClient.invalidateQueries(["group-bookings"]);
+      navigate("/groupBookings"); // Navigate to the hotels page after successful update
     },
     onError: (error: any) => {
       console.log(error);
@@ -363,7 +306,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         toast.error(error.message);
       } else {
         toast.error(
-          error.response?.data?.message || "Failed to create Booking"
+          error.response?.data?.message || "Failed to create Group Booking"
         );
       }
     },
@@ -385,7 +328,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
 
       // Map the itineraries to match the structure of tourBookingDetails
       const mappedItineraries = tour.itineraries.map((itinerary, index) => ({
-        bookingDetailId: String(itinerary.id) || "",
+        groupBookingDetailId: String(itinerary.id) || "",
         day: String(itinerary.day) || "", // Use the day from the itinerary
         date: startDate
           ? new Date(startDate.getTime() + index * 24 * 60 * 60 * 1000)
@@ -428,15 +371,15 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     // Recalculate days and dates for the remaining records
     const updatedFields = [...fields].filter((_, idx) => idx !== index); // Create a new array without the removed record
     updatedFields.forEach((field, idx) => {
-      setValue(`bookingDetails.${idx}.day`, String(idx + 1)); // Always update day
+      setValue(`groupBookingDetails.${idx}.day`, String(idx + 1)); // Always update day
 
       // Update the date field
       if (idx === 0) {
         // For the first record, use the journeyDate or the start of the current month
-        setValue(`bookingDetails.${idx}.date`, startDate);
+        setValue(`groupBookingDetails.${idx}.date`, startDate);
       } else {
         // For subsequent records, increment the date by one day from the previous record
-        const previousDate = watch(`bookingDetails.${idx - 1}.date`);
+        const previousDate = watch(`groupBookingDetails.${idx - 1}.date`);
         const newDate = previousDate
           ? new Date(
               new Date(previousDate + "T00:00:00Z").getTime() +
@@ -445,7 +388,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
               .toISOString()
               .split("T")[0]
           : startDate; // Fallback to startDate if previousDate is not available
-        setValue(`bookingDetails.${idx}.date`, newDate);
+        setValue(`groupBookingDetails.${idx}.date`, newDate);
       }
     });
 
@@ -464,14 +407,12 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
 
   return (
     <>
-      {/* JSX Code for HotelForm.tsx */}
-
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card className="mx-auto mt-10">
           <CardContent className="pt-6">
             {/* Client Details */}
             <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-              Tour Booking
+              Group Tour Booking
             </CardTitle>
 
             {/* start code */}
@@ -486,17 +427,17 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     Booking Number
                   </Label>
                   <Input
-                    id="bookingNumber"
-                    {...register("bookingNumber")}
+                    id="groupBookingNumber"
+                    {...register("groupBookingNumber")}
                     placeholder="Booking number"
                     readOnly
                     className="bg-gray-100 text-gray-500 cursor-not-allowed"
 
                     // disabled
                   />
-                  {errors.bookingNumber && (
+                  {errors.groupBookingNumber && (
                     <p className="text-red-500 text-xs mt-1">
-                      {errors.bookingNumber.message}
+                      {errors.groupBookingNumber.message}
                     </p>
                   )}
                 </div>
@@ -504,13 +445,13 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                 {/* Booking Date */}
                 <div className="col-span-2 lg:col-span-1">
                   <Label
-                    htmlFor="bookingDate"
+                    htmlFor="groupBookingDate"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Booking Date <span className="text-red-500">*</span>
                   </Label>
                   <Input
-                    id="bookingDate"
+                    id="groupBookingDate"
                     type="date"
                     {...(mode !== "edit" && {
                       min: new Date().toISOString().split("T")[0], // Set min only if not edit mode
@@ -522,41 +463,11 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                         .toISOString()
                         .split("T")[0]
                     } // Today + 2 years
-                    {...register("bookingDate")}
+                    {...register("groupBookingDate")}
                   />
-                  {errors.bookingDate && (
+                  {errors.groupBookingDate && (
                     <p className="text-red-500 text-xs mt-1">
-                      {errors.bookingDate.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Departure Date */}
-                <div className="col-span-2 lg:col-span-1">
-                  <Label
-                    htmlFor="departureDate"
-                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Client Departure Date
-                  </Label>
-                  <Input
-                    id="departureDate"
-                    type="date"
-                    {...(mode !== "edit" && {
-                      min: new Date().toISOString().split("T")[0], // Set min only if not edit mode
-                    })}
-                    max={
-                      new Date(
-                        new Date().setFullYear(new Date().getFullYear() + 2)
-                      )
-                        .toISOString()
-                        .split("T")[0]
-                    } // Today + 2 years
-                    {...register("departureDate")}
-                  />
-                  {errors.departureDate && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.departureDate.message}
+                      {errors.groupBookingDate.message}
                     </p>
                   )}
                 </div>
@@ -567,7 +478,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     htmlFor="journeyDate"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Journey Start Date
+                    Journey Start Date <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="journeyDate"
@@ -591,13 +502,54 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   )}
                 </div>
 
+                {parsedUser.role === "admin" && (
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label
+                      htmlFor="branchId"
+                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Branch <span className="text-red-500">*</span>
+                    </Label>
+                    <Controller
+                      name="branchId"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          key={field.value}
+                          onValueChange={(value) => setValue("branchId", value)}
+                          value={watch("branchId")}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select branch" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {branches?.map((branch) => (
+                              <SelectItem
+                                key={branch.id}
+                                value={String(branch.id)}
+                              >
+                                {branch.branchName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.branchId && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.branchId.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Tours Dropdown */}
                 <div className="col-span-2 lg:col-span-1">
                   <Label
                     htmlFor="tourId"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Tour
+                    Tour <span className="text-red-500">*</span>
                   </Label>
                   <Controller
                     name="tourId"
@@ -673,375 +625,6 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   )}
                 </div>
 
-                {/* Client ID */}
-                <div className="col-span-2 lg:col-span-1">
-                  <div className="flex w-full justify-between items-center">
-                    <div className="a">
-                      <Label
-                        htmlFor="clientId"
-                        className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                      >
-                        Client <span className="text-red-500">*</span>
-                      </Label>
-                      <Controller
-                        name="clientId"
-                        control={control}
-                        render={({ field }) => (
-                          <Popover
-                            open={openClientId}
-                            onOpenChange={setOpenClientId}
-                          >
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={openClientId ? "true" : "false"} // This should depend on the popover state
-                                className=" w-[275px] overflow-hidden justify-between mt-1"
-                                onClick={() => setOpenClientId((prev) => !prev)} // Toggle popover on button click
-                              >
-                                {field.value
-                                  ? clientOptions &&
-                                    clientOptions.find(
-                                      (client) => client.id === field.value
-                                    )?.clientName
-                                  : "Select client"}
-                                <ChevronsUpDown className="opacity-50" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[325px] p-0">
-                              <Command>
-                                <CommandInput
-                                  placeholder="Search client..."
-                                  className="h-9"
-                                />
-                                <CommandList>
-                                  <CommandEmpty>No client found.</CommandEmpty>
-                                  <CommandGroup>
-                                    {clientOptions &&
-                                      clientOptions.map((client) => (
-                                        <CommandItem
-                                          key={client.id}
-                                          // value={String(client.id)}
-                                          value={client.clientName.toLowerCase()} // 👈 Use client name for filtering
-                                          onSelect={(currentValue) => {
-                                            if (client.id === "none") {
-                                              setValue("clientId", ""); // Clear the value
-                                            } else {
-                                              setValue("clientId", client.id);
-                                            }
-                                            // handleTourSelectChange(client);
-                                            setOpenClientId(false);
-                                            // Close popover after selection
-                                          }}
-                                        >
-                                          {client.clientName}
-                                          <Check
-                                            className={cn(
-                                              "ml-auto",
-                                              client.id === field.value
-                                                ? "opacity-100"
-                                                : "opacity-0"
-                                            )}
-                                          />
-                                        </CommandItem>
-                                      ))}
-                                  </CommandGroup>
-                                </CommandList>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
-                        )}
-                      />
-                      {errors.clientId && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.clientId.message}
-                        </p>
-                      )}
-                    </div>
-                    {/* <div className="">
-                    <Button type="button" onClick={handleAdd} className="mt-7">
-                      {" "}
-                      <PlusCircle className="h-5 w-5" />
-                      <AddClient />
-                    </Button>
-                  </div> */}
-                    <div className="col-span-2 lg:col-span-1">
-                      <AddClient
-                        onClientAdded={(newClient) => {
-                          // Update the client dropdown with the new client
-                          queryClient.invalidateQueries(["clients"]);
-
-                          // setTimeout(() => {
-                          //   if (clients) {
-                          //     setValue("clientId", String(newClient.id));
-                          //   }
-                          // }, 1000); // delay can be adjusted as needed
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {parsedUser.role === "admin" && (
-                  <div className="col-span-2 lg:col-span-1">
-                    <Label
-                      htmlFor="branchId"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Branch <span className="text-red-500">*</span>
-                    </Label>
-                    <Controller
-                      name="branchId"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          key={field.value}
-                          onValueChange={(value) => setValue("branchId", value)}
-                          value={watch("branchId")}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select branch" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {branches?.map((branch) => (
-                              <SelectItem
-                                key={branch.id}
-                                value={String(branch.id)}
-                              >
-                                {branch.branchName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    {errors.branchId && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors.branchId.message}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* numberOfAdults */}
-                <div className="col-span-2 lg:col-span-1">
-                  <Label
-                    htmlFor="no"
-                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    No. Of Adults
-                  </Label>
-                  <Controller
-                    name="numberOfAdults"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        key={field.value}
-                        onValueChange={(value) =>
-                          setValue(
-                            "numberOfAdults",
-                            value === "none" ? "" : value
-                          )
-                        }
-                        value={watch("numberOfAdults")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {noOfAdultsOptions.map((option) => (
-                            <SelectItem
-                              key={option.value}
-                              value={String(option.value)}
-                            >
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.numberOfAdults && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.numberOfAdults.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* numberOfChildren5To11 */}
-                <div className="col-span-2 lg:col-span-1">
-                  <Label
-                    htmlFor="no"
-                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    No. Of Children 5-11
-                  </Label>
-                  <Controller
-                    name="numberOfChildren5To11"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        key={field.value}
-                        onValueChange={(value) =>
-                          setValue(
-                            "numberOfChildren5To11",
-                            value === "none" ? "" : value
-                          )
-                        }
-                        value={watch("numberOfChildren5To11")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {noOfChildrens5To11Options.map((option) => (
-                            <SelectItem
-                              key={option.value}
-                              value={String(option.value)}
-                            >
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.numberOfChildren5To11 && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.numberOfChildren5To11.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Budget Field */}
-                <div className="col-span-2 lg:col-span-1">
-                  <Label
-                    htmlFor="budgetField"
-                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Budget Field
-                  </Label>
-                  <Controller
-                    name="budgetField"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        key={field.value}
-                        onValueChange={(value) =>
-                          setValue("budgetField", value === "none" ? "" : value)
-                        }
-                        value={watch("budgetField")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select budget" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {budgetFieldOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.budgetField && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.budgetField.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* numberOfChildrenBelow5 */}
-                <div className="col-span-2 lg:col-span-1">
-                  <Label
-                    htmlFor="no"
-                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    No. Of Children &lt; 5
-                  </Label>
-                  <Controller
-                    name="numberOfChildrenUnder5"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        key={field.value}
-                        onValueChange={(value) =>
-                          setValue(
-                            "numberOfChildrenUnder5",
-                            value === "none" ? "" : value
-                          )
-                        }
-                        value={watch("numberOfChildrenUnder5")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {noOfChildrensBelow5Options.map((option) => (
-                            <SelectItem
-                              key={option.value}
-                              value={String(option.value)}
-                            >
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.numberOfChildrenUnder5 && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.numberOfChildrenUnder5.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* numbr of nights */}
-                {/* <div className="col-span-2 lg:col-span-1">
-                  <Label
-                    htmlFor="no"
-                    className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    No. Of Nights
-                  </Label>
-                  <Controller
-                    name="numberOfNights"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        key={field.value}
-                        onValueChange={(value) =>
-                          setValue(
-                            "numberOfNights",
-                            value === "none" ? "" : value
-                          )
-                        }
-                        value={watch("numberOfNights")}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {noOfNightOptions.map((option) => (
-                            <SelectItem
-                              key={option.value}
-                              value={String(option.value)}
-                            >
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.numberOfNights && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.numberOfNights.message}
-                    </p>
-                  )}
-                </div> */}
-
                 {/* Booking Details */}
                 <div className="col-span-2">
                   <Label
@@ -1107,20 +690,6 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                       Vehicle
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="isPackage"
-                      {...register("isPackage")}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <Label
-                      htmlFor="isPackage"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Package
-                    </Label>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1149,48 +718,53 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <TableRow key={field.id}>
                       <TableCell className="w-20 px-1">
                         <Input
-                          {...register(`bookingDetails.${index}.day`)}
+                          {...register(`groupBookingDetails.${index}.day`)}
                           type="text"
                           placeholder="day"
                           className="w-20 m-0"
                         />
-                        {errors.bookingDetails?.[index]?.day && (
+                        {errors.groupBookingDetails?.[index]?.day && (
                           <p className="text-red-500 text-xs mt-1">
-                            {errors.bookingDetails[index]?.day?.message}
+                            {errors.groupBookingDetails[index]?.day?.message}
                           </p>
                         )}
                       </TableCell>
 
                       <TableCell className="w-36 px-1">
                         <Input
-                          {...register(`bookingDetails.${index}.date`)}
+                          {...register(`groupBookingDetails.${index}.date`)}
                           type="date"
                           className="w-full"
                         />
-                        {errors.bookingDetails?.[index]?.date && (
+                        {errors.groupBookingDetails?.[index]?.date && (
                           <p className="text-red-500 text-xs mt-1">
-                            {errors.bookingDetails[index]?.date?.message}
+                            {errors.groupBookingDetails[index]?.date?.message}
                           </p>
                         )}
                       </TableCell>
 
                       <TableCell className="max-w-[500px] px-1 whitespace-normal break-words">
                         <Textarea
-                          {...register(`bookingDetails.${index}.description`)}
+                          {...register(
+                            `groupBookingDetails.${index}.description`
+                          )}
                           className="w-[400px] lg:w-full"
                           placeholder="description"
                           rows={4}
                         />
-                        {errors.bookingDetails?.[index]?.description && (
+                        {errors.groupBookingDetails?.[index]?.description && (
                           <p className="text-red-500 text-xs mt-1">
-                            {errors.bookingDetails[index]?.description?.message}
+                            {
+                              errors.groupBookingDetails[index]?.description
+                                ?.message
+                            }
                           </p>
                         )}
                       </TableCell>
 
                       <TableCell className="w-36 px-1">
                         <Controller
-                          name={`bookingDetails.${index}.cityId`}
+                          name={`groupBookingDetails.${index}.cityId`}
                           control={control}
                           render={({ field }) => (
                             <Select
@@ -1200,11 +774,13 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                               // }}
                               onValueChange={(value) =>
                                 setValue(
-                                  `bookingDetails.${index}.cityId`,
+                                  `groupBookingDetails.${index}.cityId`,
                                   value === "none" ? "" : value
                                 )
                               }
-                              value={watch(`bookingDetails.${index}.cityId`)}
+                              value={watch(
+                                `groupBookingDetails.${index}.cityId`
+                              )}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select a city" />
@@ -1222,22 +798,25 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                             </Select>
                           )}
                         />
-                        {errors.bookingDetails?.[index]?.cityId && (
+                        {errors.groupBookingDetails?.[index]?.cityId && (
                           <p className="text-red-500 text-xs mt-1">
-                            {errors.bookingDetails[index]?.cityId?.message}
+                            {errors.groupBookingDetails[index]?.cityId?.message}
                           </p>
                         )}
                       </TableCell>
 
                       <Input
                         type="hidden"
-                        {...register(`bookingDetails.${index}.bookingDetailId`)}
+                        {...register(
+                          `groupBookingDetails.${index}.groupBookingDetailId`
+                        )}
                       />
-                      {errors.bookingDetails?.[index]?.bookingDetailId && (
+                      {errors.groupBookingDetails?.[index]
+                        ?.groupBookingDetailId && (
                         <p className="text-red-500 text-xs mt-1">
                           {
-                            errors.bookingDetails[index]?.bookingDetailId
-                              ?.message
+                            errors.groupBookingDetails[index]
+                              ?.groupBookingDetailId?.message
                           }
                         </p>
                       )}
@@ -1305,7 +884,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                         .split("T")[0];
 
                   append({
-                    bookingDetailId: "",
+                    groupBookingDetailId: "",
                     day: String(lastDay + 1), // Increment day based on the last entry
                     date: newDate, // Add the calculated date
                     description: "",
@@ -1372,7 +951,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate("/bookings")}
+              onClick={() => navigate("/groupBookings")}
             >
               Cancel
             </Button>
@@ -1392,4 +971,4 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   );
 };
 
-export default BookingForm;
+export default GroupBookingForm;

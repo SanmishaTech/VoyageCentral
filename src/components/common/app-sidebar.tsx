@@ -106,6 +106,16 @@ const initialData = {
             { title: "Tour Booking", url: "/bookings" },
           ],
         },
+        {
+          title: "Group Tours",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: false,
+          items: [
+            { title: "Group Tour Enquiries", url: "/groupBookings/enquiries" },
+            { title: "Group Tour Booking", url: "/groupBookings" },
+          ],
+        },
       ],
     },
     // branch start
@@ -143,6 +153,16 @@ const initialData = {
             { title: "Tours", url: "/tours" },
             { title: "Tour Enquiries", url: "/tours/enquiries" },
             { title: "Tour Booking", url: "/bookings" },
+          ],
+        },
+        {
+          title: "Group Tours",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: false,
+          items: [
+            { title: "Group Tour Enquiries", url: "/groupBookings/enquiries" },
+            { title: "Group Tour Booking", url: "/groupBookings" },
           ],
         },
       ],
@@ -183,6 +203,16 @@ const initialData = {
             { title: "Tours", url: "/tours" },
             { title: "Tour Enquiries", url: "/tours/enquiries" },
             { title: "Tour Booking", url: "/bookings" },
+          ],
+        },
+        {
+          title: "Group Tours",
+          url: "#",
+          icon: SquareTerminal,
+          isActive: false,
+          items: [
+            { title: "Group Tour Enquiries", url: "/groupBookings/enquiries" },
+            { title: "Group Tour Booking", url: "/groupBookings" },
           ],
         },
       ],

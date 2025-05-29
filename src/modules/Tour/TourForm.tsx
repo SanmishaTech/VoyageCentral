@@ -126,7 +126,10 @@ const FormSchema = z
       .min(1, "destination is required.")
       .max(100, "destination must not exceed 100 characters."),
     numberOfNights: z.string().optional(),
-    numberOfTravelers: z.string().optional(),
+    numberOfTravelers: z
+      .string()
+      .regex(/^\d+$/, "Only numeric characters are allowed")
+      .optional(),
     status: z
       .string()
       .min(1, "Status is required.")
@@ -497,7 +500,7 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                   >
                     No. Of Travelers <span className="text-red-500">*</span>
                   </Label>
-                  <Controller
+                  {/* <Controller
                     name="numberOfTravelers"
                     control={control}
                     render={({ field }) => (
@@ -526,6 +529,11 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
                         </SelectContent>
                       </Select>
                     )}
+                  /> */}
+                  <Input
+                    id="numberOfTravelers"
+                    {...register("numberOfTravelers")}
+                    placeholder="Enter number"
                   />
                   {errors.numberOfTravelers && (
                     <p className="text-red-500 text-xs mt-1">
