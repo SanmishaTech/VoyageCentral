@@ -72,6 +72,13 @@ import ServiceList from "@/modules/Service/ServiceList";
 import StaffList from "./modules/Staff/StaffList";
 import EditTourMember from "./modules/Booking/TourMembers/EditTourMember";
 import TourEnquiryList from "./modules/Booking/TourEnquiryList";
+import GroupBookingList from "./modules/GroupBooking/GroupBookingList";
+import CreateGroupBooking from "./modules/GroupBooking/CreateGroupBooking";
+import EditGroupBooking from "./modules/GroupBooking/EditGroupBooking";
+import GroupTourEnquiryList from "./modules/GroupBooking/GroupTourEnquiryList";
+import GroupBookingDetails from "./modules/GroupBooking/GroupBookingDetails";
+import CreateGroupClientBooking from "./modules/GroupBooking/GroupClientBooking/CreateGroupClientBooking";
+import EditGroupClientBooking from "./modules/GroupBooking/GroupClientBooking/EditGroupClientBooking";
 
 const App = () => {
   useEffect(() => {
@@ -530,6 +537,65 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+            {/* group Booking routes start */}
+            <Route
+              path="/groupBookings"
+              element={
+                <ProtectedRoute>
+                  <GroupBookingList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/create"
+              element={
+                <ProtectedRoute>
+                  <CreateGroupBooking />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/groupBookings/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditGroupBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/enquiries"
+              element={
+                <ProtectedRoute>
+                  <GroupTourEnquiryList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:bookingId/details"
+              element={
+                <ProtectedRoute>
+                  <GroupBookingDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:bookingId/groupClientBooking/create"
+              element={
+                <ProtectedRoute>
+                  <CreateGroupClientBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:bookingId/groupClientBooking/:groupClientId/edit"
+              element={
+                <ProtectedRoute>
+                  <EditGroupClientBooking />
+                </ProtectedRoute>
+              }
+            />
+            {/* group Booking routes end */}
           </Route>
         </Routes>
       </Router>

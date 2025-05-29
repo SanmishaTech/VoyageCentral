@@ -389,7 +389,7 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
           ? new Date(editHotelBookingData.hotelBookingDate)
               .toISOString()
               .split("T")[0]
-          : "", // Default to today
+          : new Date().toISOString().split("T")[0], // Default to today
 
         bookingConfirmedBy: editHotelBookingData.bookingConfirmedBy
           ? editHotelBookingData.bookingConfirmedBy
