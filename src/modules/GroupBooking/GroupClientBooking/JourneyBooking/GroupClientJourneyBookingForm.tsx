@@ -5,6 +5,14 @@ import {
   Controller,
   useFieldArray,
 } from "react-hook-form";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Loader } from "lucide-react"; // Import the LoaderCircle icon
+import { Separator } from "@radix-ui/react-separator";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -165,9 +173,14 @@ const defaultValues: FormInputs = {
   amount: "",
 };
 
-const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
-  const { id, journeyBookingId } = useParams<{
-    id: string;
+const GroupClientJourneyBookingForm = ({
+  mode,
+}: {
+  mode: "create" | "edit";
+}) => {
+  const { groupBookingId, groupClientBookingId, journeyBookingId } = useParams<{
+    groupBookingId: string;
+    groupClientBookingId: string;
     journeyBookingId: string;
   }>();
   const [openAirlineId, setOpenAirlineId] = useState<boolean>(false);
@@ -222,19 +235,21 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     useQuery({
       queryKey: ["editJourneyBooking", journeyBookingId],
       queryFn: async () => {
-        const response = await get(`/journey-bookings/${journeyBookingId}`);
+        const response = await get(
+          `/group-client-journey-bookings/${journeyBookingId}`
+        );
         return response; // API returns the sector object directly
       },
     });
 
   const {
-    data: editBookingData,
-    isLoading: editBookingLoading,
-    isError: isEditBookingError,
+    data: editGroupBookingData,
+    isLoading: editGroupBookingLoading,
+    isError: isEditGroupBookingError,
   } = useQuery({
-    queryKey: ["editBooking", id],
+    queryKey: ["editGroupBooking", groupBookingId],
     queryFn: async () => {
-      const response = await get(`/bookings/${id}`);
+      const response = await get(`/group-bookings/${groupBookingId}`);
       return response; // API returns the sector object directly
     },
   });
@@ -307,11 +322,12 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
 
   // Mutation for creating a user
   const createMutation = useMutation({
-    mutationFn: (data: FormInputs) => post(`/journey-bookings/${id}`, data),
+    mutationFn: (data: FormInputs) =>
+      post(`/group-client-journey-bookings/${groupClientBookingId}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["journey-bookings"]); // Refetch the users list
+      queryClient.invalidateQueries(["group-client-journey-bookings"]); // Refetch the users list
       toast.success("Journey Booking added successfully");
-      navigate(`/bookings/${id}/details`);
+      navigate(`/groupBookings/${groupBookingId}/details`);
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -324,11 +340,11 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   // Mutation for updating a user
   const updateMutation = useMutation({
     mutationFn: (data: FormInputs) =>
-      put(`/journey-bookings/${journeyBookingId}`, data),
+      put(`/group-client-journey-bookings/${journeyBookingId}`, data),
     onSuccess: () => {
       toast.success("Journey Booking updated successfully");
-      queryClient.invalidateQueries(["journey-bookings"]);
-      navigate(`/bookings/${id}/details`);
+      queryClient.invalidateQueries(["group-client-journey-bookings"]);
+      navigate(`/groupBookings/${groupBookingId}/details`);
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -370,6 +386,48 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   //     updateMutation.mutate(data); // Trigger update mutation
   //   }
   // };
+
+  useEffect(() => {
+    const mode = watch("mode");
+
+    if (mode === "Train") {
+      setValue("busName", "");
+      setValue("flightClass", "");
+      setValue("airlineId", null);
+      setValue("flightNumber", "");
+      setValue("vehicleId", null);
+    }
+
+    if (mode === "Flight") {
+      setValue("busName", "");
+      setValue("trainName", "");
+      setValue("trainNumber", "");
+      setValue("vehicleId", null);
+      setValue("trainClass", "");
+    }
+
+    if (mode === "Bus") {
+      setValue("trainName", "");
+      setValue("trainNumber", "");
+      setValue("pnrNumber", "");
+      setValue("trainClass", "");
+      setValue("flightClass", "");
+      setValue("airlineId", null);
+      setValue("vehicleId", null);
+      setValue("flightNumber", "");
+    }
+
+    if (mode === "Car") {
+      setValue("trainName", "");
+      setValue("trainNumber", "");
+      setValue("pnrNumber", "");
+      setValue("trainClass", "");
+      setValue("flightClass", "");
+      setValue("airlineId", null);
+      setValue("flightNumber", "");
+      setValue("busName", "");
+    }
+  }, [watch("mode"), setValue]);
 
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     let cleanedData = { ...data };
@@ -446,11 +504,113 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         <Card className="mx-auto mt-10 ">
           <CardContent className="pt-6 space-y-8">
             {/* start */}
-            <TourBookingDetailsTable
+            {/* <TourBookingDetailsTable
               editBookingLoading={editBookingLoading}
               isEditBookingError={isEditBookingError}
               editBookingData={editBookingData}
-            />
+            /> */}
+            {/* end */}
+
+            {/* start */}
+            <div>
+              {/* tour Details */}
+              <div className="mb-7">
+                <h2 className="text-lg  font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                  Tour Details
+                </h2>
+                <Separator className="mb-4" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="text-sm text-gray-800 dark:text-gray-300">
+                    <span className="font-medium">Tour Booking No:</span>{" "}
+                    {editGroupBookingData?.groupBookingNumber || "N/A"}
+                  </div>
+                  <div className="text-sm text-gray-800 dark:text-gray-300">
+                    <span className="font-medium">Booking Date:</span>{" "}
+                    {editGroupBookingData?.groupBookingDate
+                      ? dayjs(editGroupBookingData.groupBookingDate).format(
+                          "DD/MM/YYYY"
+                        )
+                      : "N/A"}
+                  </div>
+                  <div className="text-sm text-gray-800 dark:text-gray-300">
+                    <span className="font-medium">Journey Date:</span>{" "}
+                    {editGroupBookingData?.journeyDate
+                      ? dayjs(editGroupBookingData.journeyDate).format(
+                          "DD/MM/YYYY"
+                        )
+                      : "N/A"}
+                  </div>
+                  <div className="text-sm text-gray-800 dark:text-gray-300">
+                    <span className="font-medium">Branch:</span>{" "}
+                    {editGroupBookingData?.branch?.branchName ?? "N/A"}
+                  </div>
+                  <div className="text-sm text-gray-800 dark:text-gray-300">
+                    <span className="font-medium">Tour Name:</span>{" "}
+                    {editGroupBookingData?.tour?.tourTitle ?? "N/A"}
+                  </div>
+                </div>
+              </div>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-1">
+                  <AccordionTrigger className="bg-slate-100 dark:text-white dark:bg-gray-900 p-2 border">
+                    Tour Booking Details
+                  </AccordionTrigger>
+                  <AccordionContent className="border rounded  p-2">
+                    {editGroupBookingLoading ? (
+                      <div className="flex justify-center items-center h-32">
+                        <Loader className="mr-2 h-8 w-8 animate-spin" />
+                      </div>
+                    ) : isEditGroupBookingError ? (
+                      <div className="text-center text-red-500">
+                        Failed to load booking.
+                      </div>
+                    ) : editGroupBookingData?.groupBookingDetails?.length >
+                      0 ? (
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Day</TableHead>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Description</TableHead>
+                              <TableHead>Night Halt</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {editGroupBookingData?.groupBookingDetails?.map(
+                              (booking) => (
+                                <TableRow className="h-15" key={booking.id}>
+                                  <TableCell className="w-10 text-sm text-left align-top">
+                                    {booking.day}
+                                  </TableCell>
+                                  <TableCell className="w-20 text-sm text-left align-top">
+                                    {" "}
+                                    {booking.date
+                                      ? dayjs(booking.date).format("DD/MM/YYYY")
+                                      : "N/A"}
+                                  </TableCell>
+                                  <TableCell className=" text-sm w-[375px] whitespace-normal break-words text-left align-top">
+                                    {booking.description}
+                                  </TableCell>
+                                  <TableCell className="text-sm w-20 text-left whitespace-normal break-words align-top">
+                                    {booking?.city?.cityName || "N/A"}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        No Group tour members Found.
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
             {/* end */}
 
             {/* Client Details */}
@@ -1084,7 +1244,9 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(`/bookings/${id}/details`)}
+              onClick={() =>
+                navigate(`/groupBookings/${groupBookingId}/details`)
+              }
             >
               Cancel
             </Button>
@@ -1104,4 +1266,4 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   );
 };
 
-export default JourneyBookingForm;
+export default GroupClientJourneyBookingForm;

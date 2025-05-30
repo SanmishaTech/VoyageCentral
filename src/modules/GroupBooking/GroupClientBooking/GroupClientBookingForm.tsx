@@ -7,7 +7,8 @@ import {
   useWatch,
 } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox"; // make sure it's imported
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import GroupClientJourneyBookingList from "./JourneyBooking/GroupClientJourneyBookingList";
 import dayjs from "dayjs";
 import TourBookingDetailsTable from "../TourBookingDetailsTable";
 import { cn } from "@/lib/utils";
@@ -74,6 +75,8 @@ import {
   genderOptions,
 } from "@/config/data";
 import AddClient from "../AddClient";
+import GroupClientJourneyBookingForm from "./JourneyBooking/GroupClientJourneyBookingForm";
+import GroupClientBookingReceiptList from "./BookingReceipt/GroupClientBookingReceiptList";
 
 const TourMemberSchema = z.object({
   groupClientMemberId: z.string().optional(),
@@ -236,6 +239,7 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       );
       return response; // API returns the sector object directly
     },
+    enabled: mode === "edit" && !!groupClientBookingId, // ensures the query only runs in edit mode and ID is defined
   });
 
   // const {
@@ -251,9 +255,11 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   // });
 
   useEffect(() => {
-    if (editGroupClientBookingData) {
+    if (editGroupClientBookingData && mode === "edit") {
+      setSelectedClientData(editGroupClientBookingData.client);
       const groupClientMembersData =
-        editGroupClientBookingData.groupClientMembers.map((member) => ({
+        editGroupClientBookingData?.groupClientMembers.map((member) => ({
+          groupClientMemberId: member.id ? String(member.id) : "",
           name: member.name || "",
           gender: member.gender || "",
           aadharNo: member.aadharNo || "",
@@ -274,7 +280,7 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         })) || [];
 
       reset({
-        clientId: String(editGroupClientBookingData?.clientId) || "",
+        clientId: editGroupClientBookingData?.clientId || "",
         bookingDate: editGroupClientBookingData.bookingDate
           ? new Date(editGroupClientBookingData.bookingDate)
               .toISOString()
@@ -310,38 +316,36 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         groupClientMembers: groupClientMembersData,
       });
     }
-  }, [editGroupClientBookingData, reset]);
+  }, [editGroupClientBookingData, reset, mode]);
 
-  function handleClientSelectChange(client) {
-    let clientId = parseInt(watch("clientId"));
-    if (clientId === client.id) {
+  const handleClientSelectChange = (client) => {
+    if (client?.id === selectedClientData?.id) {
       return;
-      // was here last time
     }
-    if (selectedClientData) {
-      const MemberData =
-        selectedClientData?.familyFriends?.map((member: any) => ({
-          groupClientBookingId: "",
-          aadharNo: member.aadharNo ? String(member.aadharNo) : "",
-          name: member.name || "",
-          gender: member.gender || "",
-          relation: member.relation || "",
-          dateOfBirth: member.dateOfBirth
-            ? new Date(member.dateOfBirth).toISOString().split("T")[0]
-            : "",
-          anniversaryDate: member.anniversaryDate
-            ? new Date(member.anniversaryDate).toISOString().split("T")[0]
-            : "",
-          foodType: member.foodType || "",
-          mobile: member.mobile || "",
-          email: member.email || "",
-          panNumber: member.panNumber || "",
-          passportNumber: member.passportNumber || "",
-        })) || [];
+    setSelectedClientData(client);
 
-      append(MemberData);
-    }
-  }
+    const MemberData =
+      client?.familyFriends?.map((member: any) => ({
+        groupClientMemberId: "",
+        aadharNo: member.aadharNo ? String(member.aadharNo) : "",
+        name: member.name || "",
+        gender: member.gender || "",
+        relation: member.relation || "",
+        dateOfBirth: member.dateOfBirth
+          ? new Date(member.dateOfBirth).toISOString().split("T")[0]
+          : "",
+        anniversaryDate: member.anniversaryDate
+          ? new Date(member.anniversaryDate).toISOString().split("T")[0]
+          : "",
+        foodType: member.foodType || "",
+        mobile: member.mobile || "",
+        email: member.email || "",
+        panNumber: member.panNumber || "",
+        passportNumber: member.passportNumber || "",
+      })) || [];
+    remove();
+    append(MemberData);
+  };
 
   // Mutation for creating a user
   const createMutation = useMutation({
@@ -354,9 +358,13 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     },
     onError: (error: any) => {
       Validate(error, setError);
-      toast.error(
-        error.response?.data?.message || "Failed to create Tour Members"
-      );
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error(
+          error.response?.data?.message || "Failed to create Tour Members"
+        );
+      }
     },
   });
 
@@ -367,14 +375,17 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     onSuccess: () => {
       toast.success("Tour Members updated successfully");
       queryClient.invalidateQueries(["group-client-bookings"]);
-      navigate(`/bookings/${groupBookingId}/details`);
+      navigate(`/groupBookings/${groupBookingId}/details`);
     },
     onError: (error: any) => {
       Validate(error, setError);
-      console.log("this is error", error);
-      toast.error(
-        error.response?.data?.message || "Failed to update Tour Members"
-      );
+      if (error?.message) {
+        toast.error(error.message);
+      } else {
+        toast.error(
+          error.response?.data?.message || "Failed to update Tour Members"
+        );
+      }
     },
   });
 
@@ -437,7 +448,7 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   <div className="a">
                     <Label
                       htmlFor="clientId"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Client <span className="text-red-500">*</span>
                     </Label>
@@ -454,7 +465,7 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                               variant="outline"
                               role="combobox"
                               aria-expanded={openClientId ? "true" : "false"} // This should depend on the popover state
-                              className=" w-[275px] overflow-hidden justify-between mt-1"
+                              className=" w-[325px] overflow-hidden justify-between mt-1"
                               onClick={() => setOpenClientId((prev) => !prev)} // Toggle popover on button click
                             >
                               {field.value
@@ -516,14 +527,8 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                       </p>
                     )}
                   </div>
-                  {/* <div className="">
-                    <Button type="button" onClick={handleAdd} className="mt-7">
-                      {" "}
-                      <PlusCircle className="h-5 w-5" />
-                      <AddClient />
-                    </Button>
-                  </div> */}
-                  <div className="col-span-2 lg:col-span-1">
+
+                  {/* <div className="col-span-2 lg:col-span-1">
                     <AddClient
                       onClientAdded={(newClient) => {
                         // Update the client dropdown with the new client
@@ -536,7 +541,7 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                         // }, 1000); // delay can be adjusted as needed
                       }}
                     />
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -778,295 +783,413 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   </Label>
                 </div>
               </div>
+              {/* tab start */}
               <div className="col-span-3">
-                {/* groupClientMembers start */}
-                {/* <> */}
-                <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200 ">
-                  Tour Members
-                </CardTitle>
-                <div className="mt-2">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Gender</TableHead>
-                        <TableHead>Relation</TableHead>
-                        <TableHead>Aadhar No</TableHead>
-                        <TableHead>Date of Birth</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {fields.map((field, index) => (
-                        <TableRow key={field.id}>
-                          <TableCell>
-                            <Input
-                              {...register(`groupClientMembers.${index}.name`)}
-                              placeholder="Enter name"
-                            />
-                            {errors.groupClientMembers?.[index]?.name && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {
-                                  errors.groupClientMembers[index]?.name
-                                    ?.message
-                                }
-                              </p>
-                            )}
-                            <div className="mt-2">
-                              <Label
-                                htmlFor={`groupClientMembers.${index}.anniversaryDate`}
-                                className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                              >
-                                Anniversary Date
-                              </Label>
+                <Tabs defaultValue="groupClientMembers" className="w-full">
+                  <TabsList className="grid grid-cols-1 md:grid-cols-7 w-full mb-44 md:mb-4">
+                    <>
+                      <TabsTrigger
+                        value="groupClientMembers"
+                        className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                      >
+                        Tour Members
+                      </TabsTrigger>
+                      {mode === "edit" &&
+                      editGroupClientBookingData?.isJourney ? (
+                        <>
+                          <TabsTrigger
+                            value="JourneyBooking"
+                            className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                          >
+                            Journey Booking
+                          </TabsTrigger>
+                        </>
+                      ) : (
+                        ""
+                      )}
+                      {mode === "edit" ? (
+                        <>
+                          <TabsTrigger
+                            value="BookingReceipt"
+                            className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                          >
+                            Booking Receipt
+                          </TabsTrigger>
+                        </>
+                      ) : (
+                        ""
+                      )}
+                    </>
+                  </TabsList>
+                  <TabsContent value="groupClientMembers">
+                    {/* groupClientMembers start */}
+                    {/* <> */}
+                    <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200 ">
+                      Tour Members
+                    </CardTitle>
+                    <div className="mt-2">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Gender</TableHead>
+                            <TableHead>Relation</TableHead>
+                            <TableHead>Aadhar No</TableHead>
+                            <TableHead>Date of Birth</TableHead>
+                            <TableHead>Pan Number</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {fields.map((field, index) => (
+                            <TableRow key={field.id}>
+                              <TableCell>
+                                <Input
+                                  {...register(
+                                    `groupClientMembers.${index}.name`
+                                  )}
+                                  placeholder="Enter name"
+                                />
+                                {errors.groupClientMembers?.[index]?.name && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    {
+                                      errors.groupClientMembers[index]?.name
+                                        ?.message
+                                    }
+                                  </p>
+                                )}
+                                <div className="mt-2">
+                                  <Label
+                                    htmlFor={`groupClientMembers.${index}.anniversaryDate`}
+                                    className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                                  >
+                                    Anniversary Date
+                                  </Label>
+                                  <Input
+                                    type="date"
+                                    id={`groupClientMembers.${index}.anniversaryDate`}
+                                    {...register(
+                                      `groupClientMembers.${index}.anniversaryDate`
+                                    )}
+                                  />
+                                  {errors.groupClientMembers?.[index]
+                                    ?.anniversaryDate && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                      {
+                                        errors.groupClientMembers[index]
+                                          ?.anniversaryDate?.message
+                                      }
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  onValueChange={(value) =>
+                                    setValue(
+                                      `groupClientMembers.${index}.gender`,
+                                      value
+                                    )
+                                  }
+                                  value={watch(
+                                    `groupClientMembers.${index}.gender`
+                                  )}
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select gender" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {genderOptions.map((option) => (
+                                      <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                      >
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                {errors.groupClientMembers?.[index]?.gender && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    {
+                                      errors.groupClientMembers[index]?.gender
+                                        ?.message
+                                    }
+                                  </p>
+                                )}
+                                <div className="mt-2">
+                                  <Label
+                                    htmlFor={`groupClientMembers.${index}.foodType`}
+                                    className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                                  >
+                                    Food Type{" "}
+                                    <span className="text-red-500">*</span>
+                                  </Label>
+                                  <Select
+                                    onValueChange={(value) =>
+                                      setValue(
+                                        `groupClientMembers.${index}.foodType`,
+                                        value
+                                      )
+                                    }
+                                    value={watch(
+                                      `groupClientMembers.${index}.foodType`
+                                    )}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select foodType" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {foodTypeOptions.map((option) => (
+                                        <SelectItem
+                                          key={option.value}
+                                          value={option.value}
+                                        >
+                                          {option.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  {errors.groupClientMembers?.[index]
+                                    ?.foodType && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                      {
+                                        errors.groupClientMembers[index]
+                                          ?.foodType?.message
+                                      }
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  {...register(
+                                    `groupClientMembers.${index}.relation`
+                                  )}
+                                  placeholder="Enter relation"
+                                />
+                                {errors.groupClientMembers?.[index]
+                                  ?.relation && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    {
+                                      errors.groupClientMembers[index]?.relation
+                                        ?.message
+                                    }
+                                  </p>
+                                )}
+                                <div className="mt-2">
+                                  <Label
+                                    htmlFor={`groupClientMembers.${index}.mobile`}
+                                    className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                                  >
+                                    Mobile
+                                  </Label>
+                                  <Input
+                                    id={`groupClientMembers.${index}.mobile`}
+                                    {...register(
+                                      `groupClientMembers.${index}.mobile`
+                                    )}
+                                    placeholder="Enter mobile"
+                                  />
+                                  {errors.groupClientMembers?.[index]
+                                    ?.mobile && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                      {
+                                        errors.groupClientMembers[index]?.mobile
+                                          ?.message
+                                      }
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Input
+                                  {...register(
+                                    `groupClientMembers.${index}.aadharNo`
+                                  )}
+                                  placeholder="Enter Aadhar No"
+                                />
+                                {errors.groupClientMembers?.[index]
+                                  ?.aadharNo && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    {
+                                      errors.groupClientMembers[index]?.aadharNo
+                                        ?.message
+                                    }
+                                  </p>
+                                )}
+                                <div className="mt-2">
+                                  <Label
+                                    htmlFor={`groupClientMembers.${index}.email`}
+                                    className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                                  >
+                                    Email
+                                  </Label>
+                                  <Input
+                                    id={`groupClientMembers.${index}.email`}
+                                    {...register(
+                                      `groupClientMembers.${index}.email`
+                                    )}
+                                    placeholder="Enter email"
+                                  />
+                                  {errors.groupClientMembers?.[index]
+                                    ?.email && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                      {
+                                        errors.groupClientMembers[index]?.email
+                                          ?.message
+                                      }
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="align-top">
+                                <Input
+                                  type="date"
+                                  {...register(
+                                    `groupClientMembers.${index}.dateOfBirth`
+                                  )}
+                                />
+                                {errors.groupClientMembers?.[index]
+                                  ?.dateOfBirth && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    {
+                                      errors.groupClientMembers[index]
+                                        ?.dateOfBirth?.message
+                                    }
+                                  </p>
+                                )}
+                                <div className="mt-2">
+                                  <Label
+                                    htmlFor={`groupClientMembers.${index}.passportNumber`}
+                                    className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
+                                  >
+                                    Passport Number
+                                  </Label>
+                                  <Input
+                                    id={`groupClientMembers.${index}.passportNumber`}
+                                    {...register(
+                                      `groupClientMembers.${index}.passportNumber`
+                                    )}
+                                    placeholder="Enter passport number"
+                                  />
+                                  {errors.groupClientMembers?.[index]
+                                    ?.passportNumber && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                      {
+                                        errors.groupClientMembers[index]
+                                          ?.passportNumber?.message
+                                      }
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="align-top">
+                                <Input
+                                  {...register(
+                                    `groupClientMembers.${index}.panNumber`
+                                  )}
+                                  placeholder="Enter Pan Number"
+                                />
+                                {errors.groupClientMembers?.[index]
+                                  ?.panNumber && (
+                                  <p className="text-red-500 text-xs mt-1">
+                                    {
+                                      errors.groupClientMembers[index]
+                                        ?.panNumber?.message
+                                    }
+                                  </p>
+                                )}
+                              </TableCell>
+
+                              {/* tourMemberId id */}
                               <Input
-                                type="date"
-                                id={`groupClientMembers.${index}.anniversaryDate`}
+                                type="hidden"
                                 {...register(
-                                  `groupClientMembers.${index}.anniversaryDate`
+                                  `groupClientMembers.${index}.groupClientMemberId`
                                 )}
                               />
                               {errors.groupClientMembers?.[index]
-                                ?.anniversaryDate && (
+                                ?.groupClientMemberId && (
                                 <p className="text-red-500 text-xs mt-1">
                                   {
                                     errors.groupClientMembers[index]
-                                      ?.anniversaryDate?.message
+                                      ?.groupClientMemberId?.message
                                   }
                                 </p>
                               )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              onValueChange={(value) =>
-                                setValue(
-                                  `groupClientMembers.${index}.gender`,
-                                  value
-                                )
-                              }
-                              value={watch(
-                                `groupClientMembers.${index}.gender`
-                              )}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select gender" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {genderOptions.map((option) => (
-                                  <SelectItem
-                                    key={option.value}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {errors.groupClientMembers?.[index]?.gender && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {
-                                  errors.groupClientMembers[index]?.gender
-                                    ?.message
-                                }
-                              </p>
-                            )}
-                            <div className="mt-2">
-                              <Label
-                                htmlFor={`groupClientMembers.${index}.foodType`}
-                                className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                              >
-                                Food Type{" "}
-                                <span className="text-red-500">*</span>
-                              </Label>
-                              <Select
-                                onValueChange={(value) =>
-                                  setValue(
-                                    `groupClientMembers.${index}.foodType`,
-                                    value
-                                  )
-                                }
-                                value={watch(
-                                  `groupClientMembers.${index}.foodType`
-                                )}
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Select foodType" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {foodTypeOptions.map((option) => (
-                                    <SelectItem
-                                      key={option.value}
-                                      value={option.value}
-                                    >
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {errors.groupClientMembers?.[index]?.foodType && (
-                                <p className="text-red-500 text-xs mt-1">
-                                  {
-                                    errors.groupClientMembers[index]?.foodType
-                                      ?.message
-                                  }
-                                </p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              {...register(
-                                `groupClientMembers.${index}.relation`
-                              )}
-                              placeholder="Enter relation"
-                            />
-                            {errors.groupClientMembers?.[index]?.relation && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {
-                                  errors.groupClientMembers[index]?.relation
-                                    ?.message
-                                }
-                              </p>
-                            )}
-                            <div className="mt-2">
-                              <Label
-                                htmlFor={`groupClientMembers.${index}.mobile`}
-                                className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                              >
-                                Mobile
-                              </Label>
-                              <Input
-                                id={`groupClientMembers.${index}.mobile`}
-                                {...register(
-                                  `groupClientMembers.${index}.mobile`
-                                )}
-                                placeholder="Enter mobile"
-                              />
-                              {errors.groupClientMembers?.[index]?.mobile && (
-                                <p className="text-red-500 text-xs mt-1">
-                                  {
-                                    errors.groupClientMembers[index]?.mobile
-                                      ?.message
-                                  }
-                                </p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              {...register(
-                                `groupClientMembers.${index}.aadharNo`
-                              )}
-                              placeholder="Enter Aadhar No"
-                            />
-                            {errors.groupClientMembers?.[index]?.aadharNo && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {
-                                  errors.groupClientMembers[index]?.aadharNo
-                                    ?.message
-                                }
-                              </p>
-                            )}
-                            <div className="mt-2">
-                              <Label
-                                htmlFor={`groupClientMembers.${index}.email`}
-                                className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
-                              >
-                                Email
-                              </Label>
-                              <Input
-                                id={`groupClientMembers.${index}.email`}
-                                {...register(
-                                  `groupClientMembers.${index}.email`
-                                )}
-                                placeholder="Enter email"
-                              />
-                              {errors.groupClientMembers?.[index]?.email && (
-                                <p className="text-red-500 text-xs mt-1">
-                                  {
-                                    errors.groupClientMembers[index]?.email
-                                      ?.message
-                                  }
-                                </p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="align-top">
-                            <Input
-                              type="date"
-                              {...register(
-                                `groupClientMembers.${index}.dateOfBirth`
-                              )}
-                            />
-                            {errors.groupClientMembers?.[index]
-                              ?.dateOfBirth && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {
-                                  errors.groupClientMembers[index]?.dateOfBirth
-                                    ?.message
-                                }
-                              </p>
-                            )}
-                          </TableCell>
+                              {/* tourMemberId id */}
 
-                          {/* tourMemberId id */}
-                          <Input
-                            type="hidden"
-                            {...register(
-                              `groupClientMembers.${index}.groupClientMemberId`
-                            )}
-                          />
-                          {errors.groupClientMembers?.[index]
-                            ?.groupClientMemberId && (
-                            <p className="text-red-500 text-xs mt-1">
-                              {
-                                errors.groupClientMembers[index]
-                                  ?.groupClientMemberId?.message
-                              }
-                            </p>
-                          )}
-                          {/* tourMemberId id */}
-
-                          <TableCell>
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              onClick={() => remove(index)}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() =>
-                      append({
-                        groupClientMemberId: "",
-                        name: "",
-                        gender: "",
-                        relation: "",
-                        aadharNo: "",
-                        dateOfBirth: "",
-                        anniversaryDate: "",
-                        foodType: "",
-                        mobile: "",
-                        email: "",
-                      })
-                    }
-                  >
-                    <PlusCircle className="mr-2 h-5 w-5" />
-                    Add Tour Member
-                  </Button>
-                </div>
-                {/* </> */}
-                {/* groupClientMembers end */}
+                              <TableCell>
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  onClick={() => remove(index)}
+                                >
+                                  <Trash2 size={16} />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() =>
+                          append({
+                            groupClientMemberId: "",
+                            name: "",
+                            gender: "",
+                            relation: "",
+                            aadharNo: "",
+                            dateOfBirth: "",
+                            anniversaryDate: "",
+                            foodType: "",
+                            mobile: "",
+                            email: "",
+                            passportNumber: "",
+                            panNumber: "",
+                          })
+                        }
+                      >
+                        <PlusCircle className="mr-2 h-5 w-5" />
+                        Add Tour Member
+                      </Button>
+                    </div>
+                    {/* </> */}
+                    {/* groupClientMembers end */}
+                  </TabsContent>
+                  {mode === "edit" && editGroupClientBookingData?.isJourney ? (
+                    <>
+                      <TabsContent value="JourneyBooking">
+                        {/* <JourneyBookingList bookingId={id} /> */}
+                        <GroupClientJourneyBookingList
+                          groupBookingId={groupBookingId}
+                          groupClientBookingId={groupClientBookingId}
+                        />
+                      </TabsContent>
+                    </>
+                  ) : (
+                    ""
+                  )}
+                  {mode === "edit" ? (
+                    <>
+                      <TabsContent value="BookingReceipt">
+                        {/* <JourneyBookingList bookingId={id} /> */}
+                        <GroupClientBookingReceiptList
+                          groupBookingId={groupBookingId}
+                          groupClientBookingId={groupClientBookingId}
+                        />
+                      </TabsContent>
+                    </>
+                  ) : (
+                    ""
+                  )}
+                </Tabs>
               </div>
+              {/* tab end */}
             </div>
           </CardContent>
 
