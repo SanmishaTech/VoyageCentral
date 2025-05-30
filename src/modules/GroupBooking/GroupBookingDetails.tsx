@@ -89,7 +89,7 @@ import TravelDocumentList from "./TravelDocument/TravelDocumentList";
 import BookingReceiptList from "./BookingReceipt/BookingReceiptList";
 import TourMemberList from "./TourMembers/TourMemberList";
 const GroupBookingDetails = () => {
-  const { bookingId } = useParams<{ bookingId: string }>();
+  const { groupBookingId } = useParams<{ groupBookingId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -98,9 +98,9 @@ const GroupBookingDetails = () => {
     isLoading: editGroupBookingLoading,
     isError: isEditGroupBookingError,
   } = useQuery({
-    queryKey: ["editGroupBooking", bookingId],
+    queryKey: ["editGroupBooking", groupBookingId],
     queryFn: async () => {
-      const response = await get(`/group-bookings/${bookingId}`);
+      const response = await get(`/group-bookings/${groupBookingId}`);
       return response; // API returns the sector object directly
     },
   });
@@ -217,7 +217,7 @@ const GroupBookingDetails = () => {
                       </div>
                     ) : (
                       <div className="text-center">
-                        No Group tour Booking Details Found.
+                        No Group tour members Found.
                       </div>
                     )}
                   </AccordionContent>
@@ -227,7 +227,7 @@ const GroupBookingDetails = () => {
             {/* end */}
 
             {/* tour Members start */}
-            <GroupClientBookingList groupBookingId={editGroupBookingData?.id} />
+            <GroupClientBookingList groupBookingId={groupBookingId} />
             {/* tour Members end */}
           </CardContent>
         </Card>

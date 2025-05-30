@@ -79,6 +79,10 @@ import GroupTourEnquiryList from "./modules/GroupBooking/GroupTourEnquiryList";
 import GroupBookingDetails from "./modules/GroupBooking/GroupBookingDetails";
 import CreateGroupClientBooking from "./modules/GroupBooking/GroupClientBooking/CreateGroupClientBooking";
 import EditGroupClientBooking from "./modules/GroupBooking/GroupClientBooking/EditGroupClientBooking";
+import CreateGroupClientJourneyBooking from "./modules/GroupBooking/GroupClientBooking/JourneyBooking/CreateGroupClientJourneyBooking";
+import EditGroupClientJourneyBooking from "./modules/GroupBooking/GroupClientBooking/JourneyBooking/EditGroupClientJourneyBooking";
+import CreateGroupClientBookingReceipt from "./modules/GroupBooking/GroupClientBooking/BookingReceipt/CreateGroupClientBookingReceipt";
+import EditGroupClientBookingReceipt from "./modules/GroupBooking/GroupClientBooking/BookingReceipt/EditGroupClientBookingReceipt";
 
 const App = () => {
   useEffect(() => {
@@ -572,7 +576,7 @@ const App = () => {
               }
             />
             <Route
-              path="/groupBookings/:bookingId/details"
+              path="/groupBookings/:groupBookingId/details"
               element={
                 <ProtectedRoute>
                   <GroupBookingDetails />
@@ -580,7 +584,7 @@ const App = () => {
               }
             />
             <Route
-              path="/groupBookings/:bookingId/groupClientBooking/create"
+              path="/groupBookings/:groupBookingId/groupClientBooking/create"
               element={
                 <ProtectedRoute>
                   <CreateGroupClientBooking />
@@ -588,10 +592,42 @@ const App = () => {
               }
             />
             <Route
-              path="/groupBookings/:bookingId/groupClientBooking/:groupClientId/edit"
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/edit"
               element={
                 <ProtectedRoute>
                   <EditGroupClientBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/journeyBooking/create"
+              element={
+                <ProtectedRoute>
+                  <CreateGroupClientJourneyBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/journeyBooking/:journeyBookingId/edit"
+              element={
+                <ProtectedRoute>
+                  <EditGroupClientJourneyBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/bookingReceipt/create"
+              element={
+                <ProtectedRoute>
+                  <CreateGroupClientBookingReceipt />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/bookingReceipt/:bookingReceiptId/edit"
+              element={
+                <ProtectedRoute>
+                  <EditGroupClientBookingReceipt />
                 </ProtectedRoute>
               }
             />

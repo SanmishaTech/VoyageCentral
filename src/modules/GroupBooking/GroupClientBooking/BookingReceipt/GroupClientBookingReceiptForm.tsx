@@ -249,7 +249,7 @@ const defaultValues: FormInputs = {
   description: "",
 };
 
-const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
+const GroupClientBookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id, bookingReceiptId } = useParams<{
     id: string;
     bookingReceiptId: string;
@@ -943,4 +943,4 @@ const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
   );
 };
 
-export default BookingReceiptForm;
+export default GroupClientBookingReceiptForm;

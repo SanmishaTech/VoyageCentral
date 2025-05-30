@@ -13,7 +13,12 @@ import MultipleSelector, {
 import { Card, CardContent } from "@/components/ui/card";
 import dayjs from "dayjs";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatter.js";
-
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Table,
   TableBody,
@@ -64,7 +69,7 @@ const GroupClientBookingList = ({ groupBookingId }) => {
   const navigate = useNavigate();
 
   const fetchGroupClientBookings = async () => {
-    const response = await get(`/group-client-bookings/${groupBookingId}`);
+    const response = await get(`/group-client-bookings/all/${groupBookingId}`);
     return response;
   };
 
@@ -177,21 +182,23 @@ const GroupClientBookingList = ({ groupBookingId }) => {
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                {/* <TableBody>
                   {groupClients.map((client) => (
                     <TableRow key={client.id}>
                       <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
-                        {client?.bookingDate}
+                        {client.bookingDate
+                          ? dayjs(client.bookingDate).format("DD/MM/YYYY")
+                          : "N/A"}
                       </TableCell>
                       <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
-                        {client?.name || "N/A"}
+                        {client?.client?.clientName || "N/A"}
                       </TableCell>
-                      <TableCell>{client?.mobile || "N/A"}</TableCell>
-                      <TableCell>{client?.email || "N/A"}</TableCell>
+                      <TableCell>{client?.client?.mobile1 || "N/A"}</TableCell>
+                      <TableCell>{client?.client?.email || "N/A"}</TableCell>
                       <TableCell>
                         {formatCurrency(client?.tourCost) || "N/A"}
                       </TableCell>
-                      <TableCell>{client?.totalMembers || "N/A"}</TableCell>
+                      <TableCell>{client?.totalMember || "N/A"}</TableCell>
 
                       <TableCell className="w-20">
                         <div className="flex justify-end gap-2">
@@ -217,6 +224,114 @@ const GroupClientBookingList = ({ groupBookingId }) => {
                         </div>
                       </TableCell>
                     </TableRow>
+                  ))}
+                </TableBody> */}
+                <TableBody>
+                  {groupClients.map((client) => (
+                    <React.Fragment key={client.id}>
+                      {/* Main Client Row */}
+                      <TableRow>
+                        <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
+                          {client.bookingDate
+                            ? dayjs(client.bookingDate).format("DD/MM/YYYY")
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
+                          {client?.client?.clientName || "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          {client?.client?.mobile1 || "N/A"}
+                        </TableCell>
+                        <TableCell>{client?.client?.email || "N/A"}</TableCell>
+                        <TableCell>
+                          {formatCurrency(client?.tourCost) || "N/A"}
+                        </TableCell>
+                        <TableCell>{client?.totalMember || "N/A"}</TableCell>
+                        <TableCell className="w-20">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                navigate(
+                                  `/groupBookings/${groupBookingId}/groupClientBooking/${client.id}/edit`
+                                )
+                              }
+                            >
+                              <Edit size={16} />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => confirmDelete(client.id)}
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* Accordion Row */}
+                      <TableRow>
+                        <TableCell colSpan={7} className="p-0 border-none">
+                          <Accordion
+                            type="single"
+                            collapsible
+                            className="w-full"
+                          >
+                            <AccordionItem value={`members-${client.id}`}>
+                              <AccordionTrigger className="bg-slate-100 dark:bg-gray-900 dark:text-white p-2 border">
+                                Members
+                              </AccordionTrigger>
+                              <AccordionContent className="border rounded p-2">
+                                {client.groupClientMembers?.length > 0 ? (
+                                  <div className="overflow-x-auto">
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Name</TableHead>
+                                          <TableHead>Gender</TableHead>
+                                          <TableHead>Food Type</TableHead>
+                                          <TableHead>Mobile</TableHead>
+                                          <TableHead>Email</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {client.groupClientMembers.map(
+                                          (member) => (
+                                            <TableRow key={member.id}>
+                                              <TableCell>
+                                                {member.name || "N/A"}
+                                              </TableCell>
+                                              <TableCell>
+                                                {member.gender || "N/A"}
+                                              </TableCell>
+                                              <TableCell>
+                                                {member.foodType || "N/A"}
+                                              </TableCell>
+                                              <TableCell>
+                                                {member.mobile || "N/A"}
+                                              </TableCell>
+                                              <TableCell>
+                                                {member.email || "N/A"}
+                                              </TableCell>
+                                            </TableRow>
+                                          )
+                                        )}
+                                      </TableBody>
+                                    </Table>
+                                  </div>
+                                ) : (
+                                  <div className="text-center text-sm text-gray-500">
+                                    No members found.
+                                  </div>
+                                )}
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
                   ))}
                 </TableBody>
               </Table>

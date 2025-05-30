@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Input } from "@/components/ui";
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatter.js";
+import axios from "axios";
 import {
   Select,
   SelectTrigger,
@@ -11,6 +13,8 @@ import MultipleSelector, {
   Option,
 } from "@/components/common/multiple-selector"; // Import MultipleSelector from common folder
 import { Card, CardContent } from "@/components/ui/card";
+import dayjs from "dayjs";
+
 import {
   Table,
   TableBody,
@@ -19,7 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, del, patch } from "@/services/apiService";
@@ -51,73 +54,108 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
-
-const JourneyBookingList = ({ bookingId }) => {
+//  was here last time
+const GroupClientBookingReceiptList = ({
+  groupBookingId,
+  groupClientBookingId,
+}) => {
   const queryClient = useQueryClient();
   const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
-  const [journeyBookingToDelete, setJourneyBookingToDelete] = useState<
+  const [bookingReceiptToDelete, setBookingReceiptToDelete] = useState<
     number | null
   >(null); //
   //  Track the user ID to delete
   const navigate = useNavigate();
 
-  const fetchJourneyBookings = async () => {
-    const response = await get(`/journey-bookings/booking/${bookingId}`);
+  const fetchBookingReceipts = async () => {
+    const response = await get(`/booking-receipts/booking/${bookingId}`);
     return response;
   };
 
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["journey-bookings", bookingId],
-    queryFn: () => fetchJourneyBookings(),
+    queryKey: ["booking-receipts", bookingId],
+    queryFn: () => fetchBookingReceipts(),
   });
 
-  const journeyBookings = data?.journeyBookings || [];
+  const bookingReceipts = data?.bookingReceipts || [];
 
   // Mutation for deleting a user
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => del(`/journey-bookings/${id}`),
+    mutationFn: (id: number) => del(`/booking-receipts/${id}`),
     onSuccess: () => {
-      toast.success("Journey Booking deleted successfully");
-      queryClient.invalidateQueries(["journey-bookings"]);
+      toast.success("Booking Receipt deleted successfully");
+      queryClient.invalidateQueries(["booking-receipts"]);
     },
     onError: (error) => {
       if (error?.message) {
         toast.error(error.message);
       } else {
-        toast.error("Failed to delete Journey Booking");
+        toast.error("Failed to delete Booking Receipt");
       }
     },
   });
 
+  const handleGenerateInvoice = async (receiptId) => {
+    try {
+      const response = await get(
+        `/booking-receipts/invoice/${receiptId}`,
+        {},
+        { responseType: "blob" } // must be in config
+      );
+
+      if (response.status === 200) {
+        const blob = new Blob([response.data], { type: "application/pdf" });
+
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `invoice-${receiptId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error("Failed to generate invoice");
+        alert("Failed to generate invoice");
+      }
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      alert("Failed to download invoice");
+    }
+  };
+
   const confirmDelete = (id: number) => {
-    setJourneyBookingToDelete(id);
+    setBookingReceiptToDelete(id);
     setShowConfirmation(true);
   };
 
   const handleDelete = () => {
-    if (journeyBookingToDelete) {
-      deleteMutation.mutate(journeyBookingToDelete);
+    if (bookingReceiptToDelete) {
+      deleteMutation.mutate(bookingReceiptToDelete);
       setShowConfirmation(false);
-      setJourneyBookingToDelete(null);
+      setBookingReceiptToDelete(null);
     }
   };
 
   return (
     <div className="mt-2 ">
       <div className="mx-auto ">
-        <div className="mb-1 w-full flex  flex-wrap justify-between items-center gap-2">
-          <div className="text-xl font-bold text-gray-800 tracking-wide  dark:text-white">
-            Journey Booking
+        <div className="mb-1 w-full flex flex-wrap justify-between items-center gap-2">
+          <div className="text-xl font-bold text-gray-800 tracking-wide  dark:text-white ">
+            Booking Receipt
           </div>
+
           <Button
             onClick={() =>
-              navigate(`/bookings/${bookingId}/journeyBooking/create`)
+              navigate(`/bookings/${bookingId}/bookingReceipt/create`)
             }
             className="bg-primary text-xs hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
           >
             <PlusCircle className="mr-2 h-5 w-5" />
-            Add Journey Booking
+            Add Booking Receipt
           </Button>
         </div>
 
@@ -129,87 +167,71 @@ const JourneyBookingList = ({ bookingId }) => {
             </div>
           ) : isError ? (
             <div className="text-center text-red-500">
-              Failed to load journey booking details.
+              Failed to load booking receipt details.
             </div>
-          ) : journeyBookings.length > 0 ? (
+          ) : bookingReceipts.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>From - To</span>
+                        <span>Receipt No.</span>
                       </div>
                     </TableHead>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>Mode</span>
+                        <span>Description</span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer">
+                      <div className="flex items-center">
+                        <span>Receipt Date</span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer">
+                      <div className="flex items-center">
+                        <span>Total Amount</span>
                       </div>
                     </TableHead>
 
-                    <TableHead className="cursor-pointer">
-                      <div className="flex items-center">
-                        <span>From Place</span>
-                      </div>
+                    <TableHead className="cursor-pointer text-right">
+                      <span>Actions</span>
                     </TableHead>
-                    <TableHead className="cursor-pointer">
-                      <div className="flex items-center">
-                        <span>To Place</span>
-                      </div>
-                    </TableHead>
-                    <TableHead className="cursor-pointer">
-                      <div className="flex items-center">
-                        <span>PNR No.</span>
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {journeyBookings.map((journey) => (
-                    <TableRow key={journey.id}>
-                      <TableCell className="text-sm w-40">
-                        {journey.fromDepartureDate
-                          ? dayjs(journey.fromDepartureDate).format(
-                              "DD/MM/YYYY hh:mm A"
-                            )
-                          : "N/A"}{" "}
-                        To{" "}
-                        {journey.toArrivalDate
-                          ? dayjs(journey.toArrivalDate).format(
-                              "DD/MM/YYYY hh:mm A"
-                            )
+                  {bookingReceipts.map((receipt) => (
+                    <TableRow key={receipt.id}>
+                      <TableCell className="max-w-[600px] px-1 whitespace-normal break-words">
+                        {receipt?.receiptNumber}
+                      </TableCell>
+                      <TableCell className="max-w-[500px] px-1 whitespace-normal break-words">
+                        {receipt?.description}
+                      </TableCell>
+                      <TableCell className="max-w-[600px] px-1 whitespace-normal break-words">
+                        {receipt?.receiptDate
+                          ? dayjs(receipt?.receiptDate).format("DD/MM/YYYY")
                           : "N/A"}
                       </TableCell>
+                      <TableCell>
+                        {" "}
+                        {formatCurrency(receipt?.totalAmount)}
+                      </TableCell>
 
-                      <TableCell>{journey.mode}</TableCell>
-                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
-                        {journey.fromPlace || "N/A"}
-                      </TableCell>
-                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
-                        {journey.toPlace || "N/A"}
-                      </TableCell>
-                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
-                        {journey.pnrNumber || "N/A"}
-                      </TableCell>
-                      <TableCell className="w-20">
+                      <TableCell className="20">
                         <div className="flex justify-end gap-2">
                           <Button
-                            variant="outline"
+                            // variant="ghost"
                             size="sm"
-                            onClick={() =>
-                              navigate(
-                                `/bookings/${bookingId}/journeyBooking/${journey.id}/edit`
-                              )
-                            }
+                            onClick={() => handleGenerateInvoice(receipt.id)}
                           >
-                            <Edit size={16} />
+                            invoice
                           </Button>
-
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => confirmDelete(journey.id)}
+                            onClick={() => confirmDelete(receipt.id)}
                           >
                             <Trash2 size={16} />
                           </Button>
@@ -221,7 +243,7 @@ const JourneyBookingList = ({ bookingId }) => {
               </Table>
             </div>
           ) : (
-            <div className="text-center">No Journey booking Found.</div>
+            <div className="text-center">No booking Receipt Found.</div>
           )}
         </div>
       </div>
@@ -229,10 +251,10 @@ const JourneyBookingList = ({ bookingId }) => {
       <ConfirmDialog
         isOpen={showConfirmation}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this journey booking? This action cannot be undone."
+        description="Are you sure you want to delete this Booking Receipt? This action cannot be undone."
         onCancel={() => {
           setShowConfirmation(false);
-          setJourneyBookingToDelete(null);
+          setBookingReceiptToDelete(null);
         }}
         onConfirm={handleDelete}
       />
@@ -240,4 +262,4 @@ const JourneyBookingList = ({ bookingId }) => {
   );
 };
 
-export default JourneyBookingList;
+export default GroupClientBookingReceiptList;
