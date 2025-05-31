@@ -117,7 +117,7 @@ const FormSchema = z.object({
     z.string().min(1, "Client field is required."),
     z.number().min(1, "Client Field is required"),
   ]),
-  numberOfAdults: z.string().optional(),
+  numberOfAdults: z.string().min(1, "Number of Adults Field is required"),
   // numberOfNights: z.string().optional(),
   numberOfChildren5To11: z.string().optional(),
   numberOfChildrenUnder5: z.string().optional(),
@@ -154,8 +154,8 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id } = useParams<{ id: string }>();
   const [openTourId, setOpenTourId] = useState<boolean>(false);
   const [openClientId, setOpenClientId] = useState<boolean>(false);
-  const [isGroupTour, setIsGroupTour] = useState<boolean>(false);
-
+  const [selectedTourDetailsData, setSelectedTourDetailsData] =
+    useState<any>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const storedUser = localStorage.getItem("user");
@@ -169,7 +169,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     journeyDate: "",
     budgetField: "",
     clientId: "",
-    numberOfAdults: "",
+    numberOfAdults: "1",
     numberOfChildren5To11: "",
     numberOfChildrenUnder5: "",
     branchId: "",
@@ -189,6 +189,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     handleSubmit,
     setValue,
     watch,
+    getValues,
     reset,
     control,
     setError,
@@ -270,6 +271,8 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       setValue("bookingDate", today);
     }
     if (editBookingData) {
+      setSelectedTourDetailsData(editBookingData.tour);
+
       // ✅ Map familyFriends once
       const tourBookingDetailsData =
         editBookingData.bookingDetails?.map((tourBooking) => ({
@@ -377,6 +380,11 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       setValue("tourId", "");
       return; // Exit if no journeyDate is selected
     }
+
+    if (tour?.id === selectedTourDetailsData?.id) {
+      return;
+    }
+    setSelectedTourDetailsData(tour);
 
     if (tour.itineraries && Array.isArray(tour.itineraries)) {
       // Parse the journeyDate into a Date object
@@ -829,7 +837,7 @@ const BookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     htmlFor="no"
                     className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    No. Of Adults
+                    No. Of Adults <span className="text-red-500">*</span>
                   </Label>
                   <Controller
                     name="numberOfAdults"

@@ -77,6 +77,7 @@ import {
 import AddClient from "../AddClient";
 import GroupClientJourneyBookingForm from "./JourneyBooking/GroupClientJourneyBookingForm";
 import GroupClientBookingReceiptList from "./BookingReceipt/GroupClientBookingReceiptList";
+import GroupClientTravelDocumentList from "./TravelDocument/GroupClientTravelDocumentList";
 
 const TourMemberSchema = z.object({
   groupClientMemberId: z.string().optional(),
@@ -130,42 +131,59 @@ const TourMemberSchema = z.object({
     .optional(),
 });
 
-const FormSchema = z.object({
-  clientId: z.union([
-    z.string().min(1, "Client field is required."),
-    z.number().min(1, "Client Field is required"),
-  ]),
-  bookingDate: z.string().min(1, "Booing Date Field is required."), // should be parsed to Date if needed
+const FormSchema = z
+  .object({
+    clientId: z.union([
+      z.string().min(1, "Client field is required."),
+      z.number().min(1, "Client Field is required"),
+    ]),
+    bookingDate: z.string().min(1, "Booing Date Field is required."), // should be parsed to Date if needed
 
-  numberOfAdults: z.string().optional(),
+    numberOfAdults: z.string().optional(),
 
-  numberOfChildren5To11: z.string().optional(),
+    numberOfChildren5To11: z.string().optional(),
 
-  numberOfChildrenUnder5: z.string().optional(),
+    numberOfChildrenUnder5: z.string().optional(),
 
-  tourCost: z.preprocess(
-    (val) => {
-      if (typeof val === "string") {
-        const parsed = parseFloat(val);
-        return isNaN(parsed) ? val : parsed;
-      }
-      return val;
-    },
-    z
-      .number({
-        invalid_type_error: "Amount must be a number",
-        required_error: "Amount is required",
-      })
-      .min(1, "Amount must be greater than 0")
-  ),
+    tourCost: z.preprocess(
+      (val) => {
+        if (typeof val === "string") {
+          const parsed = parseFloat(val);
+          return isNaN(parsed) ? val : parsed;
+        }
+        return val;
+      },
+      z
+        .number({
+          invalid_type_error: "Amount must be a number",
+          required_error: "Amount is required",
+        })
+        .min(1, "Amount must be greater than 0")
+    ),
 
-  notes: z.string().max(1000, "Max 1000 characters").optional(),
+    notes: z.string().max(1000, "Max 1000 characters").optional(),
 
-  isJourney: z.boolean(),
-  isHotel: z.boolean(),
-  isVehicle: z.boolean(),
-  groupClientMembers: z.array(TourMemberSchema).optional(),
-});
+    isJourney: z.boolean(),
+    isHotel: z.boolean(),
+    isVehicle: z.boolean(),
+    groupClientMembers: z.array(TourMemberSchema).optional(),
+  })
+  .superRefine((data, ctx) => {
+    const adults = parseInt(data.numberOfAdults || "0", 10);
+    const children5To11 = parseInt(data.numberOfChildren5To11 || "0", 10);
+    const childrenUnder5 = parseInt(data.numberOfChildrenUnder5 || "0", 10);
+
+    const total = adults + children5To11 + childrenUnder5;
+
+    if (total === 0) {
+      toast.error("Adults or children count must be greater than 0.");
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Adults or children count must be greater than 0.",
+        path: ["numberOfAdults"], // You can add issues to all three if desired
+      });
+    }
+  });
 
 type FormInputs = z.infer<typeof FormSchema>;
 
@@ -173,7 +191,7 @@ const defaultValues: FormInputs = {
   clientId: "",
   bookingDate: new Date().toISOString().split("T")[0], // defaults to today (YYYY-MM-DD)
 
-  numberOfAdults: "",
+  numberOfAdults: "1",
   numberOfChildren5To11: "",
   numberOfChildrenUnder5: "",
   tourCost: "",
@@ -198,6 +216,7 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const {
     register,
     handleSubmit,
+    getValues,
     setValue,
     watch,
     reset,
@@ -318,13 +337,61 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     }
   }, [editGroupClientBookingData, reset, mode]);
 
+  // const handleClientSelectChange = (client) => {
+  //   if (client?.id === selectedClientData?.id) {
+  //     return;
+  //   }
+  //   setSelectedClientData(client);
+
+  //   const MemberData =
+  //     client?.familyFriends?.map((member: any) => ({
+  //       groupClientMemberId: "",
+  //       aadharNo: member.aadharNo ? String(member.aadharNo) : "",
+  //       name: member.name || "",
+  //       gender: member.gender || "",
+  //       relation: member.relation || "",
+  //       dateOfBirth: member.dateOfBirth
+  //         ? new Date(member.dateOfBirth).toISOString().split("T")[0]
+  //         : "",
+  //       anniversaryDate: member.anniversaryDate
+  //         ? new Date(member.anniversaryDate).toISOString().split("T")[0]
+  //         : "",
+  //       foodType: member.foodType || "",
+  //       mobile: member.mobile || "",
+  //       email: member.email || "",
+  //       panNumber: member.panNumber || "",
+  //       passportNumber: member.passportNumber || "",
+  //     })) || [];
+  //   remove();
+  //   append(MemberData);
+  // };
+
   const handleClientSelectChange = (client) => {
     if (client?.id === selectedClientData?.id) {
       return;
     }
+
+    const adults = parseInt(getValues("numberOfAdults") || "0", 10);
+    const children5To11 = parseInt(
+      getValues("numberOfChildren5To11") || "0",
+      10
+    );
+    const childrenUnder5 = parseInt(
+      getValues("numberOfChildrenUnder5") || "0",
+      10
+    );
+
+    const total = adults + children5To11 + childrenUnder5;
+    const maxMembersAllowed = total - 1;
+
+    if (total === 0) {
+      toast.error("Enter at least one person before adding members.");
+      return;
+    }
+
     setSelectedClientData(client);
 
-    const MemberData =
+    let MemberData =
       client?.familyFriends?.map((member: any) => ({
         groupClientMemberId: "",
         aadharNo: member.aadharNo ? String(member.aadharNo) : "",
@@ -343,9 +410,61 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         panNumber: member.panNumber || "",
         passportNumber: member.passportNumber || "",
       })) || [];
+
+    if (MemberData.length > maxMembersAllowed) {
+      MemberData = MemberData.slice(0, maxMembersAllowed);
+      toast.info(
+        `Only ${maxMembersAllowed} members were added based on counts.`
+      );
+    }
+
     remove();
     append(MemberData);
   };
+
+  // Watch relevant fields
+  const numberOfAdults = watch("numberOfAdults");
+  const numberOfChildren5To11 = watch("numberOfChildren5To11");
+  const numberOfChildrenUnder5 = watch("numberOfChildrenUnder5");
+
+  useEffect(() => {
+    const adults = parseInt(numberOfAdults || "0", 10);
+    const children5To11 = parseInt(numberOfChildren5To11 || "0", 10);
+    const childrenUnder5 = parseInt(numberOfChildrenUnder5 || "0", 10);
+
+    const total = adults + children5To11 + childrenUnder5;
+    const maxMembersAllowed = total > 0 ? total - 1 : 0;
+
+    if (maxMembersAllowed < 0) return; // Safety check
+
+    if (fields.length > maxMembersAllowed) {
+      // Remove excess members
+      for (let i = fields.length - 1; i >= maxMembersAllowed; i--) {
+        remove(i);
+      }
+      toast.info(`Members reduced to match counts (${maxMembersAllowed}).`);
+    }
+    //  else if (fields.length < maxMembersAllowed) {
+    //   // Optionally append empty members to match count
+    //   for (let i = fields.length; i < maxMembersAllowed; i++) {
+    //     append({
+    //       groupClientMemberId: "",
+    //       name: "",
+    //       gender: "",
+    //       relation: "",
+    //       aadharNo: "",
+    //       dateOfBirth: "",
+    //       anniversaryDate: "",
+    //       foodType: "",
+    //       mobile: "",
+    //       email: "",
+    //       passportNumber: "",
+    //       panNumber: "",
+    //     });
+    //   }
+    //   // Optional: toast.info(`Members increased to match counts (${maxMembersAllowed}).`);
+    // }
+  }, [numberOfAdults, numberOfChildren5To11, numberOfChildrenUnder5]);
 
   // Mutation for creating a user
   const createMutation = useMutation({
@@ -390,6 +509,20 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   });
 
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
+    const adults = parseInt(data.numberOfAdults || "0", 10);
+    const children5To11 = parseInt(data.numberOfChildren5To11 || "0", 10);
+    const childrenUnder5 = parseInt(data.numberOfChildrenUnder5 || "0", 10);
+
+    const total = adults + children5To11 + childrenUnder5;
+    const maxMembersAllowed = total > 0 ? total - 1 : 0;
+
+    if (fields.length < maxMembersAllowed) {
+      toast.error(
+        `Please add at least ${maxMembersAllowed} tour member(s) before submitting.`
+      );
+      return; // prevent form submission
+    }
+
     if (mode === "create") {
       createMutation.mutate(data);
     } else {
@@ -503,7 +636,16 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                                           // Close popover after selection
                                         }}
                                       >
-                                        {client.clientName}
+                                        <span className="flex items-center justify-between w-full">
+                                          {client.clientName}
+                                          {client.clientName !== "---" && (
+                                            <span className="ml-2 text-xs font-medium bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                                              {client?.familyFriends?.length}{" "}
+                                              members
+                                            </span>
+                                          )}
+                                        </span>
+
                                         <Check
                                           className={cn(
                                             "ml-auto",
@@ -814,6 +956,18 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                             className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
                           >
                             Booking Receipt
+                          </TabsTrigger>
+                        </>
+                      ) : (
+                        ""
+                      )}
+                      {mode === "edit" ? (
+                        <>
+                          <TabsTrigger
+                            value="TravelDocument"
+                            className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                          >
+                            Travel Documents
                           </TabsTrigger>
                         </>
                       ) : (
@@ -1137,7 +1291,53 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                         type="button"
                         variant="outline"
                         className="mt-4"
-                        onClick={() =>
+                        // onClick={() =>
+                        //   append({
+                        //     groupClientMemberId: "",
+                        //     name: "",
+                        //     gender: "",
+                        //     relation: "",
+                        //     aadharNo: "",
+                        //     dateOfBirth: "",
+                        //     anniversaryDate: "",
+                        //     foodType: "",
+                        //     mobile: "",
+                        //     email: "",
+                        //     passportNumber: "",
+                        //     panNumber: "",
+                        //   })
+                        // }
+                        onClick={() => {
+                          const adults = parseInt(
+                            getValues("numberOfAdults") || "0",
+                            10
+                          );
+                          const children5To11 = parseInt(
+                            getValues("numberOfChildren5To11") || "0",
+                            10
+                          );
+                          const childrenUnder5 = parseInt(
+                            getValues("numberOfChildrenUnder5") || "0",
+                            10
+                          );
+
+                          const total = adults + children5To11 + childrenUnder5;
+                          const maxMembersAllowed = total - 1;
+
+                          if (total === 0) {
+                            toast.error(
+                              "Enter at least one person before adding members."
+                            );
+                            return;
+                          }
+
+                          if (fields.length >= maxMembersAllowed) {
+                            toast.error(
+                              `Increase adults or children counts to add more tour members.`
+                            );
+                            return;
+                          }
+
                           append({
                             groupClientMemberId: "",
                             name: "",
@@ -1151,8 +1351,8 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                             email: "",
                             passportNumber: "",
                             panNumber: "",
-                          })
-                        }
+                          });
+                        }}
                       >
                         <PlusCircle className="mr-2 h-5 w-5" />
                         Add Tour Member
@@ -1177,8 +1377,19 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   {mode === "edit" ? (
                     <>
                       <TabsContent value="BookingReceipt">
-                        {/* <JourneyBookingList bookingId={id} /> */}
                         <GroupClientBookingReceiptList
+                          groupBookingId={groupBookingId}
+                          groupClientBookingId={groupClientBookingId}
+                        />
+                      </TabsContent>
+                    </>
+                  ) : (
+                    ""
+                  )}
+                  {mode === "edit" ? (
+                    <>
+                      <TabsContent value="TravelDocument">
+                        <GroupClientTravelDocumentList
                           groupBookingId={groupBookingId}
                           groupClientBookingId={groupClientBookingId}
                         />

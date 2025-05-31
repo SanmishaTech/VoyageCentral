@@ -23,7 +23,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import TourBookingDetailsTable from "../TourBookingDetailsTable";
 import {
   Command,
   CommandEmpty,
@@ -106,9 +105,14 @@ const defaultValues: FormInputs = {
   isPrivate: false,
 };
 
-const TravelDocumentForm = ({ mode }: { mode: "create" | "edit" }) => {
-  const { id, travelDocumentId } = useParams<{
-    id: string;
+const GroupClientTravelDocumentForm = ({
+  mode,
+}: {
+  mode: "create" | "edit";
+}) => {
+  const { groupBookingId, groupClientBookingId, travelDocumentId } = useParams<{
+    groupBookingId: string;
+    groupClientBookingId: string;
     travelDocumentId: string;
   }>();
   const [logoPreview, setAttachmentPreview] = useState<string | null>(null);
@@ -135,22 +139,12 @@ const TravelDocumentForm = ({ mode }: { mode: "create" | "edit" }) => {
     useQuery({
       queryKey: ["editTravelDocument", travelDocumentId],
       queryFn: async () => {
-        const response = await get(`/travel-documents/${travelDocumentId}`);
+        const response = await get(
+          `/group-client-travel-documents/${travelDocumentId}`
+        );
         return response;
       },
     });
-
-  const {
-    data: editBookingData,
-    isLoading: editBookingLoading,
-    isError: isEditBookingError,
-  } = useQuery({
-    queryKey: ["editBooking", id],
-    queryFn: async () => {
-      const response = await get(`/bookings/${id}`);
-      return response; // API returns the sector object directly
-    },
-  });
 
   useEffect(() => {
     if (editTravelDocumentData) {
@@ -189,13 +183,13 @@ const TravelDocumentForm = ({ mode }: { mode: "create" | "edit" }) => {
   // Mutation for creating a user
   const createMutation = useMutation({
     mutationFn: (data: FormInputs) =>
-      post(`/travel-documents/${id}`, data, {
+      post(`/group-client-travel-documents/${groupClientBookingId}`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries(["travel-documents"]); // Refetch the users list
+      queryClient.invalidateQueries(["group-client-travel-documents"]); // Refetch the users list
       toast.success("Travel Document added successfully");
-      navigate(`/bookings/${id}/details`);
+      navigate(`/groupBookings/${groupBookingId}/details`);
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -208,13 +202,13 @@ const TravelDocumentForm = ({ mode }: { mode: "create" | "edit" }) => {
   // Mutation for updating a user
   const updateMutation = useMutation({
     mutationFn: (data: FormInputs) =>
-      put(`/travel-documents/${travelDocumentId}`, data, {
+      put(`/group-client-travel-documents/${travelDocumentId}`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       }),
     onSuccess: () => {
       toast.success("Travel Document updated successfully");
-      queryClient.invalidateQueries(["travel-documents"]);
-      navigate(`/bookings/${id}/details`);
+      queryClient.invalidateQueries(["group-client-travel-documents"]);
+      navigate(`/groupBookings/${groupBookingId}/details`);
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -271,12 +265,6 @@ const TravelDocumentForm = ({ mode }: { mode: "create" | "edit" }) => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card className="mx-auto mt-10 ">
           <CardContent className="pt-6 space-y-8">
-            <TourBookingDetailsTable
-              editBookingLoading={editBookingLoading}
-              isEditBookingError={isEditBookingError}
-              editBookingData={editBookingData}
-            />
-
             <CardTitle className="font-semibold mt-5 text-gray-800 dark:text-gray-200 mb-4">
               Travel Document Details
             </CardTitle>
@@ -387,7 +375,9 @@ const TravelDocumentForm = ({ mode }: { mode: "create" | "edit" }) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(`/bookings/${id}/details`)}
+              onClick={() =>
+                navigate(`/groupBookings/${groupBookingId}/details`)
+              }
             >
               Cancel
             </Button>
@@ -407,4 +397,4 @@ const TravelDocumentForm = ({ mode }: { mode: "create" | "edit" }) => {
   );
 };
 
-export default TravelDocumentForm;
+export default GroupClientTravelDocumentForm;

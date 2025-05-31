@@ -71,7 +71,8 @@ const AdminDashboard = () => {
                   {followUps.map((fu, idx) => (
                     <TableRow key={idx}>
                       <TableCell className="w-15 pr-6">
-                        {fu.bookingNumber}
+                        {fu.bookingNumber ? fu.bookingNumber : null}
+                        {fu.groupBookingNumber ? fu.groupBookingNumber : null}
                       </TableCell>
                       <TableCell className="w-15 pr-6">
                         {fu.nextFollowUpDate

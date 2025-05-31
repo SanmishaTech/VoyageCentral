@@ -22,7 +22,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import TourBookingDetailsTable from "../TourBookingDetailsTable";
 import {
   Command,
   CommandEmpty,
@@ -249,11 +248,16 @@ const defaultValues: FormInputs = {
   description: "",
 };
 
-const GroupClientBookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
-  const { id, bookingReceiptId } = useParams<{
-    id: string;
-    bookingReceiptId: string;
+const GroupClientBookingReceiptForm = ({
+  mode,
+}: {
+  mode: "create" | "edit";
+}) => {
+  const { groupBookingId, groupClientBookingId } = useParams<{
+    groupBookingId: string;
+    groupClientBookingId: string;
   }>();
+  const MAHARASHTRA = "maharashtra";
 
   const UserData = JSON.parse(localStorage.getItem("user") || "{}");
   const agencyDetailsId = UserData?.agency?.id;
@@ -286,7 +290,7 @@ const GroupClientBookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) =>
   // gst calculate start
   const isGstinValid = editAgencyData?.gstin?.length > 4;
   const isMaharashtra =
-    editAgencyData?.stateName?.toLowerCase() === "maharashtra";
+    editAgencyData?.stateName?.toLowerCase() === MAHARASHTRA;
   const cgstPercent = watch("cgstPercent");
   const sgstPercent = watch("sgstPercent");
   const igstPercent = watch("igstPercent");
@@ -295,7 +299,7 @@ const GroupClientBookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) =>
   useEffect(() => {
     if (!editAgencyData) return;
     const isMaharashtra =
-      editAgencyData?.stateName.toLowerCase() === "maharashtra";
+      editAgencyData?.stateName.toLowerCase() === MAHARASHTRA;
     const isGstinValid = editAgencyData.gstin?.length > 4;
     const baseAmount = Number(amount) || 0;
 
@@ -328,7 +332,7 @@ const GroupClientBookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) =>
     if (!editAgencyData) return;
     const isGstinValid = editAgencyData.gstin?.length > 4;
     const isMaharashtra =
-      editAgencyData?.stateName.toLowerCase() === "maharashtra";
+      editAgencyData?.stateName.toLowerCase() === MAHARASHTRA;
     if (isGstinValid) {
       if (isMaharashtra) {
         setValue("cgstPercent", 9);
@@ -348,15 +352,6 @@ const GroupClientBookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) =>
 
   // gst calculation end
 
-  const { data: editBookingReceiptData, isLoading: editBookingReceiptLoading } =
-    useQuery({
-      queryKey: ["editBookingReceipt", bookingReceiptId],
-      queryFn: async () => {
-        const response = await get(`/booking-receipts/${bookingReceiptId}`);
-        return response;
-      },
-    });
-
   // banks
   const { data: banks, isLoading: isBankLoading } = useQuery({
     queryKey: ["banks"],
@@ -371,77 +366,19 @@ const GroupClientBookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) =>
     ...(banks ?? []),
   ];
 
-  const {
-    data: editBookingData,
-    isLoading: editBookingLoading,
-    isError: isEditBookingError,
-  } = useQuery({
-    queryKey: ["editBooking", id],
-    queryFn: async () => {
-      const response = await get(`/bookings/${id}`);
-      return response; // API returns the sector object directly
-    },
-  });
-
-  useEffect(() => {
-    if (editBookingReceiptData) {
-      reset({
-        receiptNumber: editBookingReceiptData?.receiptNumber ?? "",
-        receiptDate: editBookingReceiptData?.receiptDate
-          ? new Date(editBookingReceiptData.receiptDate)
-              .toISOString()
-              .split("T")[0]
-          : "",
-        paymentMode: editBookingReceiptData?.paymentMode ?? "",
-        amount: editBookingReceiptData?.amount
-          ? parseFloat(editBookingReceiptData?.amount).toFixed(2)
-          : null,
-        bankId: editBookingReceiptData?.bankId
-          ? parseInt(editBookingReceiptData?.bankId)
-          : null,
-        chequeDate: editBookingReceiptData?.chequeDate
-          ? new Date(editBookingReceiptData.chequeDate)
-              .toISOString()
-              .split("T")[0]
-          : null,
-        chequeNumber: editBookingReceiptData?.chequeNumber ?? "",
-        utrNumber: editBookingReceiptData?.utrNumber ?? "",
-        neftImpfNumber: editBookingReceiptData?.neftImpfNumber ?? "",
-        description: editBookingReceiptData?.description ?? "",
-      });
-    }
-  }, [editBookingReceiptData, reset]);
-
   // Mutation for creating a user
   const createMutation = useMutation({
-    mutationFn: (data: FormInputs) => post(`/booking-receipts/${id}`, data),
+    mutationFn: (data: FormInputs) =>
+      post(`/group-client-booking-receipts/${groupClientBookingId}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["booking-receipts"]); // Refetch the users list
+      queryClient.invalidateQueries(["group-client-booking-receipts"]); // Refetch the users list
       toast.success("Booking Receipt added successfully");
-      navigate(`/bookings/${id}/details`);
+      navigate(`/groupBookings/${groupBookingId}/details`);
     },
     onError: (error: any) => {
       Validate(error, setError);
       toast.error(
         error.response?.data?.message || "Failed to create booking Receipt"
-      );
-    },
-  });
-
-  // Mutation for updating a user
-  const updateMutation = useMutation({
-    mutationFn: (data: FormInputs) =>
-      put(`/booking-receipts/${bookingReceiptId}`, data),
-    onSuccess: () => {
-      toast.success("Booking Receipt updated successfully");
-      queryClient.invalidateQueries(["booking-receipts"]);
-      navigate(`/bookings/${id}/details`);
-    },
-    onError: (error: any) => {
-      Validate(error, setError);
-      console.log("this is error", error);
-      toast.error(
-        error.response?.data?.message || "Failed to update booking receipt"
       );
     },
   });
@@ -473,15 +410,10 @@ const GroupClientBookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) =>
   // payment mode
 
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
-    if (mode === "create") {
-      createMutation.mutate(data);
-    } else {
-      updateMutation.mutate(data);
-    }
+    createMutation.mutate(data);
   };
 
-  const isLoading = createMutation.isPending || updateMutation.isPending;
-
+  const isLoading = createMutation.isPending;
   return (
     <>
       {/* JSX Code for HotelForm.tsx */}
@@ -494,12 +426,6 @@ const GroupClientBookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) =>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card className="mx-auto mt-10 ">
           <CardContent className="pt-6 space-y-8">
-            <TourBookingDetailsTable
-              editBookingLoading={editBookingLoading}
-              isEditBookingError={isEditBookingError}
-              editBookingData={editBookingData}
-            />
-
             <CardTitle className="font-semibold mt-5 text-gray-800 dark:text-gray-200 mb-4">
               Booking Receipt
             </CardTitle>
@@ -923,7 +849,9 @@ const GroupClientBookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) =>
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate(`/bookings/${id}/details`)}
+              onClick={() =>
+                navigate(`/groupBookings/${groupBookingId}/details`)
+              }
             >
               Cancel
             </Button>

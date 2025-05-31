@@ -83,7 +83,7 @@ const FormSchema = z.object({
 
 type FormInputs = z.infer<typeof FormSchema>;
 
-const AddFollowUp = () => {
+const AddGroupBookingFollowUp = () => {
   const { id } = useParams<{ id: string }>();
 
   const navigate = useNavigate();
@@ -112,18 +112,19 @@ const AddFollowUp = () => {
   const { data: followUps, isLoading: isFollowUpsLoading } = useQuery({
     queryKey: ["followUps", id],
     queryFn: async () => {
-      const response = await get(`/follow-ups/booking/${id}`);
+      const response = await get(`/follow-ups/group-booking/${id}`);
       return response; // API returns the sector object directly
     },
   });
 
   // Mutation for creating a user
   const createMutation = useMutation({
-    mutationFn: (data: FormInputs) => post(`/follow-ups/${id}`, data),
+    mutationFn: (data: FormInputs) =>
+      post(`/follow-ups/group-booking/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries(["followUps"]); // Refetch the users list
       toast.success("Follow up created successfully");
-      navigate("/bookings"); // Navigate to the hotels page after successful creation
+      navigate("/groupBookings"); // Navigate to the hotels page after successful creation
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -243,7 +244,7 @@ const AddFollowUp = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/bookings")}
+                onClick={() => navigate("/groupBookings")}
               >
                 Cancel
               </Button>
@@ -314,4 +315,4 @@ const AddFollowUp = () => {
   );
 };
 
-export default AddFollowUp;
+export default AddGroupBookingFollowUp;

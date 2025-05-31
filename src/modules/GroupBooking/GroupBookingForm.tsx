@@ -138,6 +138,9 @@ type FormInputs = z.infer<typeof FormSchema>;
 const GroupBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id } = useParams<{ id: string }>();
   const [openTourId, setOpenTourId] = useState<boolean>(false);
+  const [selectedTourDetailsData, setSelectedTourDetailsData] =
+    useState<any>(null); //used for:if same tour selected then to prevent tourBookingDetais to chnage
+
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const storedUser = localStorage.getItem("user");
@@ -231,6 +234,8 @@ const GroupBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       setValue("groupBookingDate", today);
     }
     if (editGroupBookingData) {
+      setSelectedTourDetailsData(editGroupBookingData.tour);
+
       // ✅ Map familyFriends once
       const tourBookingDetailsData =
         editGroupBookingData.groupBookingDetails?.map((tourBooking) => ({
@@ -320,6 +325,11 @@ const GroupBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       setValue("tourId", "");
       return; // Exit if no journeyDate is selected
     }
+
+    if (tour?.id === selectedTourDetailsData?.id) {
+      return;
+    }
+    setSelectedTourDetailsData(tour);
 
     if (tour.itineraries && Array.isArray(tour.itineraries)) {
       // Parse the journeyDate into a Date object
