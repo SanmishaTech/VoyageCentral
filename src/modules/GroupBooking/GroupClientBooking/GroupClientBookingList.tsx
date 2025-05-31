@@ -167,14 +167,15 @@ const GroupClientBookingList = ({ groupBookingId }) => {
                         <span>email</span>
                       </div>
                     </TableHead>
+
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>tour Cost</span>
+                        <span>Total members</span>
                       </div>
                     </TableHead>
                     <TableHead className="cursor-pointer">
                       <div className="flex items-center">
-                        <span>Total members</span>
+                        <span>tour Cost</span>
                       </div>
                     </TableHead>
                     <TableHead className="cursor-pointer text-right">
@@ -182,50 +183,6 @@ const GroupClientBookingList = ({ groupBookingId }) => {
                     </TableHead>
                   </TableRow>
                 </TableHeader>
-                {/* <TableBody>
-                  {groupClients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
-                        {client.bookingDate
-                          ? dayjs(client.bookingDate).format("DD/MM/YYYY")
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell className="max-w-[100px] px-1 whitespace-normal break-words">
-                        {client?.client?.clientName || "N/A"}
-                      </TableCell>
-                      <TableCell>{client?.client?.mobile1 || "N/A"}</TableCell>
-                      <TableCell>{client?.client?.email || "N/A"}</TableCell>
-                      <TableCell>
-                        {formatCurrency(client?.tourCost) || "N/A"}
-                      </TableCell>
-                      <TableCell>{client?.totalMember || "N/A"}</TableCell>
-
-                      <TableCell className="w-20">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              navigate(
-                                `/groupBookings/${groupBookingId}/groupClientBooking/${client.id}/edit`
-                              )
-                            }
-                          >
-                            <Edit size={16} />
-                          </Button>
-
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => confirmDelete(client.id)}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody> */}
                 <TableBody>
                   {groupClients.map((client) => (
                     <React.Fragment key={client.id}>
@@ -243,10 +200,10 @@ const GroupClientBookingList = ({ groupBookingId }) => {
                           {client?.client?.mobile1 || "N/A"}
                         </TableCell>
                         <TableCell>{client?.client?.email || "N/A"}</TableCell>
+                        <TableCell>{client?.totalMember || "N/A"}</TableCell>
                         <TableCell>
                           {formatCurrency(client?.tourCost) || "N/A"}
                         </TableCell>
-                        <TableCell>{client?.totalMember || "N/A"}</TableCell>
                         <TableCell className="w-20">
                           <div className="flex justify-end gap-2">
                             <Button

@@ -54,7 +54,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
-//  was here last time
+
 const GroupClientBookingReceiptList = ({
   groupBookingId,
   groupClientBookingId,
@@ -68,13 +68,15 @@ const GroupClientBookingReceiptList = ({
   const navigate = useNavigate();
 
   const fetchBookingReceipts = async () => {
-    const response = await get(`/booking-receipts/booking/${bookingId}`);
+    const response = await get(
+      `/group-client-booking-receipts/all/${groupClientBookingId}`
+    );
     return response;
   };
 
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["booking-receipts", bookingId],
+    queryKey: ["group-client-booking-receipts", groupClientBookingId],
     queryFn: () => fetchBookingReceipts(),
   });
 
@@ -82,10 +84,10 @@ const GroupClientBookingReceiptList = ({
 
   // Mutation for deleting a user
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => del(`/booking-receipts/${id}`),
+    mutationFn: (id: number) => del(`/group-client-booking-receipts/${id}`),
     onSuccess: () => {
       toast.success("Booking Receipt deleted successfully");
-      queryClient.invalidateQueries(["booking-receipts"]);
+      queryClient.invalidateQueries(["group-client-booking-receipts"]);
     },
     onError: (error) => {
       if (error?.message) {
@@ -99,7 +101,7 @@ const GroupClientBookingReceiptList = ({
   const handleGenerateInvoice = async (receiptId) => {
     try {
       const response = await get(
-        `/booking-receipts/invoice/${receiptId}`,
+        `/group-client-booking-receipts/${receiptId}/invoice`,
         {},
         { responseType: "blob" } // must be in config
       );
@@ -149,8 +151,11 @@ const GroupClientBookingReceiptList = ({
           </div>
 
           <Button
+            type="button"
             onClick={() =>
-              navigate(`/bookings/${bookingId}/bookingReceipt/create`)
+              navigate(
+                `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/bookingReceipt/create`
+              )
             }
             className="bg-primary text-xs hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
           >
@@ -222,6 +227,7 @@ const GroupClientBookingReceiptList = ({
                       <TableCell className="20">
                         <div className="flex justify-end gap-2">
                           <Button
+                            type="button"
                             // variant="ghost"
                             size="sm"
                             onClick={() => handleGenerateInvoice(receipt.id)}
@@ -229,6 +235,7 @@ const GroupClientBookingReceiptList = ({
                             invoice
                           </Button>
                           <Button
+                            type="button"
                             variant="destructive"
                             size="sm"
                             onClick={() => confirmDelete(receipt.id)}

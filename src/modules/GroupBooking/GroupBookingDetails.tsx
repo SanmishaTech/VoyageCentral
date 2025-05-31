@@ -6,6 +6,8 @@ import {
   useFieldArray,
 } from "react-hook-form";
 import dayjs from "dayjs";
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatter.js";
+
 import {
   budgetFieldOptions,
   noOfAdultsOptions,
@@ -229,6 +231,9 @@ const GroupBookingDetails = () => {
             {/* tour Members start */}
             <GroupClientBookingList groupBookingId={groupBookingId} />
             {/* tour Members end */}
+            <div className="w-full flex justify-end items-center">
+              Total Cost {formatCurrency(editGroupBookingData?.totalCost)}
+            </div>
           </CardContent>
         </Card>
       </div>

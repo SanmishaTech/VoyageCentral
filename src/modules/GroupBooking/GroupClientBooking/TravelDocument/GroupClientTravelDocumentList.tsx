@@ -55,7 +55,10 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 
-const TravelDocumentList = ({ bookingId }) => {
+const GroupClientTravelDocumentList = ({
+  groupBookingId,
+  groupClientBookingId,
+}) => {
   const queryClient = useQueryClient();
   const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
   const [travelDocumentToDelete, setTravelDocumentToDelete] = useState<
@@ -65,13 +68,15 @@ const TravelDocumentList = ({ bookingId }) => {
   const navigate = useNavigate();
 
   const fetchTravelDocuments = async () => {
-    const response = await get(`/travel-documents/booking/${bookingId}`);
+    const response = await get(
+      `/group-client-travel-documents/all/${groupClientBookingId}`
+    );
     return response;
   };
 
   // Fetch users using react-query
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["travel-documents", bookingId],
+    queryKey: ["group-client-travel-documents", groupClientBookingId],
     queryFn: () => fetchTravelDocuments(),
   });
 
@@ -79,10 +84,10 @@ const TravelDocumentList = ({ bookingId }) => {
 
   // Mutation for deleting a user
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => del(`/travel-documents/${id}`),
+    mutationFn: (id: number) => del(`/group-client-travel-documents/${id}`),
     onSuccess: () => {
       toast.success("Travel Document deleted successfully");
-      queryClient.invalidateQueries(["travel-documents"]);
+      queryClient.invalidateQueries(["group-client-travel-documents"]);
     },
     onError: (error) => {
       if (error?.message) {
@@ -115,8 +120,11 @@ const TravelDocumentList = ({ bookingId }) => {
           </div>
 
           <Button
+            type="button"
             onClick={() =>
-              navigate(`/bookings/${bookingId}/travelDocument/create`)
+              navigate(
+                `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/travelDocument/create`
+              )
             }
             className="bg-primary text-xs hover:bg-primary/90 text-white shadow-sm transition-all duration-200 hover:shadow-md"
           >
@@ -167,11 +175,12 @@ const TravelDocumentList = ({ bookingId }) => {
                       <TableCell className="20">
                         <div className="flex justify-end gap-2">
                           <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             onClick={() =>
                               navigate(
-                                `/bookings/${bookingId}/travelDocument/${doc.id}/edit`
+                                `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/travelDocument/${doc.id}/edit`
                               )
                             }
                           >
@@ -179,6 +188,7 @@ const TravelDocumentList = ({ bookingId }) => {
                           </Button>
 
                           <Button
+                            type="button"
                             variant="destructive"
                             size="sm"
                             onClick={() => confirmDelete(doc.id)}
@@ -212,4 +222,4 @@ const TravelDocumentList = ({ bookingId }) => {
   );
 };
 
-export default TravelDocumentList;
+export default GroupClientTravelDocumentList;

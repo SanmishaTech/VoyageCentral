@@ -464,16 +464,18 @@ const GroupBookingList = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent className="w-56">
                             <DropdownMenuGroup>
-                              {/* <DropdownMenuItem
+                              <DropdownMenuItem
                                 onClick={() =>
-                                  navigate(`/bookings/${booking.id}/followUp`)
+                                  navigate(
+                                    `/groupBookings/${booking.id}/followUp`
+                                  )
                                 }
                               >
                                 <div className="flex items-center gap-2">
                                   <BookText className="h-4 w-4" />
                                   <span>Follow Up</span>
                                 </div>
-                              </DropdownMenuItem> */}
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
                                   navigate(`/groupBookings/${booking.id}/edit`)

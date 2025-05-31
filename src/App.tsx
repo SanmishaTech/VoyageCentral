@@ -83,6 +83,9 @@ import CreateGroupClientJourneyBooking from "./modules/GroupBooking/GroupClientB
 import EditGroupClientJourneyBooking from "./modules/GroupBooking/GroupClientBooking/JourneyBooking/EditGroupClientJourneyBooking";
 import CreateGroupClientBookingReceipt from "./modules/GroupBooking/GroupClientBooking/BookingReceipt/CreateGroupClientBookingReceipt";
 import EditGroupClientBookingReceipt from "./modules/GroupBooking/GroupClientBooking/BookingReceipt/EditGroupClientBookingReceipt";
+import CreateGroupClientTravelDocument from "./modules/GroupBooking/GroupClientBooking/TravelDocument/CreateGroupClientTravelDocument";
+import EditGroupClientTravelDocument from "./modules/GroupBooking/GroupClientBooking/TravelDocument/EditGroupClientTravelDocument";
+import AddGroupBookingFollowUp from "./modules/GroupBooking/AddGroupBookingFollowUp";
 
 const App = () => {
   useEffect(() => {
@@ -624,10 +627,26 @@ const App = () => {
               }
             />
             <Route
-              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/bookingReceipt/:bookingReceiptId/edit"
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/travelDocument/create"
               element={
                 <ProtectedRoute>
-                  <EditGroupClientBookingReceipt />
+                  <CreateGroupClientTravelDocument />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/travelDocument/:travelDocumentId/edit"
+              element={
+                <ProtectedRoute>
+                  <EditGroupClientTravelDocument />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:id/followUp"
+              element={
+                <ProtectedRoute>
+                  <AddGroupBookingFollowUp />
                 </ProtectedRoute>
               }
             />

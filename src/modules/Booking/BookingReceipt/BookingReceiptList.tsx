@@ -96,7 +96,7 @@ const BookingReceiptList = ({ bookingId }) => {
   const handleGenerateInvoice = async (receiptId) => {
     try {
       const response = await get(
-        `/booking-receipts/invoice/${receiptId}`,
+        `/booking-receipts/${receiptId}/invoice`,
         {},
         { responseType: "blob" } // must be in config
       );
