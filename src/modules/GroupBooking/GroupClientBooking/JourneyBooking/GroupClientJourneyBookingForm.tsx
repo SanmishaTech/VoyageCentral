@@ -327,7 +327,9 @@ const GroupClientJourneyBookingForm = ({
     onSuccess: () => {
       queryClient.invalidateQueries(["group-client-journey-bookings"]); // Refetch the users list
       toast.success("Journey Booking added successfully");
-      navigate(`/groupBookings/${groupBookingId}/details`);
+      navigate(
+        `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/edit`
+      );
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -344,7 +346,9 @@ const GroupClientJourneyBookingForm = ({
     onSuccess: () => {
       toast.success("Journey Booking updated successfully");
       queryClient.invalidateQueries(["group-client-journey-bookings"]);
-      navigate(`/groupBookings/${groupBookingId}/details`);
+      navigate(
+        `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/edit`
+      );
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -1245,7 +1249,9 @@ const GroupClientJourneyBookingForm = ({
               type="button"
               variant="outline"
               onClick={() =>
-                navigate(`/groupBookings/${groupBookingId}/details`)
+                navigate(
+                  `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/edit`
+                )
               }
             >
               Cancel

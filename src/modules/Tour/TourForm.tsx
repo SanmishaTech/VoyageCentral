@@ -127,8 +127,10 @@ const FormSchema = z
       .max(100, "destination must not exceed 100 characters."),
     numberOfNights: z.string().optional(),
     numberOfTravelers: z
-      .string()
-      .regex(/^\d+$/, "Only numeric characters are allowed")
+      .union([
+        z.string().regex(/^\d+$/, "Only numeric characters are allowed"),
+        z.literal(""),
+      ])
       .optional(),
     status: z
       .string()
@@ -311,7 +313,11 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
     onError: (error: any) => {
       console.log(error);
       Validate(error, setError);
-      toast.error(error.response?.data?.message || "Failed to create Tour");
+      if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error(error.response?.data?.message || "Failed to update tours");
+      }
     },
   });
 
@@ -327,8 +333,13 @@ const TourForm = ({ mode }: { mode: "create" | "edit" }) => {
       navigate("/tours"); // Navigate to the hotels page after successful update
     },
     onError: (error: any) => {
+      console.log("working");
       Validate(error, setError);
-      toast.error(error.response?.data?.message || "Failed to update tours");
+      if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error(error.response?.data?.message || "Failed to update tours");
+      }
     },
   });
 

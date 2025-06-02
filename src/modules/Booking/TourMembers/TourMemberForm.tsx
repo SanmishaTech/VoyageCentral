@@ -147,6 +147,7 @@ const TourMemberForm = ({ mode }: { mode: "create" | "edit" }) => {
     id: string;
     tourMemberId: string;
   }>();
+  const [maxTourMembers, setMaxTourMembers] = useState(0);
 
   const addDefaultValues: z.infer<typeof AddFormSchema> = {
     tourMembers: [], // Optional array
@@ -208,12 +209,17 @@ const TourMemberForm = ({ mode }: { mode: "create" | "edit" }) => {
         const response = await get(`/tour-members/${tourMemberId}`);
         return response; // API returns the sector object directly
       },
+      enabled: mode === "edit", // Only runs if in edit mode and bookingId exists
     }
   );
 
   // data from client master
   useEffect(() => {
     if (editBookingData && mode === "create") {
+      const totalTravelers = editBookingData.totalTravelers || 0;
+      const totalTourMembers = totalTravelers - 1;
+      setMaxTourMembers(totalTourMembers); // 👈 Save it for later
+
       const tourMemberDataFromClientMaster =
         editBookingData.client.familyFriends?.map((member) => ({
           tourMemberId: "",
@@ -237,6 +243,39 @@ const TourMemberForm = ({ mode }: { mode: "create" | "edit" }) => {
       });
     }
   }, [editBookingData, reset, mode]);
+
+  // useEffect(() => {
+  //   if (editBookingData && mode === "create") {
+  //     const totalTravelers = editBookingData.totalTravelers || 0;
+  //     const totalTourMembers = totalTravelers - 1;
+  //     setMaxTourMembers(totalTourMembers); // 👈 Save it for later
+
+  //     const rawMembers = editBookingData.client.familyFriends || [];
+
+  //     const tourMemberDataFromClientMaster = rawMembers
+  //       .slice(0, totalTourMembers) // Only take up to the needed count
+  //       .map((member) => ({
+  //         tourMemberId: "",
+  //         aadharNo: member.aadharNo ? String(member.aadharNo) : "",
+  //         name: member.name || "",
+  //         gender: member.gender || "",
+  //         relation: member.relation || "",
+  //         dateOfBirth: member.dateOfBirth
+  //           ? new Date(member.dateOfBirth).toISOString().split("T")[0]
+  //           : "",
+  //         anniversaryDate: member.anniversaryDate
+  //           ? new Date(member.anniversaryDate).toISOString().split("T")[0]
+  //           : "",
+  //         foodType: member.foodType || "",
+  //         mobile: member.mobile || "",
+  //         email: member.email || "",
+  //       }));
+
+  //     reset({
+  //       tourMembers: tourMemberDataFromClientMaster,
+  //     });
+  //   }
+  // }, [editBookingData, reset, mode]);
 
   useEffect(() => {
     if (editTourMemberData) {
@@ -273,9 +312,13 @@ const TourMemberForm = ({ mode }: { mode: "create" | "edit" }) => {
     },
     onError: (error: any) => {
       Validate(error, setError);
-      toast.error(
-        error.response?.data?.message || "Failed to create Tour Member"
-      );
+      if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error(
+          error.response?.data?.message || "Failed to create Tour Member"
+        );
+      }
     },
   });
 
@@ -550,6 +593,7 @@ const TourMemberForm = ({ mode }: { mode: "create" | "edit" }) => {
                       email: "",
                     })
                   }
+                  // disabled={fields.length >= maxTourMembers} // 👈 Prevent adding more
                 >
                   <PlusCircle className="mr-2 h-5 w-5" />
                   Add Tour Member
