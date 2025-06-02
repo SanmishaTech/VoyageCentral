@@ -9,8 +9,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"; // make sure it's imported
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GroupClientJourneyBookingList from "./JourneyBooking/GroupClientJourneyBookingList";
-import GroupClientHotelBookingList from "./HotelBooking/GroupClientHotelBookingList";
-
 import dayjs from "dayjs";
 import TourBookingDetailsTable from "../TourBookingDetailsTable";
 import { cn } from "@/lib/utils";
@@ -80,7 +78,6 @@ import AddClient from "../AddClient";
 import GroupClientJourneyBookingForm from "./JourneyBooking/GroupClientJourneyBookingForm";
 import GroupClientBookingReceiptList from "./BookingReceipt/GroupClientBookingReceiptList";
 import GroupClientTravelDocumentList from "./TravelDocument/GroupClientTravelDocumentList";
-import GroupClientVehicleBookingList from "./VehicleBooking/GroupClientVehicleBookingList";
 
 const TourMemberSchema = z.object({
   groupClientMemberId: z.string().optional(),
@@ -134,42 +131,60 @@ const TourMemberSchema = z.object({
     .optional(),
 });
 
-const FormSchema = z.object({
-  clientId: z.union([
-    z.string().min(1, "Client field is required."),
-    z.number().min(1, "Client Field is required"),
-  ]),
-  bookingDate: z.string().min(1, "Booing Date Field is required."), // should be parsed to Date if needed
+const FormSchema = z
+  .object({
+    clientId: z.union([
+      z.string().min(1, "Client field is required."),
+      z.number().min(1, "Client Field is required"),
+    ]),
+    bookingDate: z.string().min(1, "Booing Date Field is required."), // should be parsed to Date if needed
 
-  numberOfAdults: z.string().min(1, "Adult field must be greater than 0"),
+    numberOfAdults: z.string().optional(),
 
-  numberOfChildren5To11: z.string().optional(),
+    numberOfChildren5To11: z.string().optional(),
 
-  numberOfChildrenUnder5: z.string().optional(),
+    numberOfChildrenUnder5: z.string().optional(),
 
-  tourCost: z.preprocess(
-    (val) => {
-      if (typeof val === "string") {
-        const parsed = parseFloat(val);
-        return isNaN(parsed) ? val : parsed;
-      }
-      return val;
-    },
-    z
-      .number({
-        invalid_type_error: "Amount must be a number",
-        required_error: "Amount is required",
-      })
-      .min(1, "Amount must be greater than 0")
-  ),
+    tourCost: z.preprocess(
+      (val) => {
+        if (typeof val === "string") {
+          const parsed = parseFloat(val);
+          return isNaN(parsed) ? val : parsed;
+        }
+        return val;
+      },
+      z
+        .number({
+          invalid_type_error: "Amount must be a number",
+          required_error: "Amount is required",
+        })
+        .min(1, "Amount must be greater than 0")
+    ),
 
-  notes: z.string().max(1000, "Max 1000 characters").optional(),
+    notes: z.string().max(1000, "Max 1000 characters").optional(),
 
-  isJourney: z.boolean(),
-  isHotel: z.boolean(),
-  isVehicle: z.boolean(),
-  groupClientMembers: z.array(TourMemberSchema).optional(),
-});
+    isJourney: z.boolean(),
+    isHotel: z.boolean(),
+    isVehicle: z.boolean(),
+    groupClientMembers: z.array(TourMemberSchema).optional(),
+  })
+  .superRefine((data, ctx) => {
+    const adults = parseInt(data.numberOfAdults || "0", 10);
+    const children5To11 = parseInt(data.numberOfChildren5To11 || "0", 10);
+    const childrenUnder5 = parseInt(data.numberOfChildrenUnder5 || "0", 10);
+
+    const total = adults + children5To11 + childrenUnder5;
+
+    if (total === 0) {
+      toast.error("Adults or children count must be greater than 0.");
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Adults or children count must be greater than 0.",
+        path: ["numberOfAdults"], // You can add issues to all three if desired
+      });
+    }
+  });
+
 type FormInputs = z.infer<typeof FormSchema>;
 
 const defaultValues: FormInputs = {
@@ -356,6 +371,24 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
       return;
     }
 
+    const adults = parseInt(getValues("numberOfAdults") || "0", 10);
+    const children5To11 = parseInt(
+      getValues("numberOfChildren5To11") || "0",
+      10
+    );
+    const childrenUnder5 = parseInt(
+      getValues("numberOfChildrenUnder5") || "0",
+      10
+    );
+
+    const total = adults + children5To11 + childrenUnder5;
+    const maxMembersAllowed = total - 1;
+
+    if (total === 0) {
+      toast.error("Enter at least one person before adding members.");
+      return;
+    }
+
     setSelectedClientData(client);
 
     let MemberData =
@@ -378,9 +411,60 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         passportNumber: member.passportNumber || "",
       })) || [];
 
+    if (MemberData.length > maxMembersAllowed) {
+      MemberData = MemberData.slice(0, maxMembersAllowed);
+      toast.info(
+        `Only ${maxMembersAllowed} members were added based on counts.`
+      );
+    }
+
     remove();
     append(MemberData);
   };
+
+  // Watch relevant fields
+  const numberOfAdults = watch("numberOfAdults");
+  const numberOfChildren5To11 = watch("numberOfChildren5To11");
+  const numberOfChildrenUnder5 = watch("numberOfChildrenUnder5");
+
+  useEffect(() => {
+    const adults = parseInt(numberOfAdults || "0", 10);
+    const children5To11 = parseInt(numberOfChildren5To11 || "0", 10);
+    const childrenUnder5 = parseInt(numberOfChildrenUnder5 || "0", 10);
+
+    const total = adults + children5To11 + childrenUnder5;
+    const maxMembersAllowed = total > 0 ? total - 1 : 0;
+
+    if (maxMembersAllowed < 0) return; // Safety check
+
+    if (fields.length > maxMembersAllowed) {
+      // Remove excess members
+      for (let i = fields.length - 1; i >= maxMembersAllowed; i--) {
+        remove(i);
+      }
+      toast.info(`Members reduced to match counts (${maxMembersAllowed}).`);
+    }
+    //  else if (fields.length < maxMembersAllowed) {
+    //   // Optionally append empty members to match count
+    //   for (let i = fields.length; i < maxMembersAllowed; i++) {
+    //     append({
+    //       groupClientMemberId: "",
+    //       name: "",
+    //       gender: "",
+    //       relation: "",
+    //       aadharNo: "",
+    //       dateOfBirth: "",
+    //       anniversaryDate: "",
+    //       foodType: "",
+    //       mobile: "",
+    //       email: "",
+    //       passportNumber: "",
+    //       panNumber: "",
+    //     });
+    //   }
+    //   // Optional: toast.info(`Members increased to match counts (${maxMembersAllowed}).`);
+    // }
+  }, [numberOfAdults, numberOfChildren5To11, numberOfChildrenUnder5]);
 
   // Mutation for creating a user
   const createMutation = useMutation({
@@ -430,10 +514,11 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     const childrenUnder5 = parseInt(data.numberOfChildrenUnder5 || "0", 10);
 
     const total = adults + children5To11 + childrenUnder5;
+    const maxMembersAllowed = total > 0 ? total - 1 : 0;
 
-    if (fields.length + 1 !== total) {
+    if (fields.length < maxMembersAllowed) {
       toast.error(
-        `Number of Tour Members count and member added does not match.`
+        `Please add at least ${maxMembersAllowed} tour member(s) before submitting.`
       );
       return; // prevent form submission
     }
@@ -864,32 +949,6 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                       ) : (
                         ""
                       )}
-                      {mode === "edit" &&
-                      editGroupClientBookingData?.isHotel ? (
-                        <>
-                          <TabsTrigger
-                            value="HotelBooking"
-                            className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
-                          >
-                            Hotel Booking
-                          </TabsTrigger>
-                        </>
-                      ) : (
-                        ""
-                      )}
-                      {mode === "edit" &&
-                      editGroupClientBookingData?.isVehicle ? (
-                        <>
-                          <TabsTrigger
-                            value="VehicleBooking"
-                            className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
-                          >
-                            Vehicle Booking
-                          </TabsTrigger>
-                        </>
-                      ) : (
-                        ""
-                      )}
                       {mode === "edit" ? (
                         <>
                           <TabsTrigger
@@ -1232,7 +1291,53 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                         type="button"
                         variant="outline"
                         className="mt-4"
-                        onClick={() =>
+                        // onClick={() =>
+                        //   append({
+                        //     groupClientMemberId: "",
+                        //     name: "",
+                        //     gender: "",
+                        //     relation: "",
+                        //     aadharNo: "",
+                        //     dateOfBirth: "",
+                        //     anniversaryDate: "",
+                        //     foodType: "",
+                        //     mobile: "",
+                        //     email: "",
+                        //     passportNumber: "",
+                        //     panNumber: "",
+                        //   })
+                        // }
+                        onClick={() => {
+                          const adults = parseInt(
+                            getValues("numberOfAdults") || "0",
+                            10
+                          );
+                          const children5To11 = parseInt(
+                            getValues("numberOfChildren5To11") || "0",
+                            10
+                          );
+                          const childrenUnder5 = parseInt(
+                            getValues("numberOfChildrenUnder5") || "0",
+                            10
+                          );
+
+                          const total = adults + children5To11 + childrenUnder5;
+                          const maxMembersAllowed = total - 1;
+
+                          if (total === 0) {
+                            toast.error(
+                              "Enter at least one person before adding members."
+                            );
+                            return;
+                          }
+
+                          if (fields.length >= maxMembersAllowed) {
+                            toast.error(
+                              `Increase adults or children counts to add more tour members.`
+                            );
+                            return;
+                          }
+
                           append({
                             groupClientMemberId: "",
                             name: "",
@@ -1246,8 +1351,8 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                             email: "",
                             passportNumber: "",
                             panNumber: "",
-                          })
-                        }
+                          });
+                        }}
                       >
                         <PlusCircle className="mr-2 h-5 w-5" />
                         Add Tour Member
@@ -1261,30 +1366,6 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                       <TabsContent value="JourneyBooking">
                         {/* <JourneyBookingList bookingId={id} /> */}
                         <GroupClientJourneyBookingList
-                          groupBookingId={groupBookingId}
-                          groupClientBookingId={groupClientBookingId}
-                        />
-                      </TabsContent>
-                    </>
-                  ) : (
-                    ""
-                  )}
-                  {mode === "edit" && editGroupClientBookingData?.isHotel ? (
-                    <>
-                      <TabsContent value="HotelBooking">
-                        <GroupClientHotelBookingList
-                          groupBookingId={groupBookingId}
-                          groupClientBookingId={groupClientBookingId}
-                        />
-                      </TabsContent>
-                    </>
-                  ) : (
-                    ""
-                  )}
-                  {mode === "edit" && editGroupClientBookingData?.isVehicle ? (
-                    <>
-                      <TabsContent value="VehicleBooking">
-                        <GroupClientVehicleBookingList
                           groupBookingId={groupBookingId}
                           groupClientBookingId={groupClientBookingId}
                         />

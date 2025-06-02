@@ -189,7 +189,9 @@ const GroupClientTravelDocumentForm = ({
     onSuccess: () => {
       queryClient.invalidateQueries(["group-client-travel-documents"]); // Refetch the users list
       toast.success("Travel Document added successfully");
-      navigate(`/groupBookings/${groupBookingId}/details`);
+      navigate(
+        `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/edit`
+      );
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -208,7 +210,9 @@ const GroupClientTravelDocumentForm = ({
     onSuccess: () => {
       toast.success("Travel Document updated successfully");
       queryClient.invalidateQueries(["group-client-travel-documents"]);
-      navigate(`/groupBookings/${groupBookingId}/details`);
+      navigate(
+        `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/edit`
+      );
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -376,7 +380,9 @@ const GroupClientTravelDocumentForm = ({
               type="button"
               variant="outline"
               onClick={() =>
-                navigate(`/groupBookings/${groupBookingId}/details`)
+                navigate(
+                  `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/edit`
+                )
               }
             >
               Cancel

@@ -373,7 +373,9 @@ const GroupClientBookingReceiptForm = ({
     onSuccess: () => {
       queryClient.invalidateQueries(["group-client-booking-receipts"]); // Refetch the users list
       toast.success("Booking Receipt added successfully");
-      navigate(`/groupBookings/${groupBookingId}/details`);
+      navigate(
+        `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/edit`
+      );
     },
     onError: (error: any) => {
       Validate(error, setError);
@@ -850,7 +852,9 @@ const GroupClientBookingReceiptForm = ({
               type="button"
               variant="outline"
               onClick={() =>
-                navigate(`/groupBookings/${groupBookingId}/details`)
+                navigate(
+                  `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/edit`
+                )
               }
             >
               Cancel

@@ -86,7 +86,10 @@ import EditGroupClientBookingReceipt from "./modules/GroupBooking/GroupClientBoo
 import CreateGroupClientTravelDocument from "./modules/GroupBooking/GroupClientBooking/TravelDocument/CreateGroupClientTravelDocument";
 import EditGroupClientTravelDocument from "./modules/GroupBooking/GroupClientBooking/TravelDocument/EditGroupClientTravelDocument";
 import AddGroupBookingFollowUp from "./modules/GroupBooking/AddGroupBookingFollowUp";
-
+import CreateGroupClientHotelBooking from "./modules/GroupBooking/GroupClientBooking/HotelBooking/CreateGroupClientHotelBooking";
+import EditGroupClientHotelBooking from "./modules/GroupBooking/GroupClientBooking/HotelBooking/EditGroupClientHotelBooking";
+import CreateGroupClientVehicleBooking from "./modules/GroupBooking/GroupClientBooking/VehicleBooking/CreateGroupClientVehicleBooking";
+import EditGroupClientVehicleBooking from "./modules/GroupBooking/GroupClientBooking/VehicleBooking/EditGroupClientVehicleBooking";
 const App = () => {
   useEffect(() => {
     document.title = appName; // Set the document title
@@ -647,6 +650,38 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <AddGroupBookingFollowUp />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/hotelBooking/create"
+              element={
+                <ProtectedRoute>
+                  <CreateGroupClientHotelBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/hotelBooking/:hotelBookingId/edit"
+              element={
+                <ProtectedRoute>
+                  <EditGroupClientHotelBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/vehicleBooking/create"
+              element={
+                <ProtectedRoute>
+                  <CreateGroupClientVehicleBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/vehicleBooking/:vehicleBookingId/edit"
+              element={
+                <ProtectedRoute>
+                  <EditGroupClientVehicleBooking />
                 </ProtectedRoute>
               }
             />
