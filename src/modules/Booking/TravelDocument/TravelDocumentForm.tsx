@@ -138,6 +138,7 @@ const TravelDocumentForm = ({ mode }: { mode: "create" | "edit" }) => {
         const response = await get(`/travel-documents/${travelDocumentId}`);
         return response;
       },
+      enabled: mode === "edit", // Only run when in "edit" mode and ID is present
     });
 
   const {

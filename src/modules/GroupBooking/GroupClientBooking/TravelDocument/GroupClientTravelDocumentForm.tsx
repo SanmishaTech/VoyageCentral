@@ -144,6 +144,7 @@ const GroupClientTravelDocumentForm = ({
         );
         return response;
       },
+      enabled: mode === "edit", // Only run when in "edit" mode and ID is present
     });
 
   useEffect(() => {

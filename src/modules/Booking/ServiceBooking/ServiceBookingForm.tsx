@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea"; // adjust path if needed
@@ -24,6 +25,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import TourBookingDetailsTable from "../TourBookingDetailsTable";
+import LineCostingFields from "../LineCostingFields";
 import {
   Command,
   CommandEmpty,
@@ -139,6 +141,15 @@ const FormSchema = z
       .refine((val) => !val || /^[0-9]{6,12}$/.test(val), {
         message: "Cheque number must be 6 to 12 digits",
       }),
+    inputGstPercentage: z.any().optional(),
+    inputGstAmount: z.any().optional(),
+    inputCost: z.any().optional(),
+    serviceCharge: z.any().optional(),
+    serviceChargeGst: z.any().optional(),
+    serviceChargeGstAmount: z.any().optional(),
+    totalServiceCharge: z.any().optional(),
+    totalCost: z.any().optional(),
+    inputCommission: z.any().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.isPaid) {
@@ -234,6 +245,15 @@ const defaultValues: FormInputs = {
   chequeNumber: "",
   utrNumber: "",
   nrftImpfNumber: "",
+  inputGstPercentage: "0.00",
+  inputGstAmount: "0.00",
+  inputCost: "0.00",
+  serviceCharge: "0.00",
+  serviceChargeGst: "0.00",
+  serviceChargeGstAmount: "0.00",
+  totalServiceCharge: "0.00",
+  totalCost: "0.00",
+  inputCommission: "0.00",
 };
 const ServiceBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const { id, serviceBookingId } = useParams<{
@@ -312,6 +332,7 @@ const ServiceBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         const response = await get(`/service-bookings/${serviceBookingId}`);
         return response;
       },
+      enabled: mode === "edit", // Only run when in "edit" mode and ID is present
     });
 
   const {
@@ -360,6 +381,44 @@ const ServiceBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         chequeNumber: editServiceBookingData?.chequeNumber || "", // Default to empty string if undefined
         utrNumber: editServiceBookingData?.utrNumber || "", // Default to empty string if undefined
         neftImpfNumber: editServiceBookingData?.neftImpfNumber || "", // Default to empty string if undefined
+        inputGstPercentage:
+          editServiceBookingData.inputGstPercentage != null
+            ? parseFloat(editServiceBookingData.inputGstPercentage).toFixed(2)
+            : "0.00",
+        inputGstAmount:
+          editServiceBookingData.inputGstAmount != null
+            ? parseFloat(editServiceBookingData.inputGstAmount).toFixed(2)
+            : "0.00",
+        inputCost:
+          editServiceBookingData.inputCost != null
+            ? parseFloat(editServiceBookingData.inputCost).toFixed(2)
+            : "0.00",
+        serviceCharge:
+          editServiceBookingData.serviceCharge != null
+            ? parseFloat(editServiceBookingData.serviceCharge).toFixed(2)
+            : "0.00",
+        serviceChargeGst:
+          editServiceBookingData.serviceChargeGst != null
+            ? parseFloat(editServiceBookingData.serviceChargeGst).toFixed(2)
+            : "0.00",
+        serviceChargeGstAmount:
+          editServiceBookingData.serviceChargeGstAmount != null
+            ? parseFloat(
+                editServiceBookingData.serviceChargeGstAmount
+              ).toFixed(2)
+            : "0.00",
+        totalServiceCharge:
+          editServiceBookingData.totalServiceCharge != null
+            ? parseFloat(editServiceBookingData.totalServiceCharge).toFixed(2)
+            : "0.00",
+        totalCost:
+          editServiceBookingData.totalCost != null
+            ? parseFloat(editServiceBookingData.totalCost).toFixed(2)
+            : "0.00",
+        inputCommission:
+          editServiceBookingData.inputCommission != null
+            ? parseFloat(editServiceBookingData.inputCommission).toFixed(2)
+            : "0.00",
       });
     }
   }, [editServiceBookingData, reset]);
@@ -368,7 +427,8 @@ const ServiceBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const createMutation = useMutation({
     mutationFn: (data: FormInputs) => post(`/service-bookings/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["service-bookings"]); // Refetch the users list
+      queryClient.invalidateQueries(["service-bookings"]);
+      queryClient.invalidateQueries({ queryKey: ["booking-costing"] }); // Refetch the users list
       toast.success("Service Booking added successfully");
       navigate(`/bookings/${id}/details`);
     },
@@ -387,6 +447,7 @@ const ServiceBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     onSuccess: () => {
       toast.success("Service Booking updated successfully");
       queryClient.invalidateQueries(["service-bookings"]);
+      queryClient.invalidateQueries({ queryKey: ["booking-costing"] });
       navigate(`/bookings/${id}/details`);
     },
     onError: (error: any) => {
@@ -472,9 +533,9 @@ const ServiceBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
               Service Booking
             </CardTitle>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              {/* Party Coming From */}
-              <div className="col-span-1 md:col-span-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {/* Description */}
+              <div className="md:col-span-2 xl:col-span-3">
                 <Label
                   htmlFor="description"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -492,7 +553,7 @@ const ServiceBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   </p>
                 )}
               </div>
-              <div className="mt-8 ml-5 flex items-center space-x-2 ">
+              <div className="flex items-center space-x-2 mt-2">
                 <Controller
                   name="isPaid"
                   control={control}
@@ -511,27 +572,6 @@ const ServiceBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                 >
                   Is Paid
                 </Label>
-              </div>
-
-              <div className="col-start-3">
-                <Label
-                  htmlFor="cost"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Cost <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="cost"
-                  type="number"
-                  step="0.01"
-                  placeholder="Enter cost"
-                  {...register("cost")}
-                />
-                {errors.cost && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.cost.message}
-                  </p>
-                )}
               </div>
               {watch("isPaid") && (
                 <>
@@ -778,10 +818,9 @@ const ServiceBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     >
                       Paid Amount
                     </Label>
-                    <Input
+                    <NumericInput
                       id="paidAmount"
                       {...register("paidAmount")}
-                      type="number"
                       step="0.01"
                       placeholder="Enter paid amount"
                       className="w-full mt-1"
@@ -973,6 +1012,14 @@ const ServiceBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                 </>
               )}
             </div>
+            <LineCostingFields
+              register={register}
+              setValue={setValue}
+              watch={watch}
+              costField="cost"
+              amountLabel="Cost"
+              errors={errors}
+            />
           </CardContent>
 
           {/* Submit/Cancel Buttons */}

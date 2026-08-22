@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea"; // adjust path if needed
@@ -348,15 +349,6 @@ const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
 
   // gst calculation end
 
-  const { data: editBookingReceiptData, isLoading: editBookingReceiptLoading } =
-    useQuery({
-      queryKey: ["editBookingReceipt", bookingReceiptId],
-      queryFn: async () => {
-        const response = await get(`/booking-receipts/${bookingReceiptId}`);
-        return response;
-      },
-    });
-
   // banks
   const { data: banks, isLoading: isBankLoading } = useQuery({
     queryKey: ["banks"],
@@ -383,40 +375,14 @@ const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
     },
   });
 
-  useEffect(() => {
-    if (editBookingReceiptData) {
-      reset({
-        receiptNumber: editBookingReceiptData?.receiptNumber ?? "",
-        receiptDate: editBookingReceiptData?.receiptDate
-          ? new Date(editBookingReceiptData.receiptDate)
-              .toISOString()
-              .split("T")[0]
-          : "",
-        paymentMode: editBookingReceiptData?.paymentMode ?? "",
-        amount: editBookingReceiptData?.amount
-          ? parseFloat(editBookingReceiptData?.amount).toFixed(2)
-          : null,
-        bankId: editBookingReceiptData?.bankId
-          ? parseInt(editBookingReceiptData?.bankId)
-          : null,
-        chequeDate: editBookingReceiptData?.chequeDate
-          ? new Date(editBookingReceiptData.chequeDate)
-              .toISOString()
-              .split("T")[0]
-          : null,
-        chequeNumber: editBookingReceiptData?.chequeNumber ?? "",
-        utrNumber: editBookingReceiptData?.utrNumber ?? "",
-        neftImpfNumber: editBookingReceiptData?.neftImpfNumber ?? "",
-        description: editBookingReceiptData?.description ?? "",
-      });
-    }
-  }, [editBookingReceiptData, reset]);
-
   // Mutation for creating a user
   const createMutation = useMutation({
     mutationFn: (data: FormInputs) => post(`/booking-receipts/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["booking-receipts"]); // Refetch the users list
+      queryClient.invalidateQueries({ queryKey: ["booking-receipts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["booking-costing", id],
+      });
       toast.success("Booking Receipt added successfully");
       navigate(`/bookings/${id}/details`);
     },
@@ -434,7 +400,10 @@ const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
       put(`/booking-receipts/${bookingReceiptId}`, data),
     onSuccess: () => {
       toast.success("Booking Receipt updated successfully");
-      queryClient.invalidateQueries(["booking-receipts"]);
+      queryClient.invalidateQueries({ queryKey: ["booking-receipts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["booking-costing", id],
+      });
       navigate(`/bookings/${id}/details`);
     },
     onError: (error: any) => {
@@ -635,9 +604,8 @@ const BookingReceiptForm = ({ mode }: { mode: "create" | "edit" }) => {
                     >
                       Amount <span className="text-red-500">*</span>
                     </Label>
-                    <Input
+                    <NumericInput
                       id="amount"
-                      type="number"
                       placeholder="Enter amount"
                       {...register("amount")}
                     />

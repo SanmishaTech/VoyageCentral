@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import dayjs from "dayjs";
+import { formatCurrency } from "@/lib/formatter.js";
 
 import MultipleSelector, {
   Option,
@@ -190,7 +191,7 @@ const GroupBookingList = () => {
 
   return (
     <div className="mt-2 p-4 sm:p-6">
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+      <h1 className="text-xl sm:text-lg font-bold mb-4 sm:mb-6">
         {/* Booking Management */}
         Group Tour Booking
       </h1>
@@ -409,6 +410,7 @@ const GroupBookingList = () => {
                         )}
                       </div>
                     </TableHead>
+                    <TableHead className="text-right">Tour Cost</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -443,6 +445,9 @@ const GroupBookingList = () => {
                       </TableCell>
                       <TableCell className="max-w-[150px] break-words whitespace-normal">
                         {(booking?.tour && booking?.tour.tourTitle) || "N/A"}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatCurrency(booking?.totalCost)}
                       </TableCell>
                       <TableCell className="flex flex-col items-center justify-end">
                         <div className="flex gap-2">

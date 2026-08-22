@@ -318,6 +318,7 @@ const GroupClientHotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         );
         return response; // API returns the sector object directly
       },
+      enabled: mode === "edit", // Only run when in "edit" mode and ID is present
     });
 
   useEffect(() => {

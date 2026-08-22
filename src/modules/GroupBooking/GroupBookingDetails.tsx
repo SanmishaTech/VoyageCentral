@@ -229,10 +229,29 @@ const GroupBookingDetails = () => {
             {/* end */}
 
             {/* tour Members start */}
-            <GroupClientBookingList groupBookingId={groupBookingId} />
+            <GroupClientBookingList
+              totalGroupTravelers={editGroupBookingData?.totalGroupTravelers}
+              numberOfTravelersAllowed={
+                editGroupBookingData?.tour?.numberOfTravelers
+              }
+              groupBookingId={groupBookingId}
+            />
             {/* tour Members end */}
-            <div className="w-full flex justify-end items-center">
-              Total Cost {formatCurrency(editGroupBookingData?.totalCost)}
+            <div className="w-full flex flex-wrap justify-end items-center gap-4 text-sm font-medium">
+              <span>
+                Total Tour Cost:{" "}
+                {formatCurrency(editGroupBookingData?.totalCost)}
+              </span>
+              <span>
+                Total Outstanding:{" "}
+                {formatCurrency(
+                  (Number(editGroupBookingData?.totalCost) || 0) -
+                    (editGroupBookingData?.groupClients || []).reduce(
+                      (s, c) => s + (Number(c.paidAmount) || 0),
+                      0
+                    )
+                )}
+              </span>
             </div>
           </CardContent>
         </Card>

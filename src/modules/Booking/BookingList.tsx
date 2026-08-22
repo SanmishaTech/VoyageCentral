@@ -43,6 +43,7 @@ import {
   XCircle,
   SquarePen,
   BookText,
+  ExternalLink,
 } from "lucide-react";
 import ConfirmDialog from "@/components/common/confirm-dialog";
 import { saveAs } from "file-saver";
@@ -54,6 +55,26 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
+
+const openBookingPdf = async (
+  bookingId: number,
+  kind: "tax-invoice" | "quotation" | "package-summary"
+) => {
+  try {
+    const response = await get(
+      `/booking-costings/${bookingId}/${kind}`,
+      undefined,
+      { responseType: "blob" }
+    );
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const win = window.open(url, "_blank");
+    if (!win) toast.error("Pop-up blocked. Allow pop-ups to view the PDF.");
+    setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
+  } catch {
+    toast.error(`Failed to open ${kind}`);
+  }
+};
 
 const fetchBookings = async (
   page: number,
@@ -195,7 +216,7 @@ const BookingList = () => {
 
   return (
     <div className="mt-2 p-4 sm:p-6">
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+      <h1 className="text-xl sm:text-lg font-bold mb-4 sm:mb-6">
         {/* Booking Management */}
         Tour Booking
       </h1>
@@ -481,7 +502,20 @@ const BookingList = () => {
                           "N/A"}
                       </TableCell>
                       <TableCell className="max-w-[150px] break-words whitespace-normal">
-                        {(booking?.tour && booking?.tour.tourTitle) || "N/A"}
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span>
+                            {(booking?.tour && booking?.tour.tourTitle) ||
+                              "N/A"}
+                          </span>
+                          {booking?.isPackage ? (
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-800 border border-amber-200"
+                            >
+                              Package
+                            </Badge>
+                          ) : null}
+                        </div>
                       </TableCell>
                       <TableCell className="flex flex-col items-center justify-end">
                         <div className="flex gap-2">
@@ -549,6 +583,46 @@ const BookingList = () => {
                                   <span>Edit</span>
                                 </div>
                               </DropdownMenuItem>
+                              {booking.bookingType === "Confirm" && (
+                                <>
+                                  {booking.isPackage ? (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        openBookingPdf(
+                                          booking.id,
+                                          "package-summary"
+                                        )
+                                      }
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <ExternalLink className="h-4 w-4" />
+                                        <span>Print Package Summary</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  ) : (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        openBookingPdf(booking.id, "quotation")
+                                      }
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <ExternalLink className="h-4 w-4" />
+                                        <span>View Quotation</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      openBookingPdf(booking.id, "tax-invoice")
+                                    }
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <ExternalLink className="h-4 w-4" />
+                                      <span>Print Invoice</span>
+                                    </div>
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                               <DropdownMenuItem
                                 onClick={() => confirmDelete(booking.id)}
                               >

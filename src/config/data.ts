@@ -41,6 +41,11 @@ export const paymentModeOptions = [
   { label: "UPI", value: "UPI" },
 ];
 
+export const gstOnOptions = [
+  { label: "Total Cost", value: "Total Cost" },
+  { label: "Service Charge", value: "Service Charge" },
+];
+
 export const bloodGroupOptions = [
   { label: "A+", value: "A+" },
   { label: "A-", value: "A-" },
@@ -62,9 +67,9 @@ export const noOfNightOptions = [
 
 export const noOfAdultsOptions = [
   { label: "---", value: "none" },
-  ...Array.from({ length: 21 }, (_, i) => ({
-    label: `${i}`,
-    value: `${i}`,
+  ...Array.from({ length: 20 }, (_, i) => ({
+    label: `${i + 1}`,
+    value: `${i + 1}`,
   })),
 ];
 

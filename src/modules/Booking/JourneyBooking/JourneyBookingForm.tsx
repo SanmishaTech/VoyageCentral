@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea"; // adjust path if needed
@@ -38,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import TourBookingDetailsTable from "../TourBookingDetailsTable";
+import LineCostingFields from "../LineCostingFields";
 import { Switch } from "@/components/ui/switch";
 import Validate from "@/lib/Handlevalidation";
 import {
@@ -139,6 +141,15 @@ const FormSchema = z.object({
       })
       .min(1, "Amount must be greater than 0")
   ),
+  inputGstPercentage: z.any().optional(),
+  inputGstAmount: z.any().optional(),
+  inputCost: z.any().optional(),
+  serviceCharge: z.any().optional(),
+  serviceChargeGst: z.any().optional(),
+  serviceChargeGstAmount: z.any().optional(),
+  totalServiceCharge: z.any().optional(),
+  totalCost: z.any().optional(),
+  inputCommission: z.any().optional(),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
@@ -163,6 +174,15 @@ const defaultValues: FormInputs = {
   airlineId: null,
   vehicleId: null,
   amount: "",
+  inputGstPercentage: "0.00",
+  inputGstAmount: "0.00",
+  inputCost: "0.00",
+  serviceCharge: "0.00",
+  serviceChargeGst: "0.00",
+  serviceChargeGstAmount: "0.00",
+  totalServiceCharge: "0.00",
+  totalCost: "0.00",
+  inputCommission: "0.00",
 };
 
 const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
@@ -225,6 +245,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         const response = await get(`/journey-bookings/${journeyBookingId}`);
         return response; // API returns the sector object directly
       },
+      enabled: mode === "edit", // Only run when in "edit" mode and ID is present
     });
 
   const {
@@ -299,6 +320,44 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         amount: editJourneyBookingData.amount
           ? parseFloat(editJourneyBookingData.amount).toFixed(2)
           : "",
+        inputGstPercentage:
+          editJourneyBookingData.inputGstPercentage != null
+            ? parseFloat(editJourneyBookingData.inputGstPercentage).toFixed(2)
+            : "0.00",
+        inputGstAmount:
+          editJourneyBookingData.inputGstAmount != null
+            ? parseFloat(editJourneyBookingData.inputGstAmount).toFixed(2)
+            : "0.00",
+        inputCost:
+          editJourneyBookingData.inputCost != null
+            ? parseFloat(editJourneyBookingData.inputCost).toFixed(2)
+            : "0.00",
+        serviceCharge:
+          editJourneyBookingData.serviceCharge != null
+            ? parseFloat(editJourneyBookingData.serviceCharge).toFixed(2)
+            : "0.00",
+        serviceChargeGst:
+          editJourneyBookingData.serviceChargeGst != null
+            ? parseFloat(editJourneyBookingData.serviceChargeGst).toFixed(2)
+            : "0.00",
+        serviceChargeGstAmount:
+          editJourneyBookingData.serviceChargeGstAmount != null
+            ? parseFloat(
+                editJourneyBookingData.serviceChargeGstAmount
+              ).toFixed(2)
+            : "0.00",
+        totalServiceCharge:
+          editJourneyBookingData.totalServiceCharge != null
+            ? parseFloat(editJourneyBookingData.totalServiceCharge).toFixed(2)
+            : "0.00",
+        totalCost:
+          editJourneyBookingData.totalCost != null
+            ? parseFloat(editJourneyBookingData.totalCost).toFixed(2)
+            : "0.00",
+        inputCommission:
+          editJourneyBookingData.inputCommission != null
+            ? parseFloat(editJourneyBookingData.inputCommission).toFixed(2)
+            : "0.00",
       });
     }
   }, [editJourneyBookingData, reset, setValue]);
@@ -309,7 +368,8 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const createMutation = useMutation({
     mutationFn: (data: FormInputs) => post(`/journey-bookings/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["journey-bookings"]); // Refetch the users list
+      queryClient.invalidateQueries(["journey-bookings"]);
+      queryClient.invalidateQueries({ queryKey: ["booking-costing"] }); // Refetch the users list
       toast.success("Journey Booking added successfully");
       navigate(`/bookings/${id}/details`);
     },
@@ -328,6 +388,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     onSuccess: () => {
       toast.success("Journey Booking updated successfully");
       queryClient.invalidateQueries(["journey-bookings"]);
+      queryClient.invalidateQueries({ queryKey: ["booking-costing"] });
       navigate(`/bookings/${id}/details`);
     },
     onError: (error: any) => {
@@ -1048,7 +1109,7 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   id="billDescription"
                   {...register("billDescription")}
                   placeholder="bill description"
-                  rows={4} // Optional: control height
+                  rows={4}
                 />
                 {errors.billDescription && (
                   <p className="text-red-500 text-xs mt-1">
@@ -1056,27 +1117,14 @@ const JourneyBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   </p>
                 )}
               </div>
-              <div className="col-span-2 md:col-span-1 md:col-start-3">
-                <Label
-                  htmlFor="amount"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Amount <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="amount"
-                  {...register("amount")}
-                  step="0.01"
-                  type="number"
-                  placeholder="Enter amount"
-                />
-                {errors.amount && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.amount.message}
-                  </p>
-                )}
-              </div>
             </div>
+            <LineCostingFields
+              register={register}
+              setValue={setValue}
+              watch={watch}
+              costField="amount"
+              errors={errors}
+            />
           </CardContent>
 
           {/* Submit/Cancel Buttons */}
