@@ -156,7 +156,7 @@ const PackageList = () => {
 
   return (
     <div className="mt-2 p-4 sm:p-6">
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+      <h1 className="text-xl sm:text-lg font-bold mb-4 sm:mb-6">
         Package Management
       </h1>
       <Card className="mx-auto mt-6 sm:mt-10">

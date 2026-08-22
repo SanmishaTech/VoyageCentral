@@ -372,6 +372,9 @@ const GroupClientBookingReceiptForm = ({
       post(`/group-client-booking-receipts/${groupClientBookingId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries(["group-client-booking-receipts"]); // Refetch the users list
+      queryClient.invalidateQueries(["group-client-bookings"]);
+      queryClient.invalidateQueries(["editGroupBooking"]);
+      queryClient.invalidateQueries(["editGroupClientBooking"]);
       toast.success("Booking Receipt added successfully");
       navigate(
         `/groupBookings/${groupBookingId}/groupClientBooking/${groupClientBookingId}/edit`

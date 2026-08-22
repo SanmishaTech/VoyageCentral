@@ -115,7 +115,7 @@ const GroupClientTravelDocumentList = ({
     <div className="mt-2 ">
       <div className="mx-auto ">
         <div className="mb-1 w-full flex flex-wrap justify-between items-center gap-2">
-          <div className="text-xl font-bold text-gray-800 tracking-wide  dark:text-white ">
+          <div className="text-sm font-semibold text-gray-800 tracking-wide  dark:text-white ">
             Travel Documents
           </div>
 

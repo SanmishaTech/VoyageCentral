@@ -195,7 +195,7 @@ const TourEnquiryList = () => {
 
   return (
     <div className="mt-2 p-4 sm:p-6">
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+      <h1 className="text-xl sm:text-lg font-bold mb-4 sm:mb-6">
         {/* Booking Management */}
         Tour Enquiries
       </h1>
@@ -481,7 +481,20 @@ const TourEnquiryList = () => {
                           "N/A"}
                       </TableCell>
                       <TableCell className="max-w-[150px] break-words whitespace-normal">
-                        {(booking?.tour && booking?.tour.tourTitle) || "N/A"}
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span>
+                            {(booking?.tour && booking?.tour.tourTitle) ||
+                              "N/A"}
+                          </span>
+                          {booking?.isPackage ? (
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-800 border border-amber-200"
+                            >
+                              Package
+                            </Badge>
+                          ) : null}
+                        </div>
                       </TableCell>
                       <TableCell className="flex flex-col items-center justify-end">
                         <div className="flex gap-2">

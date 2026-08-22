@@ -87,6 +87,8 @@ import VehicleBookingList from "./VehicleBooking/VehicleBookingList";
 import TravelDocumentList from "./TravelDocument/TravelDocumentList";
 import BookingReceiptList from "./BookingReceipt/BookingReceiptList";
 import TourMemberList from "./TourMembers/TourMemberList";
+import BookingCosting from "./BookingCosting";
+import EnquiryCosting from "./EnquiryCosting";
 const BookingDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -104,13 +106,31 @@ const BookingDetails = () => {
     },
   });
 
+  // Old TourPro: package unlocks journey/hotel/vehicle tabs
+  const showJourney =
+    Boolean(editBookingData?.isJourney) || Boolean(editBookingData?.isPackage);
+  const showHotel =
+    Boolean(editBookingData?.isHotel) || Boolean(editBookingData?.isPackage);
+  const showVehicle =
+    Boolean(editBookingData?.isVehicle) || Boolean(editBookingData?.isPackage);
+
+  const defaultTab = showJourney
+    ? "JourneyBooking"
+    : showHotel
+      ? "HotelBooking"
+      : showVehicle
+        ? "VehicleBooking"
+        : "ServiceBooking";
+
   return (
     <>
-      <div className="mt-2 p-6">
-        <h1 className="text-2xl font-bold mb-6">Booking Details</h1>
+      <div className="mt-2 p-3 md:p-4 bg-slate-50 min-h-screen">
+        <h1 className="text-lg font-semibold mb-3 text-slate-800">
+          Booking Details
+        </h1>
 
-        <Card className="mx-auto mt-10 ">
-          <CardContent className="pt-6 space-y-8">
+        <Card className="mx-auto border-slate-200 shadow-sm bg-white">
+          <CardContent className="pt-4 space-y-4 text-sm">
             {/* start */}
             <TourBookingDetailsTable
               editBookingLoading={editBookingLoading}
@@ -119,77 +139,81 @@ const BookingDetails = () => {
             />
             {/* end */}
             {/* --- Tabs Start --- */}
-            <div className=" mt-5 w-full">
-              <Tabs defaultValue="JourneyBooking" className="w-full">
-                <TabsList className="grid grid-cols-1 md:grid-cols-7 w-full mb-44 md:mb-4">
-                  {editBookingData?.isJourney ? (
-                    <>
-                      <TabsTrigger
-                        value="JourneyBooking"
-                        className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
-                      >
-                        Journey Booking
-                      </TabsTrigger>
-                    </>
+            <div className="mt-3 w-full">
+              <Tabs
+                key={defaultTab}
+                defaultValue={defaultTab}
+                className="w-full"
+              >
+                <TabsList className="grid grid-cols-1 md:grid-cols-7 w-full mb-24 md:mb-3 h-auto gap-1 bg-slate-100 p-1">
+                  {showJourney ? (
+                    <TabsTrigger
+                      value="JourneyBooking"
+                      className="px-2 py-1.5 text-xs rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                    >
+                      Journey Booking
+                    </TabsTrigger>
                   ) : null}
-                  {editBookingData?.isHotel ? (
-                    <>
-                      <TabsTrigger
-                        value="HotelBooking"
-                        className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
-                      >
-                        Hotel Booking
-                      </TabsTrigger>
-                    </>
+                  {showHotel ? (
+                    <TabsTrigger
+                      value="HotelBooking"
+                      className="px-2 py-1.5 text-xs rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                    >
+                      Hotel Booking
+                    </TabsTrigger>
                   ) : null}
-                  {editBookingData?.isVehicle ? (
-                    <>
-                      <TabsTrigger
-                        value="VehicleBooking"
-                        className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2e5d] data-[state=active]:text-white"
-                      >
-                        Vehicle Booking
-                      </TabsTrigger>
-                    </>
+                  {showVehicle ? (
+                    <TabsTrigger
+                      value="VehicleBooking"
+                      className="px-2 py-1.5 text-xs rounded-md data-[state=active]:bg-[#2a2e5d] data-[state=active]:text-white"
+                    >
+                      Vehicle Booking
+                    </TabsTrigger>
                   ) : null}
                   <TabsTrigger
                     value="ServiceBooking"
-                    className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                    className="px-2 py-1.5 text-xs rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
                   >
                     Service Booking
                   </TabsTrigger>
 
                   <TabsTrigger
                     value="TourMembers"
-                    className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                    className="px-2 py-1.5 text-xs rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
                   >
                     Tour Members
                   </TabsTrigger>
                   <TabsTrigger
                     value="TravelDocument"
-                    className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                    className="px-2 py-1.5 text-xs rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
                   >
                     Travel Documents
                   </TabsTrigger>
                   <TabsTrigger
                     value="BookingReceipt"
-                    className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                    className="px-2 py-1.5 text-xs rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
                   >
                     Booking Receipt
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="JourneyBooking">
-                  <JourneyBookingList bookingId={id} />
-                </TabsContent>
-                <TabsContent value="HotelBooking">
-                  <HotelBookingList bookingId={id} />
-                </TabsContent>
+                {showJourney ? (
+                  <TabsContent value="JourneyBooking">
+                    <JourneyBookingList bookingId={id} />
+                  </TabsContent>
+                ) : null}
+                {showHotel ? (
+                  <TabsContent value="HotelBooking">
+                    <HotelBookingList bookingId={id} />
+                  </TabsContent>
+                ) : null}
+                {showVehicle ? (
+                  <TabsContent value="VehicleBooking">
+                    <VehicleBookingList bookingId={id} />
+                  </TabsContent>
+                ) : null}
                 <TabsContent value="ServiceBooking">
                   <ServiceBookingList bookingId={id} />
-                </TabsContent>
-                <TabsContent value="VehicleBooking">
-                  <VehicleBookingList bookingId={id} />
                 </TabsContent>
                 <TabsContent value="TourMembers">
                   <TourMemberList bookingId={id} />
@@ -203,6 +227,13 @@ const BookingDetails = () => {
               </Tabs>
             </div>
             {/* --- Tabs End --- */}
+
+            {/* Package Costing + Total Costing / Enquiry Costing */}
+            {editBookingData?.bookingType === "Enquiry" ? (
+              <EnquiryCosting bookingId={id} />
+            ) : (
+              <BookingCosting bookingId={id} />
+            )}
           </CardContent>
         </Card>
       </div>

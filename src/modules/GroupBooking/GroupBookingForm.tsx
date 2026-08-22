@@ -5,6 +5,8 @@ import {
   Controller,
   useFieldArray,
 } from "react-hook-form";
+import { Checkbox } from "@/components/ui/checkbox"; // make sure it's imported
+
 import {
   budgetFieldOptions,
   noOfAdultsOptions,
@@ -122,9 +124,7 @@ const FormSchema = z.object({
     ])
     .optional(),
   bookingType: z.string().min(1, "Booking type is required"),
-  isJourney: z.coerce.number().min(0, " required"),
-  isHotel: z.coerce.number().min(0, " required"),
-  isVehicle: z.coerce.number().min(0, " required"),
+  isAssistantsAvailable: z.boolean().optional(),
   bookingDetail: z
     .string()
     .max(100, "Booking details must not exceed 100 characters.")
@@ -153,9 +153,7 @@ const GroupBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     journeyDate: "",
     branchId: "",
     tourId: "",
-    isJourney: 0,
-    isHotel: 0,
-    isVehicle: 0,
+    isAssistantsAvailable: false,
     bookingDetail: "",
     bookingType: "",
     groupBookingDetails: [], // Empty array for booking details
@@ -268,9 +266,8 @@ const GroupBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
           ? String(editGroupBookingData.branchId)
           : "",
         tourId: editGroupBookingData.tourId ? editGroupBookingData.tourId : "",
-        isJourney: Number(editGroupBookingData.isJourney),
-        isHotel: Number(editGroupBookingData.isHotel),
-        isVehicle: Number(editGroupBookingData.isVehicle),
+        isAssistantsAvailable: editGroupBookingData.isAssistantsAvailable,
+
         bookingType: editGroupBookingData.bookingType || "",
         groupBookingDetails: tourBookingDetailsData, // ✅ include this
       });
@@ -575,9 +572,9 @@ const GroupBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                             onClick={() => setOpenTourId((prev) => !prev)} // Toggle popover on button click
                           >
                             {field.value
-                              ? tourOptions &&
-                                tourOptions.find(
-                                  (tour) => tour.id === field.value
+                              ? tourOptions.find(
+                                  (tour) =>
+                                    String(tour.id) === String(field.value)
                                 )?.tourTitle
                               : "Select tour"}
                             <ChevronsUpDown className="opacity-50" />
@@ -596,25 +593,27 @@ const GroupBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                                   tourOptions.map((tour) => (
                                     <CommandItem
                                       key={tour.id}
-                                      value={tour.tourTitle.toLowerCase()} // 👈 Use client name for filtering
-                                      onSelect={(currentValue) => {
+                                      value={String(
+                                        tour.tourTitle || tour.id || ""
+                                      ).toLowerCase()}
+                                      onSelect={() => {
                                         if (tour.id === "none") {
                                           setValue("tourId", "");
                                           remove();
                                         } else {
-                                          setValue("tourId", tour.id);
+                                          setValue("tourId", String(tour.id));
                                         }
 
                                         handleTourSelectChange(tour);
                                         setOpenTourId(false);
-                                        // Close popover after selection
                                       }}
                                     >
-                                      {tour.tourTitle}
+                                      {tour.tourTitle || "—"}
                                       <Check
                                         className={cn(
                                           "ml-auto",
-                                          tour.id === field.value
+                                          String(tour.id) ===
+                                            String(field.value)
                                             ? "opacity-100"
                                             : "opacity-0"
                                         )}
@@ -659,45 +658,23 @@ const GroupBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                 {/* Checkboxes for isJourney, isHotel, isVehicle, isPackage */}
                 <div className="grid grid-cols-1 gap-2 mt-2 ml-4">
                   <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="isJourney"
-                      {...register("isJourney")}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    <Controller
+                      name="isAssistantsAvailable"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="isAssistantsAvailable"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border border-2"
+                        />
+                      )}
                     />
                     <Label
-                      htmlFor="isJourney"
+                      htmlFor="isAssistantsAvailable"
                       className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
-                      Journey
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="isHotel"
-                      {...register("isHotel")}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <Label
-                      htmlFor="isHotel"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Hotel
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="isVehicle"
-                      {...register("isVehicle")}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <Label
-                      htmlFor="isVehicle"
-                      className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      Vehicle
+                      Assistants Available
                     </Label>
                   </div>
                 </div>

@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea"; // adjust path if needed
@@ -64,6 +65,7 @@ import {
   tariffPackageOptions,
   bedOptions,
 } from "@/config/data";
+import LineCostingFields from "../LineCostingFields";
 const FormSchema = z.object({
   hrvNumber: z.string().optional(),
   partyComingFrom: z
@@ -179,6 +181,12 @@ const FormSchema = z.object({
       })
       .min(1, "Total Amount must be greater than 0")
   ),
+  inputGstPercentage: z.any().optional(),
+  inputGstAmount: z.any().optional(),
+  inputCost: z.any().optional(),
+  serviceCharge: z.any().optional(),
+  totalCost: z.any().optional(),
+  inputCommission: z.any().optional(),
 });
 
 type FormInputs = z.infer<typeof FormSchema>;
@@ -217,6 +225,12 @@ const defaultValues: FormInputs = {
   billDescription: "",
   amount: "",
   totalAmount: "",
+  inputGstPercentage: "0.00",
+  inputGstAmount: "0.00",
+  inputCost: "0.00",
+  serviceCharge: "0.00",
+  totalCost: "0.00",
+  inputCommission: "0.00",
 };
 
 const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
@@ -316,6 +330,7 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         const response = await get(`/hotel-bookings/${hotelBookingId}`);
         return response; // API returns the sector object directly
       },
+      enabled: mode === "edit", // Only run when in "edit" mode and ID is present
     });
 
   const {
@@ -413,6 +428,24 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         totalAmount: editHotelBookingData.totalAmount
           ? parseFloat(editHotelBookingData.totalAmount).toFixed(2)
           : "",
+        inputGstPercentage: editHotelBookingData.inputGstPercentage != null
+          ? parseFloat(editHotelBookingData.inputGstPercentage).toFixed(2)
+          : "0.00",
+        inputGstAmount: editHotelBookingData.inputGstAmount != null
+          ? parseFloat(editHotelBookingData.inputGstAmount).toFixed(2)
+          : "0.00",
+        inputCost: editHotelBookingData.inputCost != null
+          ? parseFloat(editHotelBookingData.inputCost).toFixed(2)
+          : "0.00",
+        serviceCharge: editHotelBookingData.serviceCharge != null
+          ? parseFloat(editHotelBookingData.serviceCharge).toFixed(2)
+          : "0.00",
+        totalCost: editHotelBookingData.totalCost != null
+          ? parseFloat(editHotelBookingData.totalCost).toFixed(2)
+          : "0.00",
+        inputCommission: editHotelBookingData.inputCommission != null
+          ? parseFloat(editHotelBookingData.inputCommission).toFixed(2)
+          : "0.00",
       });
     }
   }, [editHotelBookingData, reset]);
@@ -421,7 +454,8 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   const createMutation = useMutation({
     mutationFn: (data: FormInputs) => post(`/hotel-bookings/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(["hotel-bookings"]); // Refetch the users list
+      queryClient.invalidateQueries(["hotel-bookings"]);
+      queryClient.invalidateQueries({ queryKey: ["booking-costing"] }); // Refetch the users list
       toast.success("Hotel Booking added successfully");
       navigate(`/bookings/${id}/details`);
     },
@@ -440,6 +474,7 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
     onSuccess: () => {
       toast.success("Hotel Booking updated successfully");
       queryClient.invalidateQueries(["hotel-bookings"]);
+      queryClient.invalidateQueries({ queryKey: ["booking-costing"] });
       navigate(`/bookings/${id}/details`);
     },
     onError: (error: any) => {
@@ -507,7 +542,7 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
               Hotel Booking
             </CardTitle>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {/* HRV number */}
               <div>
                 <Label
@@ -601,7 +636,7 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   id="nights"
                   readOnly
                   className="bg-gray-200"
-                  type="number"
+                  
                   {...register("nights")}
                 />
                 {errors.nights && (
@@ -1090,10 +1125,8 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     >
                       Extra Bed Cost
                     </Label>
-                    <Input
+                    <NumericInput
                       id="extraBedCost"
-                      type="number"
-                      step="0.01"
                       placeholder="Enter cost"
                       {...register("extraBedCost")}
                     />
@@ -1229,7 +1262,7 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
               </div>
 
               {/* Bill Description */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-2 xl:col-span-3">
                 <Label
                   htmlFor="billDescription"
                   className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -1248,49 +1281,16 @@ const HotelBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                   </p>
                 )}
               </div>
-              <div className=" md:col-start-2">
-                <Label
-                  htmlFor="amount"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Amount <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="amount"
-                  {...register("amount")}
-                  step="0.01"
-                  type="number"
-                  placeholder="Enter amount"
-                />
-                {errors.amount && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.amount.message}
-                  </p>
-                )}
-              </div>
-              <div className=" md:col-start-3">
-                <Label
-                  htmlFor="totalAmount"
-                  className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Total Amount <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="totalAmount"
-                  {...register("totalAmount")}
-                  readOnly
-                  type="number"
-                  step="0.01"
-                  className="bg-gray-100"
-                  placeholder="Total amount"
-                />
-                {errors.totalAmount && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.totalAmount.message}
-                  </p>
-                )}
-              </div>
+              <input type="hidden" {...register("totalAmount")} />
             </div>
+            <LineCostingFields
+              register={register}
+              setValue={setValue}
+              watch={watch}
+              costField="totalAmount"
+              amountField="amount"
+              errors={errors}
+            />
           </CardContent>
 
           {/* Submit/Cancel Buttons */}

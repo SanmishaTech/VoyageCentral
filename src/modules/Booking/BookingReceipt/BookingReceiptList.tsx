@@ -82,7 +82,10 @@ const BookingReceiptList = ({ bookingId }) => {
     mutationFn: (id: number) => del(`/booking-receipts/${id}`),
     onSuccess: () => {
       toast.success("Booking Receipt deleted successfully");
-      queryClient.invalidateQueries(["booking-receipts"]);
+      queryClient.invalidateQueries({ queryKey: ["booking-receipts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["booking-costing", bookingId],
+      });
     },
     onError: (error) => {
       if (error?.message) {
@@ -98,29 +101,23 @@ const BookingReceiptList = ({ bookingId }) => {
       const response = await get(
         `/booking-receipts/${receiptId}/invoice`,
         {},
-        { responseType: "blob" } // must be in config
+        { responseType: "blob" }
       );
 
       if (response.status === 200) {
         const blob = new Blob([response.data], { type: "application/pdf" });
-
         const url = window.URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `invoice-${receiptId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        window.URL.revokeObjectURL(url);
+        const win = window.open(url, "_blank");
+        if (!win) {
+          alert("Pop-up blocked. Allow pop-ups to view the PDF.");
+        }
+        setTimeout(() => window.URL.revokeObjectURL(url), 120_000);
       } else {
-        console.error("Failed to generate invoice");
-        alert("Failed to generate invoice");
+        alert("Failed to open invoice");
       }
     } catch (error) {
-      console.error("Error downloading invoice:", error);
-      alert("Failed to download invoice");
+      console.error("Error opening invoice:", error);
+      alert("Failed to open invoice");
     }
   };
 
@@ -141,7 +138,7 @@ const BookingReceiptList = ({ bookingId }) => {
     <div className="mt-2 ">
       <div className="mx-auto ">
         <div className="mb-1 w-full flex flex-wrap justify-between items-center gap-2">
-          <div className="text-xl font-bold text-gray-800 tracking-wide  dark:text-white ">
+          <div className="text-sm font-semibold text-gray-800 tracking-wide  dark:text-white ">
             Booking Receipt
           </div>
 
@@ -219,11 +216,11 @@ const BookingReceiptList = ({ bookingId }) => {
                       <TableCell className="20">
                         <div className="flex justify-end gap-2">
                           <Button
-                            // variant="ghost"
                             size="sm"
+                            className="h-6 text-[10px] px-2"
                             onClick={() => handleGenerateInvoice(receipt.id)}
                           >
-                            invoice
+                            Receipt
                           </Button>
                           <Button
                             variant="destructive"

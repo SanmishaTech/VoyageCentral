@@ -59,7 +59,11 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 
-const GroupClientBookingList = ({ groupBookingId }) => {
+const GroupClientBookingList = ({
+  groupBookingId,
+  totalGroupTravelers,
+  numberOfTravelersAllowed,
+}) => {
   const queryClient = useQueryClient();
   const [showConfirmation, setShowConfirmation] = useState(false); // State to show/hide confirmation dialog
   const [clientBookingToDelete, setClientBookingToDelete] = useState<
@@ -81,12 +85,24 @@ const GroupClientBookingList = ({ groupBookingId }) => {
 
   const groupClients = data?.groupClients || [];
 
+  const money = (v: unknown) => Number(v) || 0;
+  const totalTourCost = groupClients.reduce(
+    (s: number, c: any) => s + money(c.tourCost),
+    0
+  );
+  const totalPaid = groupClients.reduce(
+    (s: number, c: any) => s + money(c.paidAmount),
+    0
+  );
+  const totalOutstanding = totalTourCost - totalPaid;
+
   // Mutation for deleting a user
   const deleteMutation = useMutation({
     mutationFn: (id: number) => del(`/group-client-bookings/${id}`),
     onSuccess: () => {
       toast.success("Client Booking deleted successfully");
       queryClient.invalidateQueries(["group-client-bookings"]);
+      queryClient.invalidateQueries(["editGroupBooking"]);
     },
     onError: (error) => {
       if (error?.message) {
@@ -114,8 +130,15 @@ const GroupClientBookingList = ({ groupBookingId }) => {
     <div className="mt-2 ">
       <div className="mx-auto ">
         <div className="mb-1 w-full flex flex-wrap justify-between items-center gap-2">
-          <div className="text-xl font-bold text-gray-800 tracking-wide  dark:text-white ">
-            Members
+          <div className="text-sm font-semibold text-gray-800 tracking-wide  dark:text-white ">
+            Members{" "}
+            <span className="text-xs inline-block bg-green-100 text-green-800 text-sm font-semibold px-2 py-1 rounded-full">
+              {totalGroupTravelers ? totalGroupTravelers : 0} /{" "}
+              {numberOfTravelersAllowed != null && numberOfTravelersAllowed > 0
+                ? numberOfTravelersAllowed
+                : "No limit"}{" "}
+              Members
+            </span>
           </div>
 
           <Button
@@ -173,10 +196,14 @@ const GroupClientBookingList = ({ groupBookingId }) => {
                         <span>Total members</span>
                       </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer">
-                      <div className="flex items-center">
-                        <span>tour Cost</span>
-                      </div>
+                    <TableHead className="cursor-pointer text-right">
+                      <span>Tour Cost</span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer text-right">
+                      <span>Paid</span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer text-right">
+                      <span>Outstanding</span>
                     </TableHead>
                     <TableHead className="cursor-pointer text-right">
                       <span>Actions</span>
@@ -184,7 +211,11 @@ const GroupClientBookingList = ({ groupBookingId }) => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {groupClients.map((client) => (
+                  {groupClients.map((client) => {
+                    const tourCost = money(client?.tourCost);
+                    const paid = money(client?.paidAmount);
+                    const outstanding = tourCost - paid;
+                    return (
                     <React.Fragment key={client.id}>
                       {/* Main Client Row */}
                       <TableRow>
@@ -201,8 +232,14 @@ const GroupClientBookingList = ({ groupBookingId }) => {
                         </TableCell>
                         <TableCell>{client?.client?.email || "N/A"}</TableCell>
                         <TableCell>{client?.totalMember || "N/A"}</TableCell>
-                        <TableCell>
-                          {formatCurrency(client?.tourCost) || "N/A"}
+                        <TableCell className="text-right tabular-nums">
+                          {formatCurrency(tourCost)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatCurrency(paid)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums font-medium">
+                          {formatCurrency(outstanding)}
                         </TableCell>
                         <TableCell className="w-20">
                           <div className="flex justify-end gap-2">
@@ -230,7 +267,7 @@ const GroupClientBookingList = ({ groupBookingId }) => {
 
                       {/* Accordion Row */}
                       <TableRow>
-                        <TableCell colSpan={7} className="p-0 border-none">
+                        <TableCell colSpan={9} className="p-0 border-none">
                           <Accordion
                             type="single"
                             collapsible
@@ -289,7 +326,23 @@ const GroupClientBookingList = ({ groupBookingId }) => {
                         </TableCell>
                       </TableRow>
                     </React.Fragment>
-                  ))}
+                    );
+                  })}
+                  <TableRow className="bg-slate-100 font-semibold">
+                    <TableCell colSpan={5} className="text-right">
+                      Total
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatCurrency(totalTourCost)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatCurrency(totalPaid)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatCurrency(totalOutstanding)}
+                    </TableCell>
+                    <TableCell />
+                  </TableRow>
                 </TableBody>
               </Table>
             </div>

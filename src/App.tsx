@@ -90,6 +90,8 @@ import CreateGroupClientHotelBooking from "./modules/GroupBooking/GroupClientBoo
 import EditGroupClientHotelBooking from "./modules/GroupBooking/GroupClientBooking/HotelBooking/EditGroupClientHotelBooking";
 import CreateGroupClientVehicleBooking from "./modules/GroupBooking/GroupClientBooking/VehicleBooking/CreateGroupClientVehicleBooking";
 import EditGroupClientVehicleBooking from "./modules/GroupBooking/GroupClientBooking/VehicleBooking/EditGroupClientVehicleBooking";
+import CreateGroupClientServiceBooking from "./modules/GroupBooking/GroupClientBooking/ServiceBooking/CreateGroupClientServiceBooking";
+import EditGroupClientServiceBooking from "./modules/GroupBooking/GroupClientBooking/ServiceBooking/EditGroupClientServiceBooking";
 const App = () => {
   useEffect(() => {
     document.title = appName; // Set the document title
@@ -682,6 +684,22 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <EditGroupClientVehicleBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/serviceBooking/create"
+              element={
+                <ProtectedRoute>
+                  <CreateGroupClientServiceBooking />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/groupBookings/:groupBookingId/groupClientBooking/:groupClientBookingId/serviceBooking/:serviceBookingId/edit"
+              element={
+                <ProtectedRoute>
+                  <EditGroupClientServiceBooking />
                 </ProtectedRoute>
               }
             />

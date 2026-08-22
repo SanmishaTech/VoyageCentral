@@ -12,6 +12,7 @@ import GroupClientJourneyBookingList from "./JourneyBooking/GroupClientJourneyBo
 import GroupClientHotelBookingList from "./HotelBooking/GroupClientHotelBookingList";
 
 import dayjs from "dayjs";
+import { formatCurrency } from "@/lib/formatter.js";
 import TourBookingDetailsTable from "../TourBookingDetailsTable";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
@@ -81,6 +82,7 @@ import GroupClientJourneyBookingForm from "./JourneyBooking/GroupClientJourneyBo
 import GroupClientBookingReceiptList from "./BookingReceipt/GroupClientBookingReceiptList";
 import GroupClientTravelDocumentList from "./TravelDocument/GroupClientTravelDocumentList";
 import GroupClientVehicleBookingList from "./VehicleBooking/GroupClientVehicleBookingList";
+import GroupClientServiceBookingList from "./ServiceBooking/GroupClientServiceBookingList";
 
 const TourMemberSchema = z.object({
   groupClientMemberId: z.string().optional(),
@@ -172,13 +174,33 @@ const FormSchema = z.object({
 });
 type FormInputs = z.infer<typeof FormSchema>;
 
+const RESERVED_FOR_MAIN_CLIENT = 1;
+
+const parsePaxCount = (value?: string) => {
+  if (!value || value === "none") return 0;
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const getPaxTotal = (
+  adults?: string,
+  children5To11?: string,
+  childrenUnder5?: string
+) =>
+  parsePaxCount(adults) +
+  parsePaxCount(children5To11) +
+  parsePaxCount(childrenUnder5);
+
+const getMaxAdditionalMembers = (totalPax: number) =>
+  Math.max(0, totalPax - RESERVED_FOR_MAIN_CLIENT);
+
 const defaultValues: FormInputs = {
   clientId: "",
   bookingDate: new Date().toISOString().split("T")[0], // defaults to today (YYYY-MM-DD)
 
   numberOfAdults: "1",
-  numberOfChildren5To11: "",
-  numberOfChildrenUnder5: "",
+  numberOfChildren5To11: "0",
+  numberOfChildrenUnder5: "0",
   tourCost: "",
   notes: "",
   isJourney: false,
@@ -194,7 +216,6 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   }>();
   const [openClientId, setOpenClientId] = useState<boolean>(false);
   const [selectedClientData, setSelectedClientData] = useState<any>(null);
-  const RESERVED_FOR_MAIN_CLIENT = 1;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -351,14 +372,56 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   //   append(MemberData);
   // };
 
+  const numberOfAdults = watch("numberOfAdults");
+  const numberOfChildren5To11 = watch("numberOfChildren5To11");
+  const numberOfChildrenUnder5 = watch("numberOfChildrenUnder5");
+
+  const paxTotal = getPaxTotal(
+    numberOfAdults,
+    numberOfChildren5To11,
+    numberOfChildrenUnder5
+  );
+  const maxAdditionalMembers = getMaxAdditionalMembers(paxTotal);
+
+  useEffect(() => {
+    if (fields.length <= maxAdditionalMembers) return;
+
+    for (let i = fields.length - 1; i >= maxAdditionalMembers; i--) {
+      remove(i);
+    }
+    toast.info(
+      `Tour member list trimmed to ${maxAdditionalMembers} row(s) to match pax count (${paxTotal}).`
+    );
+  }, [
+    maxAdditionalMembers,
+    paxTotal,
+    fields.length,
+    remove,
+    numberOfAdults,
+    numberOfChildren5To11,
+    numberOfChildrenUnder5,
+  ]);
+
   const handleClientSelectChange = (client) => {
     if (client?.id === selectedClientData?.id) {
       return;
     }
 
+    const total = getPaxTotal(
+      getValues("numberOfAdults"),
+      getValues("numberOfChildren5To11"),
+      getValues("numberOfChildrenUnder5")
+    );
+    const maxMembersAllowed = getMaxAdditionalMembers(total);
+
+    if (total < 1) {
+      toast.error("Set adults/children counts before selecting a client.");
+      return;
+    }
+
     setSelectedClientData(client);
 
-    let MemberData =
+    let memberData =
       client?.familyFriends?.map((member: any) => ({
         groupClientMemberId: "",
         aadharNo: member.aadharNo ? String(member.aadharNo) : "",
@@ -378,8 +441,15 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
         passportNumber: member.passportNumber || "",
       })) || [];
 
+    if (memberData.length > maxMembersAllowed) {
+      memberData = memberData.slice(0, maxMembersAllowed);
+      toast.info(
+        `Imported ${maxMembersAllowed} family member(s) to match pax count (${total}).`
+      );
+    }
+
     remove();
-    append(MemberData);
+    append(memberData);
   };
 
   // Mutation for creating a user
@@ -425,17 +495,23 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
   });
 
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
-    const adults = parseInt(data.numberOfAdults || "0", 10);
-    const children5To11 = parseInt(data.numberOfChildren5To11 || "0", 10);
-    const childrenUnder5 = parseInt(data.numberOfChildrenUnder5 || "0", 10);
+    const total = getPaxTotal(
+      data.numberOfAdults,
+      data.numberOfChildren5To11,
+      data.numberOfChildrenUnder5
+    );
+    const maxAdditional = getMaxAdditionalMembers(total);
 
-    const total = adults + children5To11 + childrenUnder5;
+    if (total < 1) {
+      toast.error("Enter at least one traveler in adults/children counts.");
+      return;
+    }
 
-    if (fields.length + 1 !== total) {
+    if (fields.length > maxAdditional) {
       toast.error(
-        `Number of Tour Members count and member added does not match.`
+        `Too many tour member rows (${fields.length}). Pax count is ${total} — the client counts as 1, so at most ${maxAdditional} additional row(s) are allowed.`
       );
-      return; // prevent form submission
+      return;
     }
 
     if (mode === "create") {
@@ -756,6 +832,28 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     {errors.tourCost.message}
                   </p>
                 )}
+                {mode === "edit" && editGroupClientBookingData ? (
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                    <div>
+                      Paid:{" "}
+                      <span className="font-medium tabular-nums text-slate-800">
+                        {formatCurrency(
+                          editGroupClientBookingData.paidAmount || 0
+                        )}
+                      </span>
+                    </div>
+                    <div>
+                      Outstanding:{" "}
+                      <span className="font-medium tabular-nums text-slate-800">
+                        {formatCurrency(
+                          (Number(editGroupClientBookingData.tourCost) || 0) -
+                            (Number(editGroupClientBookingData.paidAmount) ||
+                              0)
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
               </div>
               {/* Notes */}
               <div className="col-span-2">
@@ -905,6 +1003,18 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                       {mode === "edit" ? (
                         <>
                           <TabsTrigger
+                            value="ServiceBooking"
+                            className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
+                          >
+                            Service Bookings
+                          </TabsTrigger>
+                        </>
+                      ) : (
+                        ""
+                      )}
+                      {mode === "edit" ? (
+                        <>
+                          <TabsTrigger
                             value="TravelDocument"
                             className="px-4 py-2 rounded-md data-[state=active]:bg-[#2a2f68] data-[state=active]:text-white"
                           >
@@ -922,6 +1032,11 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200 ">
                       Tour Members
                     </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Total pax: {paxTotal} · client counts as 1 ·{" "}
+                      {fields.length} member row(s) in list · max{" "}
+                      {maxAdditionalMembers} additional row(s)
+                    </p>
                     <div className="mt-2">
                       <Table>
                         <TableHeader>
@@ -1232,7 +1347,15 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                         type="button"
                         variant="outline"
                         className="mt-4"
-                        onClick={() =>
+                        onClick={() => {
+                          if (fields.length >= maxAdditionalMembers) {
+                            toast.error(
+                              maxAdditionalMembers === 0
+                                ? "Pax count is 1 — only the client is needed; no extra tour member rows."
+                                : `You can add at most ${maxAdditionalMembers} additional tour member row(s) for ${paxTotal} pax.`
+                            );
+                            return;
+                          }
                           append({
                             groupClientMemberId: "",
                             name: "",
@@ -1246,8 +1369,8 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                             email: "",
                             passportNumber: "",
                             panNumber: "",
-                          })
-                        }
+                          });
+                        }}
                       >
                         <PlusCircle className="mr-2 h-5 w-5" />
                         Add Tour Member
@@ -1297,6 +1420,18 @@ const GroupClientBookingForm = ({ mode }: { mode: "create" | "edit" }) => {
                     <>
                       <TabsContent value="BookingReceipt">
                         <GroupClientBookingReceiptList
+                          groupBookingId={groupBookingId}
+                          groupClientBookingId={groupClientBookingId}
+                        />
+                      </TabsContent>
+                    </>
+                  ) : (
+                    ""
+                  )}
+                  {mode === "edit" ? (
+                    <>
+                      <TabsContent value="ServiceBooking">
+                        <GroupClientServiceBookingList
                           groupBookingId={groupBookingId}
                           groupClientBookingId={groupClientBookingId}
                         />

@@ -88,6 +88,9 @@ const GroupClientBookingReceiptList = ({
     onSuccess: () => {
       toast.success("Booking Receipt deleted successfully");
       queryClient.invalidateQueries(["group-client-booking-receipts"]);
+      queryClient.invalidateQueries(["group-client-bookings"]);
+      queryClient.invalidateQueries(["editGroupBooking"]);
+      queryClient.invalidateQueries(["editGroupClientBooking"]);
     },
     onError: (error) => {
       if (error?.message) {
@@ -146,7 +149,7 @@ const GroupClientBookingReceiptList = ({
     <div className="mt-2 ">
       <div className="mx-auto ">
         <div className="mb-1 w-full flex flex-wrap justify-between items-center gap-2">
-          <div className="text-xl font-bold text-gray-800 tracking-wide  dark:text-white ">
+          <div className="text-sm font-semibold text-gray-800 tracking-wide  dark:text-white ">
             Booking Receipt
           </div>
 
